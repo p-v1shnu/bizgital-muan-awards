@@ -14,6 +14,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { SubmissionGroup, SubmissionStatus } from '@/types/api';
+import { formatDateTime } from '@/lib/dates';
 
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
   PENDING: 'ລໍຖ້າຄັດກອງ',
@@ -161,7 +162,7 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
                 {entry.reason || <span className="text-ink-3">ບໍ່ໄດ້ຂຽນເຫດຜົນ</span>}
               </p>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-3">
-                <span>{new Date(entry.createdAt).toLocaleString('lo-LA')}</span>
+                <span>{formatDateTime(entry.createdAt)}</span>
                 {entry.submitterName && <span>ໂດຍ {entry.submitterName}</span>}
                 {entry.creatorLink && (
                   <a

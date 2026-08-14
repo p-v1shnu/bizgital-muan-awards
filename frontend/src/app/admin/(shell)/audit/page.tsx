@@ -12,6 +12,7 @@ import { Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { AuditEntry } from '@/types/api';
+import { formatDateTime } from '@/lib/dates';
 
 /**
  * Actions are dotted names like "edition.phase.changed". Rather than keep a
@@ -118,7 +119,7 @@ export default function AuditPage() {
                   {data.data.map((entry) => (
                     <Tr key={entry.id}>
                       <Td className="whitespace-nowrap text-ink-3">
-                        {new Date(entry.createdAt).toLocaleString('lo-LA')}
+                        {formatDateTime(entry.createdAt)}
                       </Td>
                       <Td className="text-ink">{entry.user?.name ?? '—'}</Td>
                       <Td>

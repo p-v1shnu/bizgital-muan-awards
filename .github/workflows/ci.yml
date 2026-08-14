@@ -105,8 +105,16 @@ jobs:
       SETUP_ENABLED: 'true'
       CORS_ORIGINS: http://localhost:3000
       BACKEND_PORT: '3001'
-      NEXT_PUBLIC_API_URL: http://127.0.0.1:3001/api/v1
+      # The site and the API must share a hostname or the refresh cookie is
+      # cross-site and SameSite=Lax drops it — the admin would be signed out on
+      # every reload. Production serves both from one domain through Caddy.
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+      E2E_API_URL: http://localhost:3001/api/v1
       NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      # The site is built before the seed runs, so its public pages are
+      # prerendered from an empty database. This lets the seed purge them;
+      # without it the browser pass reads a snapshot of nothing.
+      REVALIDATE_SECRET: ci-revalidate-secret
 
     steps:
       - uses: actions/checkout@v4

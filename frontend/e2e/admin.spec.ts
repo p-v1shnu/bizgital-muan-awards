@@ -48,6 +48,19 @@ test.describe('the edition page', () => {
     );
   });
 
+  test('the night’s programme can be typed in and saved', async ({ page }) => {
+    await expect(page.getByText('ກິດຈະກຳໃນງານ')).toBeVisible();
+
+    // One activity per line — what the year page renders as a numbered list.
+    const programme = page.locator('textarea').nth(1);
+    await programme.fill('ຍ່າງພົມແດງ\nປະກາດຜົນລາງວັນ');
+    await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
+    await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
+
+    await page.reload();
+    await expect(page.locator('textarea').nth(1)).toHaveValue('ຍ່າງພົມແດງ\nປະກາດຜົນລາງວັນ');
+  });
+
   test('the publish checklist names what it blocks', async ({ page }) => {
     await expect(page.getByText('ບລັອກຂັ້ນ').first()).toBeVisible();
   });

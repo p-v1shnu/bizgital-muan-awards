@@ -27,6 +27,8 @@ export interface PublicEditionSummary {
   phase: EditionPhase;
   eventDate: string | null;
   venueLo: string | null;
+  /** Free text, one activity per line (PRD §6.1.2 §5). */
+  activitiesLo: string | null;
   heroImageKey: string | null;
   galleryImageKeys: string[] | null;
   ticketUrl: string | null;

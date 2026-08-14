@@ -8,6 +8,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { ErrorNote, Note } from '@/components/ui/feedback';
 import { Input } from '@/components/ui/field';
 import { useApiMutation } from '@/lib/api/hooks';
+import { formatDateTime } from '@/lib/dates';
 
 interface Minted {
   token: string;
@@ -89,7 +90,7 @@ export function PreviewLink({ editionId, slug }: { editionId: string; slug: stri
             </div>
 
             <Note>
-              ໝົດອາຍຸ {new Date(minted.expiresAt).toLocaleString('lo-LA')} ·
+              ໝົດອາຍຸ {formatDateTime(minted.expiresAt)} ·
               ລິງກ໌ນີ້ເປີດໄດ້<b className="text-ink-2">ສະເພາະປີນີ້</b>ປີດຽວ ·
               ໃຜມີລິງກ໌ກໍເປີດໄດ້ ຢ່າໂພສສາທາລະນະ
             </Note>

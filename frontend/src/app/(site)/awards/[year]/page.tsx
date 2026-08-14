@@ -9,6 +9,7 @@ import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
+import { formatDate } from '@/lib/dates';
 
 interface PageProps {
   params: Promise<{ year: string }>;
@@ -55,6 +56,12 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
   ]);
 
   const gallery = imageKeyList(edition.galleryImageKeys);
+  // One activity per line, typed free-hand in the back office — blank lines and
+  // stray whitespace come with that, so they are dropped rather than rendered.
+  const activities = (edition.activitiesLo ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
   const showNominees = edition.categories.some((category) => category.nominees.length > 0);
   const winners = edition.categories
     .map((category) => ({ category, winner: category.nominees.find((n) => n.isWinner) }))
@@ -87,11 +94,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               {edition.eventDate && (
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays className="size-4" />
-                  {new Date(edition.eventDate).toLocaleDateString('lo-LA', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {formatDate(edition.eventDate)}
                 </span>
               )}
               {edition.venueLo && (
@@ -253,6 +256,28 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
           </div>
         )}
       </Section>
+
+      {/* 5 — what happens on the night */}
+      {activities.length > 0 && (
+        <Section eyebrow="ພາຍໃນງານ" title="ກິດຈະກຳໃນງານ">
+          <ol
+            aria-label="ກິດຈະກຳໃນງານ"
+            className="max-w-2xl overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel"
+          >
+            {activities.map((activity, index) => (
+              <li
+                key={activity}
+                className="flex items-start gap-4 border-b border-hairline px-5 py-4 last:border-b-0"
+              >
+                <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border border-brand-edge bg-brand-soft text-[12px] font-bold text-brand-deep">
+                  {index + 1}
+                </span>
+                <span className="font-serif text-[19px] leading-snug text-ink">{activity}</span>
+              </li>
+            ))}
+          </ol>
+        </Section>
+      )}
 
       {/* 6 — the panel for this year */}
       {edition.judges.length > 0 && (

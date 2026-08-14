@@ -75,6 +75,14 @@ export class CreateEditionDto {
   @MaxLength(200)
   venueEn?: string;
 
+  @ApiPropertyOptional({
+    description: 'What happens on the night — one item per line (PRD §6.1.2 §5)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  activitiesLo?: string;
+
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
   @IsOptional()
   @IsString()

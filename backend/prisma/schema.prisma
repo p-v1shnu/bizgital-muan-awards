@@ -82,6 +82,11 @@ model Edition {
   venueLo   String?
   venueEn   String?
 
+  /// What happens on the night — carpet walk, performances (PRD §6.1.2 §5).
+  /// Free text, one item per line: the programme changes shape every year, so
+  /// a fixed structure would be wrong more often than it was right.
+  activitiesLo String? @db.Text
+
   /// Object storage keys — never full URLs (PRD §8 storage rules).
   heroImageKey     String?
   galleryImageKeys Json?

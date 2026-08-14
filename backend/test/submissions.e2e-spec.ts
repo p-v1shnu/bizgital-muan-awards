@@ -25,7 +25,14 @@ describe('public submissions and the screening queue', () => {
 
   afterAll(() => h.close());
 
-  const send = (body: Record<string, unknown>) => api(h).post(path('/submissions')).send(body);
+  /**
+   * `from` stands in for a different person. Repeats of one name from one
+   * address inside a day collapse to a single entry (PRD §7.1), so a test that
+   * means "twenty people nominated her" has to send from twenty addresses —
+   * otherwise it is really testing the dedupe rule and getting one row.
+   */
+  const send = (body: Record<string, unknown>, from = '203.0.113.1') =>
+    api(h).post(path('/submissions')).set('X-Forwarded-For', from).send(body);
 
   it('refuses entries while the form is closed', async () => {
     await send({ categoryId, creatorNameRaw: 'ຄົນໜຶ່ງ' }).expect(403);
@@ -49,7 +56,7 @@ describe('public submissions and the screening queue', () => {
 
   it('groups repeats of one name into a single row with a count', async () => {
     for (let i = 0; i < 3; i += 1) {
-      await send({ categoryId, creatorNameRaw: 'ບຸນມີ' }).expect(201);
+      await send({ categoryId, creatorNameRaw: 'ບຸນມີ' }, `203.0.113.${10 + i}`).expect(201);
     }
     await send({ categoryId, creatorNameRaw: 'ຄົນອື່ນ' }).expect(201);
 
@@ -106,5 +113,20 @@ describe('public submissions and the screening queue', () => {
   it('stores the submitter IP hashed, never in the clear', async () => {
     const row = await h.prisma.publicSubmission.findFirst();
     expect(row?.ipHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('counts the same name from the same address on the same day only once', async () => {
+    const one = { categoryId, creatorNameRaw: 'ສົ່ງຊ້ຳ' };
+    await send(one, '198.51.100.7').expect(201);
+    await send(one, '198.51.100.7').expect(201);
+    await send(one, '198.51.100.7').expect(201);
+
+    // The repeats answer 201 like any other entry — a person pressing the
+    // button twice should not be told off — but only one row exists.
+    expect(await h.prisma.publicSubmission.count({ where: { creatorNameRaw: 'ສົ່ງຊ້ຳ' } })).toBe(1);
+
+    // Someone else nominating her still counts.
+    await send(one, '198.51.100.8').expect(201);
+    expect(await h.prisma.publicSubmission.count({ where: { creatorNameRaw: 'ສົ່ງຊ້ຳ' } })).toBe(2);
   });
 });

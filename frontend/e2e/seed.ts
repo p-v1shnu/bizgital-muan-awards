@@ -27,10 +27,25 @@ export default async function seed() {
   const session = setup.ok() ? await setup.json() : await (await api.post('auth/login', { data: ADMIN })).json();
   const auth = { Authorization: `Bearer ${session.data.accessToken}` };
 
+  /**
+   * The public pages cache, and the site is normally built before this runs —
+   * so its pages are prerendered from an empty database. Clearing them is the
+   * last thing every path here does, including the already-seeded one: a
+   * re-run against a fresh build would otherwise read the empty snapshot.
+   */
+  const purge = async () => {
+    const site = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
+    const secret = process.env.REVALIDATE_SECRET;
+    if (secret) {
+      await api.post(`${site}/api/revalidate`, { headers: { 'x-revalidate-secret': secret } });
+    }
+    await api.dispose();
+  };
+
   // Already seeded by an earlier run.
   const existing = await (await api.get('editions')).json();
   if ((existing.data ?? []).length >= 2) {
-    await api.dispose();
+    await purge();
     return;
   }
 
@@ -74,6 +89,7 @@ export default async function seed() {
         titleLo: `ມ່ວນ ອະວອດ ${year}`,
         descriptionLo: `ງານມອບລາງວັນປະຈຳປີ ${year}`,
         venueLo: 'ຫໍປະຊຸມແຫ່ງຊາດ, ນະຄອນຫຼວງວຽງຈັນ',
+        activitiesLo: 'ຍ່າງພົມແດງ\nການສະແດງເປີດງານ\nປະກາດຜົນລາງວັນ',
       },
     });
     const editionId = (await edition.json()).data.id;
@@ -134,13 +150,5 @@ export default async function seed() {
     }
   }
 
-  // The public pages cache; clear them so the suite reads what was just
-  // seeded rather than the empty snapshot from before it ran.
-  const site = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
-  const secret = process.env.REVALIDATE_SECRET;
-  if (secret) {
-    await api.post(`${site}/api/revalidate`, { headers: { 'x-revalidate-secret': secret } });
-  }
-
-  await api.dispose();
+  await purge();
 }

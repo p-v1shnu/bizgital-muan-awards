@@ -35,15 +35,38 @@ export class SubmissionsService {
       throw new ForbiddenException('Submissions are closed for this edition');
     }
 
+    const creatorNameRaw = dto.creatorNameRaw.trim();
+    const ipHash = hashIp(ip);
+
+    /**
+     * The same name, in the same category, from the same address, on the same
+     * day counts once (PRD §7.1). The queue's send count is what the team
+     * reads as interest in a creator — if one person pressing the button
+     * twenty times showed as twenty, that number would be describing their
+     * persistence rather than the creator's support.
+     */
+    const alreadyToday = await this.prisma.publicSubmission.findFirst({
+      where: {
+        categoryId: dto.categoryId,
+        creatorNameRaw,
+        ipHash,
+        createdAt: { gte: startOfDayInVientiane() },
+      },
+      select: { id: true },
+    });
+    // Answered the same way as a fresh entry: the sender did nothing wrong and
+    // has no reason to be told their second try was ignored.
+    if (alreadyToday) return { accepted: true };
+
     await this.prisma.publicSubmission.create({
       data: {
         categoryId: dto.categoryId,
-        creatorNameRaw: dto.creatorNameRaw.trim(),
+        creatorNameRaw,
         creatorLink: dto.creatorLink,
         reason: dto.reason,
         submitterName: dto.submitterName,
         submitterEmail: dto.submitterEmail,
-        ipHash: hashIp(ip),
+        ipHash,
       },
     });
 
@@ -246,6 +269,25 @@ export interface GroupedSubmission {
   count: number;
   latestAt: Date;
   entries: QueueRow[];
+}
+
+/**
+ * Midnight in Vientiane, as an instant. "The same day" has to mean the day the
+ * sender is living in, not whatever day it happens to be in UTC — otherwise
+ * the window would roll over at 7am local time (PRD §10 timezone).
+ *
+ * Laos keeps UTC+7 all year and has no daylight saving, so the offset is a
+ * constant rather than something to look up.
+ */
+function startOfDayInVientiane() {
+  const OFFSET_MS = 7 * 60 * 60 * 1000;
+  const local = new Date(Date.now() + OFFSET_MS);
+  const midnightLocal = Date.UTC(
+    local.getUTCFullYear(),
+    local.getUTCMonth(),
+    local.getUTCDate(),
+  );
+  return new Date(midnightLocal - OFFSET_MS);
 }
 
 /**

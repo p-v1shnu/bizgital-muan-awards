@@ -121,6 +121,17 @@ describe('public site', () => {
       const response = await api(h).get(path('/winners')).expect(200);
       expect(response.body.data).toHaveLength(0);
     });
+
+    it('carries the night’s programme through to the public page', async () => {
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}`))
+        .set(h.auth)
+        .send({ activitiesLo: 'ຍ່າງພົມແດງ\nການສະແດງເປີດງານ' })
+        .expect(200);
+
+      const response = await api(h).get(path('/editions/2027')).expect(200);
+      expect(response.body.data.activitiesLo).toBe('ຍ່າງພົມແດງ\nການສະແດງເປີດງານ');
+    });
   });
 
   describe('once nominees are announced', () => {
@@ -192,6 +203,51 @@ describe('public site', () => {
       const response = await api(h).get(path('/submission-form')).expect(200);
       expect(response.body.data.edition.year).toBe(2027);
       expect(response.body.data.categories).toHaveLength(1);
+    });
+  });
+
+  describe('name suggestions for the public form', () => {
+    beforeAll(async () => {
+      // A creator who exists only inside an unannounced year. Suggesting this
+      // name would tell the world who is being lined up for next year.
+      const hidden = (
+        await api(h)
+          .post(path('/admin/editions'))
+          .set(h.auth)
+          .send({ year: 2030, slug: '2030', titleLo: 'ງານ 2030' })
+          .expect(201)
+      ).body.data.id;
+      const hiddenCategory = (
+        await api(h)
+          .post(path(`/admin/editions/${hidden}/categories`))
+          .set(h.auth)
+          .send({ slug: 'secret', nameLo: 'ສາຂາລັບ' })
+          .expect(201)
+      ).body.data.id;
+      const secret = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ slug: 'ccc', nameLo: 'ຄົນ ລັບ' })
+          .expect(201)
+      ).body.data.id;
+      await api(h)
+        .post(path(`/admin/categories/${hiddenCategory}/nominations`))
+        .set(h.auth)
+        .send({ creatorId: secret })
+        .expect(201);
+    });
+
+    it('needs at least two characters before it answers', async () => {
+      const response = await api(h).get(path('/creator-suggestions?q=ຄ')).expect(200);
+      expect(response.body.data).toEqual([]);
+    });
+
+    it('offers names already on record, and no one from an unannounced year', async () => {
+      const response = await api(h).get(path('/creator-suggestions?q=ຄົນ')).expect(200);
+      const names = response.body.data.map((row: { nameLo: string }) => row.nameLo);
+      expect(names).toContain('ຄົນ ກ');
+      expect(names).not.toContain('ຄົນ ລັບ');
     });
   });
 

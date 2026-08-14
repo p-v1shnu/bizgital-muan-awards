@@ -4,6 +4,7 @@ import { ActionLink, Section } from '@/components/site/primitives';
 import { SubmitForm } from './submit-form';
 import { getPublic } from '@/lib/api/server';
 import type { SubmissionForm } from '@/types/public';
+import { formatDate } from '@/lib/dates';
 
 export const metadata: Metadata = {
   title: 'ສົ່ງລາຍຊື່',
@@ -63,11 +64,7 @@ export default async function SubmitPage() {
             <p className="mt-4 border-t border-rule pt-4">
               ປິດຮັບ{' '}
               <b className="text-ink">
-                {new Date(form.closesAt).toLocaleDateString('lo-LA', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {formatDate(form.closesAt)}
               </b>
             </p>
           )}

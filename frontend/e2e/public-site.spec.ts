@@ -83,6 +83,15 @@ test.describe('a year page follows its phase', () => {
     await expect(page.getByText('ຜູ້ຊະນະ', { exact: true }).first()).toBeVisible();
   });
 
+  test('a year page lists what happens on the night (PRD §6.1.2 §5)', async ({ page }) => {
+    await page.goto('/awards/2025');
+
+    const programme = page.getByRole('list', { name: 'ກິດຈະກຳໃນງານ' });
+    await expect(page.getByText('ກິດຈະກຳໃນງານ')).toBeVisible();
+    await expect(programme.getByRole('listitem')).toHaveCount(3);
+    await expect(programme.getByText('ຍ່າງພົມແດງ')).toBeVisible();
+  });
+
   test('an unknown year is a 404, not an error', async ({ page }) => {
     const response = await page.goto('/awards/2099');
     expect(response?.status()).toBe(404);
@@ -130,6 +139,25 @@ test('the submission form accepts an entry', async ({ page }) => {
   await page.locator('form button[type=submit]').click();
 
   await expect(page.getByText('ຮັບຊື່ແລ້ວ')).toBeVisible();
+});
+
+test('the form suggests names already in the library', async ({ page }) => {
+  await page.goto('/submit');
+
+  const name = page.locator('form input').first();
+  await name.fill('ຄຳ');
+
+  // Scoped to the suggestion list: the category picker is a <select>, whose
+  // native options answer to the same role.
+  const list = page.getByRole('listbox', { name: 'ຊື່ທີ່ມີຢູ່ແລ້ວ' });
+  const suggestion = list.getByRole('option').filter({ hasText: 'ຄຳຫຼ້າ ສີສຸວັນ' });
+  await expect(suggestion).toBeVisible();
+  await suggestion.click();
+
+  // Choosing fills the field with the spelling already on record, which is the
+  // whole point: fewer variants of one person for the team to merge.
+  await expect(name).toHaveValue('ຄຳຫຼ້າ ສີສຸວັນ');
+  await expect(list).toBeHidden();
 });
 
 test('every page has exactly one h1', async ({ page }) => {

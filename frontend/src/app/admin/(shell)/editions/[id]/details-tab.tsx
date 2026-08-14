@@ -19,6 +19,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
     descriptionLo: edition.descriptionLo ?? '',
     eventDate: edition.eventDate ? edition.eventDate.slice(0, 10) : '',
     venueLo: edition.venueLo ?? '',
+    activitiesLo: edition.activitiesLo ?? '',
     ticketUrl: edition.ticketUrl ?? '',
     voteUrl: edition.voteUrl ?? '',
   });
@@ -42,6 +43,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
         descriptionLo: form.descriptionLo || undefined,
         eventDate: form.eventDate ? new Date(form.eventDate).toISOString() : undefined,
         venueLo: form.venueLo || undefined,
+        activitiesLo: form.activitiesLo || undefined,
         ticketUrl: form.ticketUrl || undefined,
         voteUrl: form.voteUrl || undefined,
         heroImageKey: heroImageKey ?? undefined,
@@ -103,6 +105,19 @@ export function DetailsTab({ edition }: { edition: Edition }) {
               />
             </Field>
           </div>
+
+          <Field
+            label="ກິດຈະກຳໃນງານ"
+            hint="— ບໍ່ບັງຄັບ"
+            help="ບັນທັດລະ 1 ກິດຈະກຳ ເຊັ່ນ ຍ່າງພົມແດງ · ການສະແດງ · ປະກາດຜົນ — ຈະຂຶ້ນເປັນລາຍການເທິງໜ້າປີ"
+          >
+            <Textarea
+              rows={5}
+              placeholder={'ຍ່າງພົມແດງ\nການສະແດງເປີດງານ\nປະກາດຜົນລາງວັນ'}
+              value={form.activitiesLo}
+              onChange={(event) => setForm({ ...form, activitiesLo: event.target.value })}
+            />
+          </Field>
         </CardBody>
       </Card>
 

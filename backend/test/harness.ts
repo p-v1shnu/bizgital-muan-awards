@@ -1,12 +1,12 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import type { Server } from 'node:http';
 import request from 'supertest';
 
 import { AppModule } from '../src/app.module';
-import { HttpExceptionFilter } from '../src/common/filters/http-exception.filter';
+import { configureApp } from '../src/bootstrap';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { ResponseInterceptor } from '../src/common/interceptors/response.interceptor';
 
 export interface Harness {
   app: INestApplication;
@@ -18,24 +18,15 @@ export interface Harness {
 }
 
 /**
- * Boots the real application — same pipes, filters and guards as main.ts, so a
- * test cannot pass on a route that production would reject.
+ * Boots the real application through the same `configureApp` main.ts uses, so
+ * a test cannot pass on a route that production would reject — and so proxy
+ * headers, CORS and cookies behave here exactly as they do on the server.
  */
 export async function createHarness(): Promise<Harness> {
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
 
-  const app = moduleRef.createNestApplication();
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    }),
-  );
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new ResponseInterceptor());
+  const app = moduleRef.createNestApplication<NestExpressApplication>();
+  configureApp(app);
   await app.init();
 
   const prisma = app.get(PrismaService);

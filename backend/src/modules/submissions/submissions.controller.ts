@@ -15,10 +15,11 @@ export class SubmissionsController {
   constructor(private readonly submissions: SubmissionsService) {}
 
   @Public()
-  // Tighter than the global 100/min: this endpoint writes on behalf of anyone.
-  // Not tighter still, because Lao mobile networks put many real people behind
-  // one address — this has to stop a script, not a family.
-  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  // 10 an hour per address (PRD §7.1). Somebody nominating several creators in
+  // one sitting stays well inside it; a script does not. Repeats of the same
+  // name from the same address are folded together separately, in the service,
+  // so an enthusiastic fan cannot inflate the count either.
+  @Throttle({ default: { limit: 10, ttl: 60 * 60_000 } })
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: 'Send in a name from the public form' })

@@ -198,6 +198,30 @@ export class PublicSiteService {
     };
   }
 
+  /**
+   * Name suggestions for the public form (PRD §7.1). Without them the same
+   * person arrives as "ຄຳຫຼ້າ", "คำหล้า" and "Khamla", and the screening queue
+   * shows three rows of one each instead of one row of three.
+   *
+   * Only creators who already appear on a year the public can see — so the
+   * box can never reveal that someone has been entered into a draft.
+   */
+  async creatorSuggestions(term: string) {
+    const query = term.trim();
+    if (query.length < 2) return [];
+
+    return this.prisma.creator.findMany({
+      where: {
+        deletedAt: null,
+        nominations: { some: { category: { edition: { phase: { in: VISIBLE } } } } },
+        OR: [{ nameLo: { contains: query } }, { nameEn: { contains: query } }],
+      },
+      select: { slug: true, nameLo: true, nameEn: true },
+      orderBy: { nameLo: 'asc' },
+      take: 8,
+    });
+  }
+
   // ── creator profile ─────────────────────────────────────────
 
   async creator(slug: string) {
@@ -301,6 +325,7 @@ export class PublicSiteService {
     phase: EditionPhase;
     eventDate: Date | null;
     venueLo: string | null;
+    activitiesLo: string | null;
     heroImageKey: string | null;
     galleryImageKeys: unknown;
     ticketUrl: string | null;
@@ -316,6 +341,7 @@ export class PublicSiteService {
       phase: edition.phase,
       eventDate: edition.eventDate,
       venueLo: edition.venueLo,
+      activitiesLo: edition.activitiesLo,
       heroImageKey: edition.heroImageKey,
       galleryImageKeys: edition.galleryImageKeys,
       ticketUrl: edition.ticketUrl,

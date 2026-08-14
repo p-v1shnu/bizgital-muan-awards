@@ -20,6 +20,8 @@ export interface Edition {
   eventDate: string | null;
   venueLo: string | null;
   venueEn: string | null;
+  /** Free text, one activity per line (PRD §6.1.2 §5). */
+  activitiesLo: string | null;
   heroImageKey: string | null;
   galleryImageKeys: string[] | null;
   ticketUrl: string | null;

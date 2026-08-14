@@ -14,6 +14,7 @@ import { Table, TableWrap, Td, Th, Tr } from '@/components/ui/table';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import { useAuth } from '@/lib/auth-context';
 import type { AdminRole, AdminUser } from '@/types/api';
+import { formatDateTime } from '@/lib/dates';
 
 const ROLE_LABEL: Record<AdminRole, string> = {
   SUPER_ADMIN: 'ຜູ້ດູແລສູງສຸດ',
@@ -86,9 +87,11 @@ export default function UsersPage() {
                         </Badge>
                       </Td>
                       <Td>
-                        {account.lastLoginAt
-                          ? new Date(account.lastLoginAt).toLocaleString('lo-LA')
-                          : <span className="text-ink-3">ຍັງບໍ່ເຄີຍເຂົ້າ</span>}
+                        {account.lastLoginAt ? (
+                          formatDateTime(account.lastLoginAt)
+                        ) : (
+                          <span className="text-ink-3">ຍັງບໍ່ເຄີຍເຂົ້າ</span>
+                        )}
                       </Td>
                       <Td className="text-right">
                         <Button

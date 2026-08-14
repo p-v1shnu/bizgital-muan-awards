@@ -89,6 +89,14 @@ export class PublicSiteController {
   }
 
   @Public()
+  @Get('creator-suggestions')
+  @ApiQuery({ name: 'q', required: true, description: 'At least two characters' })
+  @ApiOperation({ summary: 'Name suggestions for the public form, to curb spelling variants' })
+  creatorSuggestions(@Query('q') q = '') {
+    return this.site.creatorSuggestions(q);
+  }
+
+  @Public()
   @Get('stats')
   @ApiOperation({ summary: 'Running totals for the homepage: years, categories, creators' })
   stats() {
