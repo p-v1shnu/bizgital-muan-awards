@@ -89,6 +89,13 @@ export class PublicSiteController {
   }
 
   @Public()
+  @Get('stats')
+  @ApiOperation({ summary: 'Running totals for the homepage: years, categories, creators' })
+  stats() {
+    return this.site.stats();
+  }
+
+  @Public()
   @Get('creators/:slug')
   @ApiOperation({ summary: 'A creator profile and the years they appear in' })
   creator(@Param('slug') slug: string) {

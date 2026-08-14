@@ -231,6 +231,26 @@ export class PublicSiteService {
     };
   }
 
+  /**
+   * The running totals on the homepage. Counted from the data rather than
+   * typed in, so they stay true when a year is added and nobody remembers to
+   * update a number.
+   */
+  async stats() {
+    const [years, categories, creators] = await Promise.all([
+      this.prisma.edition.count({ where: { phase: { in: VISIBLE } } }),
+      this.prisma.category.count({ where: { edition: { phase: { in: VISIBLE } } } }),
+      // Distinct people who have appeared, not every row in the library.
+      this.prisma.creator.count({
+        where: {
+          deletedAt: null,
+          nominations: { some: { category: { edition: { phase: { in: VISIBLE } } } } },
+        },
+      }),
+    ]);
+    return { years, categories, creators };
+  }
+
   /** Every URL the sitemap should list. */
   async sitemapEntries() {
     const editions = await this.prisma.edition.findMany({

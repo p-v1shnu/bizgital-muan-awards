@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 
-import { apiFetch } from '@/lib/api/client';
+import { getPublic } from '@/lib/api/server';
 
 interface SitemapFeed {
   editions: { slug: string; updatedAt: string; categories: string[] }[];
@@ -13,19 +13,15 @@ const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://muanawards.com').repl
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: `${SITE}/`, changeFrequency: 'monthly', priority: 1 },
-    { url: `${SITE}/awards`, changeFrequency: 'monthly', priority: 0.8 },
+    { url: `${SITE}/submit`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${SITE}/winners`, changeFrequency: 'yearly', priority: 0.8 },
     { url: `${SITE}/about`, changeFrequency: 'yearly', priority: 0.5 },
   ];
 
-  let feed: SitemapFeed;
-  try {
-    feed = await apiFetch<SitemapFeed>('/sitemap-entries', { revalidate: 3600 });
-  } catch {
-    // A sitemap missing its dynamic half beats a build that fails because the
-    // API was briefly unreachable.
-    return staticPages;
-  }
+  // A sitemap missing its dynamic half beats a build that fails because the
+  // API was briefly unreachable.
+  const feed = await getPublic<SitemapFeed>('/sitemap-entries', { revalidate: 3600 });
+  if (!feed) return staticPages;
 
   const editionPages = feed.editions.flatMap((edition) => [
     {
