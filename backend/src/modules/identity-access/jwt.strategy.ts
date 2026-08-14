@@ -26,9 +26,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * disabled or deleted admin loses access immediately instead of at expiry.
    */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+    // `name` is included because the admin shell reads the session from
+    // /auth/me after a reload, and the sidebar shows who is signed in.
     const user = await this.prisma.adminUser.findFirst({
       where: { id: payload.sub, deletedAt: null },
-      select: { id: true, email: true, role: true },
+      select: { id: true, email: true, name: true, role: true },
     });
     if (!user) throw new UnauthorizedException('Account is no longer active');
     return user;

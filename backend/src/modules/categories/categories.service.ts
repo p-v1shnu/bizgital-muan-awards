@@ -20,7 +20,12 @@ export class CategoriesService {
     return this.prisma.category.findMany({
       where: { editionId },
       orderBy: { sortOrder: 'asc' },
-      include: { _count: { select: { nominations: true } } },
+      include: {
+        _count: { select: { nominations: true } },
+        // Only the winner is pulled in, so the admin can show progress and
+        // run the pre-publish checklist without a request per category.
+        nominations: { where: { isWinner: true }, include: { creator: true } },
+      },
     });
   }
 

@@ -22,10 +22,28 @@
   --color-brand-deep: #6f2c86; /*  7.49:1 on paper */
   --color-brand-soft: #f3ecf6;
 
+  /**
+   * Status colours. Admin-only: the public site never shows a state, so these
+   * appear on no visitor-facing page. Each is dark enough to clear AA on both
+   * the paper ground and its own soft tint.
+   */
+  --color-ok: #2f6b46;
+  --color-ok-soft: #e8f1ea;
+  --color-warn: #8a5a12;
+  --color-warn-soft: #f7efe0;
+  --color-stop: #93321f;
+  --color-stop-soft: #f8eae6;
+  --color-brand-edge: #d9bce4;
+  --color-hairline: #e4dbcb;
+
   /* Corners — "medium round", per the design review */
   --radius-btn: 14px;
   --radius-box: 14px;
   --radius-sm: 10px;
+
+  /* The admin is a working tool, so its corners are tighter than the site's. */
+  --radius-ui: 10px;
+  --radius-ui-sm: 8px;
 
   /**
    * Serif carries names and headings from 18px up; sans carries anything
