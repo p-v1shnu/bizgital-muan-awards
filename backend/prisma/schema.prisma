@@ -317,6 +317,12 @@ model AdminUser {
   name         String
   role         AdminRole @default(ADMIN)
 
+  /// Bumped on logout and on a password change. It rides inside both tokens,
+  /// so every session issued before the bump stops working at once — without
+  /// this, signing out only cleared the cookie in front of a refresh token
+  /// that stayed valid for a week.
+  tokenVersion Int @default(0)
+
   lastLoginAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

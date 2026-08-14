@@ -101,9 +101,14 @@ export class UsersService {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
+    // Bumping the version signs out every other browser holding a token for
+    // this account — which is the point of changing a password in a hurry.
     await this.prisma.adminUser.update({
       where: { id: userId },
-      data: { passwordHash: await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS) },
+      data: {
+        passwordHash: await bcrypt.hash(dto.newPassword, BCRYPT_ROUNDS),
+        tokenVersion: { increment: 1 },
+      },
     });
     await this.audit.log({
       userId,

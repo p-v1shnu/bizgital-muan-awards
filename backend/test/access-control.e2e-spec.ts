@@ -94,4 +94,87 @@ describe('access control', () => {
     // The refresh token must never be handed to JavaScript in the body.
     expect(JSON.stringify(login.body)).not.toContain('refreshToken');
   });
+
+  /**
+   * The password endpoint is the one place where guessing right gets
+   * everything, and the global limit of a hundred requests a minute left room
+   * for six thousand guesses an hour from a single address.
+   */
+  describe('a run of wrong passwords', () => {
+    const guess = (from: string) =>
+      api(h)
+        .post(path('/auth/login'))
+        .set('X-Forwarded-For', from)
+        .send({ email: 'editor@test.local', password: 'wrong-guess' });
+
+    it('locks the account out from that address, and answers 429', async () => {
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        await guess('198.51.100.20').expect(401);
+      }
+      await guess('198.51.100.20').expect(429);
+
+      // The right password is refused too while the lock-out holds.
+      await api(h)
+        .post(path('/auth/login'))
+        .set('X-Forwarded-For', '198.51.100.20')
+        .send({ email: 'editor@test.local', password: 'another-long-password' })
+        .expect(429);
+    });
+
+    it('leaves the same account reachable from another address', async () => {
+      await api(h)
+        .post(path('/auth/login'))
+        .set('X-Forwarded-For', '198.51.100.21')
+        .send({ email: 'editor@test.local', password: 'another-long-password' })
+        .expect(200);
+    });
+  });
+
+  /**
+   * Signing out used to clear the cookie and nothing else: the refresh token
+   * inside it stayed valid for a week, so a stolen one outlived the logout.
+   */
+  describe('signing out', () => {
+    it('kills the refresh token and the access token that were issued with it', async () => {
+      const login = await api(h)
+        .post(path('/auth/login'))
+        .set('X-Forwarded-For', '198.51.100.30')
+        .send({ email: 'editor@test.local', password: 'another-long-password' })
+        .expect(200);
+
+      const token = { Authorization: `Bearer ${login.body.data.accessToken}` };
+      const cookie = login.headers['set-cookie'];
+      await api(h).get(path('/auth/me')).set(token).expect(200);
+
+      await api(h).post(path('/auth/logout')).set(token).expect(204);
+
+      await api(h).get(path('/auth/me')).set(token).expect(401);
+      await api(h).post(path('/auth/refresh')).set('Cookie', cookie).expect(401);
+    });
+  });
+
+  it('ends other sessions when the password changes', async () => {
+    const login = await api(h)
+      .post(path('/auth/login'))
+      .set('X-Forwarded-For', '198.51.100.31')
+      .send({ email: 'editor@test.local', password: 'another-long-password' })
+      .expect(200);
+    const token = { Authorization: `Bearer ${login.body.data.accessToken}` };
+
+    await api(h)
+      .post(path('/admin/users/me/password'))
+      .set(token)
+      .send({ currentPassword: 'another-long-password', newPassword: 'a-third-long-password' })
+      .expect(204);
+
+    // The token that made the change is spent along with the rest.
+    await api(h).get(path('/auth/me')).set(token).expect(401);
+  });
+
+  it('answers an oversized body with 413 rather than 500', async () => {
+    await api(h)
+      .post(path('/submissions'))
+      .send({ categoryId: 'x', creatorNameRaw: 'A'.repeat(500_000) })
+      .expect(413);
+  });
 });

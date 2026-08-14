@@ -1,6 +1,8 @@
 import {
   ConflictException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -16,12 +18,26 @@ import { SetupDto } from './dto/setup.dto';
 
 const BCRYPT_ROUNDS = 12;
 
+/**
+ * Wrong passwords are counted per account and address. The global rate limit
+ * allows a hundred requests a minute, which is six thousand guesses an hour at
+ * the one endpoint where guessing right gets everything — this closes that.
+ *
+ * The counter lives in memory on purpose: the MVP runs one API container and
+ * carries no Redis (PRD §9). A restart forgets the count, which costs an
+ * attacker a restart they cannot cause.
+ */
+const MAX_FAILURES = 8;
+const FAILURE_WINDOW_MS = 15 * 60_000;
+
 /** Kept in one place so the cookie maxAge and the token expiry cannot drift apart. */
 export const ACCESS_TOKEN_TTL = '15m';
 export const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 @Injectable()
 export class AuthService {
+  private readonly failures = new Map<string, { count: number; firstAt: number }>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
@@ -64,7 +80,7 @@ export class AuthService {
         passwordHash: await bcrypt.hash(dto.password, BCRYPT_ROUNDS),
         role: AdminRole.SUPER_ADMIN,
       },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
     });
 
     await this.audit.log({
@@ -76,7 +92,8 @@ export class AuthService {
       ipAddress,
     });
 
-    return { user, tokens: await this.issueTokens(user) };
+    const { tokenVersion, ...profile } = user;
+    return { user: profile, tokens: await this.issueTokens(user) };
   }
 
   async login(dto: LoginDto, ipAddress?: string) {
@@ -84,11 +101,18 @@ export class AuthService {
       where: { email: dto.email, deletedAt: null },
     });
 
+    const attemptKey = `${dto.email.toLowerCase()}|${ipAddress ?? 'unknown'}`;
+    this.assertNotLockedOut(attemptKey);
+
     // Compare against a dummy hash when the account is missing so that a wrong
     // email and a wrong password take the same amount of time to answer.
     const hash = user?.passwordHash ?? (await bcrypt.hash('no-such-user', 1));
     const ok = await bcrypt.compare(dto.password, hash);
-    if (!user || !ok) throw new UnauthorizedException('Invalid email or password');
+    if (!user || !ok) {
+      this.recordFailure(attemptKey);
+      throw new UnauthorizedException('Invalid email or password');
+    }
+    this.failures.delete(attemptKey);
 
     await this.prisma.adminUser.update({
       where: { id: user.id },
@@ -109,9 +133,10 @@ export class AuthService {
   }
 
   /**
-   * Refresh tokens are stateless JWTs signed with a separate secret. The PRD
-   * (§8) keeps no session table, so logout clears the cookie rather than
-   * revoking server-side; the short access-token TTL bounds the exposure.
+   * Refresh tokens are stateless JWTs signed with a separate secret — the PRD
+   * (§8) keeps no session table. What makes them revocable anyway is the
+   * version stamped inside them: logging out or changing a password bumps the
+   * one on the account, and every token carrying an older number stops here.
    */
   async refresh(refreshToken: string | undefined) {
     if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
@@ -127,14 +152,24 @@ export class AuthService {
 
     const user = await this.prisma.adminUser.findFirst({
       where: { id: payload.sub, deletedAt: null },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
     });
     if (!user) throw new UnauthorizedException('Account is no longer active');
+    if ((payload.tv ?? 0) !== user.tokenVersion) {
+      throw new UnauthorizedException('This session has been signed out');
+    }
 
-    return { user, tokens: await this.issueTokens(user) };
+    const { tokenVersion, ...profile } = user;
+    return { user: profile, tokens: await this.issueTokens(user) };
   }
 
   async logout(userId: string, ipAddress?: string) {
+    // Ends the refresh token in the cookie the browser is throwing away, and
+    // any access token still in flight, rather than trusting the client.
+    await this.prisma.adminUser.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
     await this.audit.log({
       userId,
       action: 'admin.logout',
@@ -144,8 +179,18 @@ export class AuthService {
     });
   }
 
-  private async issueTokens(user: { id: string; email: string; role: AdminRole }) {
-    const payload: JwtPayload = { sub: user.id, email: user.email, role: user.role };
+  private async issueTokens(user: {
+    id: string;
+    email: string;
+    role: AdminRole;
+    tokenVersion: number;
+  }) {
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      tv: user.tokenVersion,
+    };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(payload, {
         secret: process.env.JWT_SECRET,
@@ -157,5 +202,30 @@ export class AuthService {
       }),
     ]);
     return { accessToken, refreshToken };
+  }
+
+  private assertNotLockedOut(key: string) {
+    const entry = this.failures.get(key);
+    if (!entry) return;
+    if (Date.now() - entry.firstAt > FAILURE_WINDOW_MS) {
+      this.failures.delete(key);
+      return;
+    }
+    if (entry.count >= MAX_FAILURES) {
+      throw new HttpException(
+        'Too many failed sign-in attempts. Try again in a few minutes.',
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+  }
+
+  private recordFailure(key: string) {
+    const now = Date.now();
+    const entry = this.failures.get(key);
+    if (!entry || now - entry.firstAt > FAILURE_WINDOW_MS) {
+      this.failures.set(key, { count: 1, firstAt: now });
+      return;
+    }
+    entry.count += 1;
   }
 }

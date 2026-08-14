@@ -9,6 +9,8 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: AuthenticatedUser['role'];
+  /** Session generation — see AuthService. Absent on tokens issued before it existed. */
+  tv?: number;
 }
 
 @Injectable()
@@ -30,9 +32,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     // /auth/me after a reload, and the sidebar shows who is signed in.
     const user = await this.prisma.adminUser.findFirst({
       where: { id: payload.sub, deletedAt: null },
-      select: { id: true, email: true, name: true, role: true },
+      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
     });
     if (!user) throw new UnauthorizedException('Account is no longer active');
-    return user;
+    // Signing out elsewhere, or changing the password, ends this token too.
+    if ((payload.tv ?? 0) !== user.tokenVersion) {
+      throw new UnauthorizedException('This session has been signed out');
+    }
+
+    const { tokenVersion, ...profile } = user;
+    return profile;
   }
 }

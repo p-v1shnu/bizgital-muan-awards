@@ -18,10 +18,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    // Express middleware throws plain errors carrying a status — an oversized
+    // body is the one that reaches here in practice. Answering 500 to it told
+    // the sender to retry a request that will never fit, and logged a stack
+    // trace for something that is not a fault in the server.
+    const middlewareStatus =
+      typeof (exception as { status?: unknown })?.status === 'number'
+        ? ((exception as { status: number }).status)
+        : undefined;
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+        : (middlewareStatus ?? HttpStatus.INTERNAL_SERVER_ERROR);
 
     let message = 'Internal server error';
     let error = 'InternalServerError';
@@ -43,6 +52,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
         error = String(asRecord.error ?? exception.name);
       }
+    } else if (middlewareStatus !== undefined) {
+      message =
+        middlewareStatus === HttpStatus.PAYLOAD_TOO_LARGE
+          ? 'That request body is too large.'
+          : String((exception as { message?: unknown }).message ?? message);
+      error = HttpStatus[middlewareStatus] ?? 'Error';
     } else {
       this.logger.error(
         `Unhandled ${request.method} ${request.url}`,
