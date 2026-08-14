@@ -8,9 +8,18 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { CreatorsModule } from './modules/creators/creators.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { EditionsModule } from './modules/editions/editions.module';
 import { HealthModule } from './modules/health/health.module';
 import { IdentityAccessModule } from './modules/identity-access/identity-access.module';
+import { JudgesModule } from './modules/judges/judges.module';
+import { NominationsModule } from './modules/nominations/nominations.module';
+import { SiteSettingsModule } from './modules/site-settings/site-settings.module';
+import { SponsorsModule } from './modules/sponsors/sponsors.module';
+import { StorageModule } from './modules/storage/storage.module';
+import { SubmissionsModule } from './modules/submissions/submissions.module';
 
 @Module({
   imports: [
@@ -21,8 +30,17 @@ import { IdentityAccessModule } from './modules/identity-access/identity-access.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     PrismaModule,
     AuditModule,
+    StorageModule,
     IdentityAccessModule,
     EditionsModule,
+    CategoriesModule,
+    CreatorsModule,
+    JudgesModule,
+    NominationsModule,
+    SponsorsModule,
+    SubmissionsModule,
+    SiteSettingsModule,
+    DashboardModule,
     HealthModule,
   ],
   providers: [

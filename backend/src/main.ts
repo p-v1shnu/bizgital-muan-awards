@@ -1,6 +1,7 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
@@ -9,7 +10,14 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Caddy terminates TLS and proxies to this container, so without this every
+  // request would read as coming from the proxy: one shared rate-limit bucket
+  // for the whole country, and one identical ipHash on every submission.
+  // Only private-range hops are trusted, so a public client cannot forge
+  // X-Forwarded-For to escape either.
+  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
   app.setGlobalPrefix('api/v1');
   app.use(helmet());
