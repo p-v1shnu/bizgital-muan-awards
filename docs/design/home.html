@@ -100,14 +100,14 @@ img{display:block;max-width:100%}
 @keyframes kb{from{transform:scale(1.04)}to{transform:scale(1.15)}}
 .hero .scrim{position:absolute;inset:0;background:
   linear-gradient(180deg,rgba(20,12,16,.55) 0%,rgba(20,12,16,.12) 32%,rgba(20,12,16,.82) 78%,rgba(20,12,16,.95) 100%)}
-.hero .in{position:relative;padding:56px 34px 40px;width:100%;color:#fff}
+.hero .in{position:relative;padding:56px 34px 92px;width:100%;color:#fff}
 .hero .kick{display:inline-flex;align-items:center;gap:9px;font-size:11px;font-weight:700;letter-spacing:.2em;
   text-transform:uppercase;color:#f4d9ea;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:6px 14px}
 .hero h1{font-family:var(--font-display);font-size:clamp(36px,5.6vw,66px);font-weight:400;line-height:1.02;margin-top:20px;max-width:16ch;color:#fff}
 .hero h1 em{font-style:italic}
 .hero .sub{font-family:var(--font-display);font-size:18px;line-height:1.55;max-width:44ch;margin-top:16px;color:rgba(255,255,255,.86)}
 .hero .cta{display:flex;gap:11px;flex-wrap:wrap;margin-top:26px;align-items:center}
-.hero .cap{position:absolute;right:16px;bottom:12px;font-size:10.5px;color:rgba(255,255,255,.6)}
+.hero .cap{position:absolute;right:20px;bottom:70px;font-size:10.5px;color:rgba(255,255,255,.6)}
 
 /* entry cards overlapping the hero */
 .entry{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin:-58px 30px 0;position:relative;z-index:5}
@@ -300,7 +300,8 @@ img{display:block;max-width:100%}
 @media (max-width:720px){
   .blk{padding:38px 18px}
   .hero{min-height:460px}
-  .hero .in{padding:40px 18px 34px}
+  .hero .in{padding:40px 18px 74px}
+  .hero .cap{right:16px;bottom:58px}
   .entry{margin:-46px 18px 0}
   .statband,.ctaband,.mu-foot{padding-left:18px;padding-right:18px}
   .jband .in{padding:32px 18px}
