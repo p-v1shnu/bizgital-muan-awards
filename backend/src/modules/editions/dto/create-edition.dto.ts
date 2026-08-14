@@ -1,6 +1,8 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EditionPhase } from '@prisma/client';
 import {
+  ArrayMaxSize,
+  IsArray,
   IsDateString,
   IsEnum,
   IsInt,
@@ -83,10 +85,26 @@ export class CreateEditionDto {
   @MaxLength(4000)
   activitiesLo?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  activitiesEn?: string;
+
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
   @IsOptional()
   @IsString()
   heroImageKey?: string;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Gallery for after the night, in display order (PRD §6.1.2 §8)',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(60)
+  @IsString({ each: true })
+  galleryImageKeys?: string[];
 
   @ApiPropertyOptional({ description: 'External ticketing site; the button hides when unset' })
   @IsOptional()

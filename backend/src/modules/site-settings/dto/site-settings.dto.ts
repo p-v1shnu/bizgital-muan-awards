@@ -15,17 +15,35 @@ export class UpdateSiteSettingsDto {
   @MaxLength(200)
   heroCaptionLo?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  heroCaptionEn?: string;
+
   @ApiPropertyOptional({ description: 'The one-line statement under the homepage title' })
   @IsOptional()
   @IsString()
   @MaxLength(400)
   brandStatementLo?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(400)
+  brandStatementEn?: string;
+
   @ApiPropertyOptional({ description: 'Short about paragraph shown on the homepage' })
   @IsOptional()
   @IsString()
   @MaxLength(2000)
   aboutSummaryLo?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  aboutSummaryEn?: string;
 
   @ApiPropertyOptional({ type: [String], description: 'Homepage gallery, in display order' })
   @IsOptional()

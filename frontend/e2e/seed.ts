@@ -94,14 +94,20 @@ export default async function seed() {
     });
     const editionId = (await edition.json()).data.id;
 
-    for (const [slug, nameLo, isFeatured] of [
-      ['creator-of-the-year', 'ຜູ້ສ້າງສັນແຫ່ງປີ', true],
-      ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true],
-      ['food', 'ຄອນເທັນອາຫານ', false],
+    for (const [slug, nameLo, isFeatured, groupLo] of [
+      ['creator-of-the-year', 'ຜູ້ສ້າງສັນແຫ່ງປີ', true, 'ສາຍຄອນເທັນ'],
+      ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍຄອນເທັນ'],
+      ['food', 'ຄອນເທັນອາຫານ', false, 'ສາຍໄລຟ໌ສະໄຕລ໌'],
     ] as const) {
       const category = await api.post(`admin/editions/${editionId}/categories`, {
         headers: auth,
-        data: { slug, nameLo, isFeatured, descriptionLo: 'ມອບໃຫ້ຜົນງານທີ່ໂດດເດັ່ນທີ່ສຸດຂອງປີ' },
+        data: {
+          slug,
+          nameLo,
+          isFeatured,
+          groupLo,
+          descriptionLo: 'ມອບໃຫ້ຜົນງານທີ່ໂດດເດັ່ນທີ່ສຸດຂອງປີ',
+        },
       });
       const categoryId = (await category.json()).data.id;
 
@@ -118,6 +124,36 @@ export default async function seed() {
       // exactly what the phase-gating specs need to catch.
       if (finalPhase === 'WINNERS_ANNOUNCED') {
         await api.patch(`admin/nominations/${nominationIds[0]}/winner`, {
+          headers: auth,
+          data: { isWinner: true },
+        });
+      }
+    }
+
+    /**
+     * A long year, because the rules that only bite at scale (PRD §7.6) cannot
+     * be seen with three categories: the winners table folds past twelve rows,
+     * and the form grows a filter box past fifteen options. These carry one
+     * nominee each so the seed stays quick.
+     */
+    const extras = year === 2025 ? 10 : 13;
+    for (let index = 0; index < extras; index += 1) {
+      const category = await api.post(`admin/editions/${editionId}/categories`, {
+        headers: auth,
+        data: {
+          slug: `award-${index + 1}`,
+          nameLo: `ສາຂາເພີ່ມເຕີມ ${index + 1}`,
+          groupLo: 'ສາຂາອື່ນໆ',
+        },
+      });
+      const categoryId = (await category.json()).data.id;
+
+      const nomination = await api.post(`admin/categories/${categoryId}/nominations`, {
+        headers: auth,
+        data: { creatorId: Object.values(creators)[index % 4] },
+      });
+      if (finalPhase === 'WINNERS_ANNOUNCED') {
+        await api.patch(`admin/nominations/${(await nomination.json()).data.id}/winner`, {
           headers: auth,
           data: { isWinner: true },
         });

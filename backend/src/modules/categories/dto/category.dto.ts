@@ -37,6 +37,11 @@ export class CreateCategoryDto {
   @IsString()
   descriptionLo?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  descriptionEn?: string;
+
   @ApiPropertyOptional({ description: 'Grouping heading, used when a year runs long (PRD §7.6)' })
   @IsOptional()
   @IsString()

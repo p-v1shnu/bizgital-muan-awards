@@ -246,6 +246,17 @@ export default async function HomePage() {
               </div>
             ))}
           </div>
+
+          {/* Photos of a night belong to the year they were taken in, so the
+              way through to the rest is that year's page, not a page here. */}
+          {latestWinners && (
+            <Link
+              href={`/awards/${latestWinners.slug}`}
+              className="mt-4 inline-block text-[13.5px] font-semibold text-brand-deep hover:underline"
+            >
+              ເບິ່ງພາບບັນຍາກາດງານ {latestWinners.year} ທັງໝົດ →
+            </Link>
+          )}
         </Section>
       )}
 

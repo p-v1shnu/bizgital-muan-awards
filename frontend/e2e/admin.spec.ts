@@ -61,6 +61,13 @@ test.describe('the edition page', () => {
     await expect(page.locator('textarea').nth(1)).toHaveValue('ຍ່າງພົມແດງ\nປະກາດຜົນລາງວັນ');
   });
 
+  test('photos of the night can be managed on the year itself', async ({ page }) => {
+    // Without this card the gallery on the year page could never be filled —
+    // the column existed and the public page rendered it, but nothing wrote it.
+    await expect(page.getByText('ພາບບັນຍາກາດຫຼັງຈົບງານ')).toBeVisible();
+    await expect(page.getByText('ເພີ່ມຮູບ')).toBeVisible();
+  });
+
   test('the publish checklist names what it blocks', async ({ page }) => {
     await expect(page.getByText('ບລັອກຂັ້ນ').first()).toBeVisible();
   });

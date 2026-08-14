@@ -8,7 +8,7 @@ import { ErrorNote, Spinner } from '@/components/ui/feedback';
 import { apiFetch } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 
-type Folder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site';
+export type Folder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site';
 
 interface UploadTicket {
   key: string;

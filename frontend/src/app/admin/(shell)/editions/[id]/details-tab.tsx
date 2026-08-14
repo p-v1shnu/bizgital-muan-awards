@@ -4,9 +4,11 @@ import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
-import { ErrorNote } from '@/components/ui/feedback';
+import { ErrorNote, Note } from '@/components/ui/feedback';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
+import { imageKeyList } from '@/lib/images';
 import { useApiMutation } from '@/lib/api/hooks';
 import type { Edition } from '@/types/api';
 
@@ -24,6 +26,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
     voteUrl: edition.voteUrl ?? '',
   });
   const [heroImageKey, setHeroImageKey] = useState(edition.heroImageKey);
+  const [gallery, setGallery] = useState<string[]>(imageKeyList(edition.galleryImageKeys));
   const [saved, setSaved] = useState(false);
 
   const save = useApiMutation<Record<string, unknown>>(`/admin/editions/${edition.id}`, 'PATCH', [
@@ -47,6 +50,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
         ticketUrl: form.ticketUrl || undefined,
         voteUrl: form.voteUrl || undefined,
         heroImageKey: heroImageKey ?? undefined,
+        galleryImageKeys: gallery,
       },
       { onSuccess: () => setSaved(true) },
     );
@@ -159,6 +163,19 @@ export function DetailsTab({ edition }: { edition: Edition }) {
             value={heroImageKey}
             onChange={setHeroImageKey}
           />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title="ພາບບັນຍາກາດຫຼັງຈົບງານ"
+          aside={gallery.length ? `${gallery.length} ຮູບ` : 'ຍັງບໍ່ມີຮູບ'}
+        />
+        <CardBody>
+          <GalleryEditor keys={gallery} onChange={setGallery} folder="editions" />
+          <Note>
+            ຮູບພວກນີ້ຂຶ້ນທ້າຍໜ້າປີ — ໃສ່ຫຼັງງານຈົບ · ຮູບຂອງໜ້າແຮກແຍກຕ່າງຫາກຢູ່ “ເນື້ອຫາເວັບສ່ວນກາງ”
+          </Note>
         </CardBody>
       </Card>
 

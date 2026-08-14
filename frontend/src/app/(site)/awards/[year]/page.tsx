@@ -32,6 +32,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+/** How many winner rows show before the rest fold away (PRD §7.6). */
+const WINNER_ROWS = 12;
+
 const TIER_LABEL: Record<SponsorTier, string> = {
   TITLE: 'ຜູ້ສະໜັບສະໜູນຫຼັກ',
   GOLD: 'ລະດັບຄຳ',
@@ -40,6 +43,35 @@ const TIER_LABEL: Record<SponsorTier, string> = {
   PARTNER: 'ພາດເນີ',
   MEDIA: 'ສື່ມວນຊົນ',
 };
+
+interface WinnerRowData {
+  category: { id: string; slug: string; nameLo: string };
+  winner: { creator: { slug: string; nameLo: string; avatarKey: string | null } };
+}
+
+function WinnerRow({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
+  const { category, winner } = row;
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-5 py-4 last:border-b-0">
+      <span className="w-full text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3 sm:w-56">
+        {category.nameLo}
+      </span>
+      <Link
+        href={`/creators/${winner.creator.slug}`}
+        className="flex items-center gap-3 font-serif text-xl text-ink hover:underline"
+      >
+        <Avatar creator={winner.creator} size="md" />
+        {winner.creator.nameLo}
+      </Link>
+      <Link
+        href={`/awards/${editionSlug}/${category.slug}`}
+        className="ml-auto text-[13px] text-brand-deep hover:underline"
+      >
+        ເບິ່ງນອມິນີ →
+      </Link>
+    </div>
+  );
+}
 
 /**
  * Everything about one year. What appears here follows the phase, and that
@@ -62,6 +94,19 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
+
+  // A year that fills in groupLo gets its categories under headings; a year
+  // that leaves it blank gets one unnamed group, which renders as a flat list
+  // (PRD §7.6). Insertion order is the API's sortOrder, so it is kept.
+  const groupedCategories = [
+    ...edition.categories
+      .reduce((groups, category) => {
+        const key = category.groupLo ?? '';
+        groups.set(key, [...(groups.get(key) ?? []), category]);
+        return groups;
+      }, new Map<string, typeof edition.categories>())
+      .entries(),
+  ];
   const showNominees = edition.categories.some((category) => category.nominees.length > 0);
   const winners = edition.categories
     .map((category) => ({ category, winner: category.nominees.find((n) => n.isWinner) }))
@@ -159,29 +204,26 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {winners.length > 0 && (
         <Section eyebrow="ຜົນລາງວັນ" title="ຜູ້ຊະນະທຸກສາຂາ">
           <div className="overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
-            {winners.map(({ category, winner }) => (
-              <div
-                key={category.id}
-                className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-5 py-4 last:border-b-0"
-              >
-                <span className="w-full text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3 sm:w-56">
-                  {category.nameLo}
-                </span>
-                <Link
-                  href={`/creators/${winner.creator.slug}`}
-                  className="flex items-center gap-3 font-serif text-xl text-ink hover:underline"
-                >
-                  <Avatar creator={winner.creator} size="md" />
-                  {winner.creator.nameLo}
-                </Link>
-                <Link
-                  href={`/awards/${edition.slug}/${category.slug}`}
-                  className="ml-auto text-[13px] text-brand-deep hover:underline"
-                >
-                  ເບິ່ງນອມິນີ →
-                </Link>
-              </div>
+            {winners.slice(0, WINNER_ROWS).map((row) => (
+              <WinnerRow key={row.category.id} row={row} editionSlug={edition.slug} />
             ))}
+
+            {/* A year with 40 categories would otherwise be one endless page
+                (PRD §7.6). <details> does this with no client JavaScript, so
+                the rows below the fold are still in the HTML for search. */}
+            {winners.length > WINNER_ROWS && (
+              <details className="group">
+                <summary className="cursor-pointer list-none border-t border-hairline px-5 py-3.5 text-center text-[13px] font-semibold text-brand-deep hover:bg-brand-soft/50">
+                  <span className="group-open:hidden">
+                    ເບິ່ງເພີ່ມອີກ {winners.length - WINNER_ROWS} ສາຂາ ↓
+                  </span>
+                  <span className="hidden group-open:inline">ຫຍໍ້ກັບ ↑</span>
+                </summary>
+                {winners.slice(WINNER_ROWS).map((row) => (
+                  <WinnerRow key={row.category.id} row={row} editionSlug={edition.slug} />
+                ))}
+              </details>
+            )}
           </div>
         </Section>
       )}
@@ -202,8 +244,16 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             <Placeholder>ຍັງບໍ່ໄດ້ໃສ່ສາຂາ — ເພີ່ມໄດ້ໃນຫຼັງບ້ານ</Placeholder>
           </p>
         ) : (
-          <div className="space-y-4">
-            {edition.categories.map((category) => (
+          groupedCategories.map(([group, categories]) => (
+            <div key={group} className="mb-8 last:mb-0">
+              {/* Only a year that fills groupLo in gets headings (PRD §7.6). */}
+              {group && (
+                <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-3">
+                  {group}
+                </h3>
+              )}
+              <div className="space-y-4">
+            {categories.map((category) => (
               <details
                 key={category.id}
                 open={category.isFeatured}
@@ -253,7 +303,9 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 )}
               </details>
             ))}
-          </div>
+              </div>
+            </div>
+          ))
         )}
       </Section>
 

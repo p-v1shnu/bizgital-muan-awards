@@ -86,6 +86,7 @@ model Edition {
   /// Free text, one item per line: the programme changes shape every year, so
   /// a fixed structure would be wrong more often than it was right.
   activitiesLo String? @db.Text
+  activitiesEn String? @db.Text
 
   /// Object storage keys — never full URLs (PRD §8 storage rules).
   heroImageKey     String?
@@ -118,6 +119,7 @@ model Category {
   nameLo        String
   nameEn        String?
   descriptionLo String? @db.Text
+  descriptionEn String? @db.Text
 
   /// Optional grouping heading, used when a year runs long (PRD §7.6).
   /// Blank on every category means a flat list.
@@ -152,6 +154,7 @@ model Creator {
   nameEn String?
 
   bioLo     String? @db.Text
+  bioEn     String? @db.Text
   avatarKey String?
 
   /// { "facebook": "...", "tiktok": "...", "youtube": "...", "instagram": "..." }
@@ -176,6 +179,7 @@ model Judge {
   positionLo String
   positionEn String?
   bioLo      String? @db.Text
+  bioEn      String? @db.Text
   avatarKey  String?
 
   createdAt DateTime  @default(now())
@@ -290,8 +294,11 @@ model SiteSetting {
 
   heroImageKey     String?
   heroCaptionLo    String?
+  heroCaptionEn    String?
   brandStatementLo String  @db.Text
+  brandStatementEn String? @db.Text
   aboutSummaryLo   String  @db.Text
+  aboutSummaryEn   String? @db.Text
   galleryImageKeys Json?
 
   updatedAt DateTime @updatedAt

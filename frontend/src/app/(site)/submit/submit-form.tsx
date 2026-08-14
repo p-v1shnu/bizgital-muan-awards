@@ -23,6 +23,7 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
     submitterEmail: '',
     website: '', // honeypot
   });
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState<string | null>(null);
 
@@ -87,10 +88,22 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
     );
   }
 
-  const grouped = form.categories.reduce<Record<string, typeof form.categories>>((groups, category) => {
-    (groups[category.groupLo ?? ''] ??= []).push(category);
-    return groups;
-  }, {});
+  // A year may run to forty categories (PRD §7.6), and scrolling a list that
+  // long on a phone is miserable — past fifteen a filter box appears above it.
+  const needle = categoryFilter.trim().toLowerCase();
+  const visibleCategories = needle
+    ? form.categories.filter((category) =>
+        `${category.nameLo} ${category.groupLo ?? ''}`.toLowerCase().includes(needle),
+      )
+    : form.categories;
+
+  const grouped = visibleCategories.reduce<Record<string, typeof form.categories>>(
+    (groups, category) => {
+      (groups[category.groupLo ?? ''] ??= []).push(category);
+      return groups;
+    },
+    {},
+  );
   const hasGroups = Object.keys(grouped).some((key) => key !== '');
 
   return (
@@ -100,6 +113,27 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
       className="rounded-[var(--radius-box)] border border-rule bg-panel p-6 md:p-8"
     >
       <Field label="ສາຂາທີ່ຢາກເສີນ" required>
+        {form.categories.length > 15 && (
+          <Input
+            type="search"
+            placeholder="ກັ່ນຕອງສາຂາ…"
+            aria-label="ກັ່ນຕອງສາຂາ"
+            className="mb-2"
+            value={categoryFilter}
+            onChange={(event) => {
+              setCategoryFilter(event.target.value);
+              // Filtering can hide what was chosen; move to the first match
+              // rather than leaving the form pointing at something invisible.
+              const term = event.target.value.trim().toLowerCase();
+              const stillVisible = form.categories.filter((category) =>
+                `${category.nameLo} ${category.groupLo ?? ''}`.toLowerCase().includes(term),
+              );
+              if (!stillVisible.some((category) => category.id === values.categoryId)) {
+                setValues((current) => ({ ...current, categoryId: stillVisible[0]?.id ?? '' }));
+              }
+            }}
+          />
+        )}
         <select
           required
           value={values.categoryId}

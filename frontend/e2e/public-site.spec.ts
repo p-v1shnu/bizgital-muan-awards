@@ -92,6 +92,27 @@ test.describe('a year page follows its phase', () => {
     await expect(programme.getByText('ຍ່າງພົມແດງ')).toBeVisible();
   });
 
+  test('a long year groups its categories and folds the winners table', async ({ page }) => {
+    await page.goto('/awards/2025');
+    const main = page.getByRole('main');
+
+    // Headings appear only because the seed fills groupLo in (PRD §7.6).
+    await expect(main.getByRole('heading', { name: 'ສາຍຄອນເທັນ' })).toBeVisible();
+    await expect(main.getByRole('heading', { name: 'ສາຍໄລຟ໌ສະໄຕລ໌' })).toBeVisible();
+
+    // 13 winners, so the rows past twelve stay folded until asked for. Scoped
+    // to the results table: every category name also appears in the accordion.
+    const results = main
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'ຜູ້ຊະນະທຸກສາຂາ' }) });
+    const fold = results.getByText(/ເບິ່ງເພີ່ມອີກ \d+ ສາຂາ/);
+
+    await expect(fold).toBeVisible();
+    await expect(results.getByText('ສາຂາເພີ່ມເຕີມ 10')).toBeHidden();
+    await fold.click();
+    await expect(results.getByText('ສາຂາເພີ່ມເຕີມ 10')).toBeVisible();
+  });
+
   test('an unknown year is a 404, not an error', async ({ page }) => {
     const response = await page.goto('/awards/2099');
     expect(response?.status()).toBe(404);
@@ -134,7 +155,9 @@ test('the submission form accepts an entry', async ({ page }) => {
   await expect(page.getByText('ບໍ່ບັງຄັບ')).toBeVisible();
 
   await page.selectOption('form select', { index: 1 });
-  await page.locator('form input').first().fill('ນັກສ້າງສັນ ທົດສອບ');
+  // By name, not by position: with sixteen categories the form also carries a
+  // filter box above the picker, which would otherwise be the first input.
+  await page.getByRole('combobox', { name: /ຊື່ຜູ້ສ້າງສັນ/ }).fill('ນັກສ້າງສັນ ທົດສອບ');
   await page.locator('form textarea').fill('ຜົນງານດີຕະຫຼອດປີ');
   await page.locator('form button[type=submit]').click();
 
@@ -144,7 +167,7 @@ test('the submission form accepts an entry', async ({ page }) => {
 test('the form suggests names already in the library', async ({ page }) => {
   await page.goto('/submit');
 
-  const name = page.locator('form input').first();
+  const name = page.getByRole('combobox', { name: /ຊື່ຜູ້ສ້າງສັນ/ });
   await name.fill('ຄຳ');
 
   // Scoped to the suggestion list: the category picker is a <select>, whose
@@ -158,6 +181,21 @@ test('the form suggests names already in the library', async ({ page }) => {
   // whole point: fewer variants of one person for the team to merge.
   await expect(name).toHaveValue('ຄຳຫຼ້າ ສີສຸວັນ');
   await expect(list).toBeHidden();
+});
+
+test('a year with many categories gets a filter above the picker', async ({ page }) => {
+  await page.goto('/submit');
+
+  const filter = page.getByRole('searchbox', { name: 'ກັ່ນຕອງສາຂາ' });
+  await expect(filter, '2026 is seeded with 16 categories (PRD §7.6)').toBeVisible();
+
+  const picker = page.locator('form select');
+  const before = await picker.locator('option').count();
+  await filter.fill('ອາຫານ');
+
+  await expect(picker.locator('option')).toHaveCount(1);
+  expect(before).toBeGreaterThan(15);
+  await expect(picker.locator('option')).toHaveText([/ອາຫານ/]);
 });
 
 test('every page has exactly one h1', async ({ page }) => {

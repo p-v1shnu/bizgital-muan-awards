@@ -132,6 +132,17 @@ describe('public site', () => {
       const response = await api(h).get(path('/editions/2027')).expect(200);
       expect(response.body.data.activitiesLo).toBe('ຍ່າງພົມແດງ\nການສະແດງເປີດງານ');
     });
+
+    it('keeps the photos of the night, in the order they were arranged', async () => {
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}`))
+        .set(h.auth)
+        .send({ galleryImageKeys: ['editions/b.jpg', 'editions/a.jpg'] })
+        .expect(200);
+
+      const response = await api(h).get(path('/editions/2027')).expect(200);
+      expect(response.body.data.galleryImageKeys).toEqual(['editions/b.jpg', 'editions/a.jpg']);
+    });
   });
 
   describe('once nominees are announced', () => {

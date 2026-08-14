@@ -32,6 +32,11 @@ export class CreateJudgeDto {
   @IsString()
   bioLo?: string;
 
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  bioEn?: string;
+
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
   @IsOptional()
   @IsString()
