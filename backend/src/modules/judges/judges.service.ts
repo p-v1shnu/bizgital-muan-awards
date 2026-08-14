@@ -4,7 +4,13 @@ import { JudgeRole, Prisma } from '@prisma/client';
 import { AuditService } from '../audit/audit.service';
 import { PaginationDto, paginate } from '../../common/dto/pagination.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { AssignJudgeDto, CreateJudgeDto, UpdateAssignmentDto, UpdateJudgeDto } from './dto/judge.dto';
+import {
+  AssignJudgeDto,
+  CreateJudgeDto,
+  ReorderPanelDto,
+  UpdateAssignmentDto,
+  UpdateJudgeDto,
+} from './dto/judge.dto';
 
 @Injectable()
 export class JudgesService {
@@ -137,6 +143,36 @@ export class JudgesService {
       ipAddress,
     });
     return assignment;
+  }
+
+  async reorderPanel(editionId: string, dto: ReorderPanelDto, actorId: string, ipAddress?: string) {
+    const owned = await this.prisma.editionJudge.findMany({
+      where: { editionId },
+      select: { id: true },
+    });
+    const ownedIds = new Set(owned.map((assignment) => assignment.id));
+    if (dto.items.some((item) => !ownedIds.has(item.id))) {
+      throw new BadRequestException('Every assignment must belong to this edition');
+    }
+
+    await this.prisma.$transaction(
+      dto.items.map((item) =>
+        this.prisma.editionJudge.update({
+          where: { id: item.id },
+          data: { sortOrder: item.sortOrder },
+        }),
+      ),
+    );
+
+    await this.audit.log({
+      userId: actorId,
+      action: 'judge.reordered',
+      targetType: 'Edition',
+      targetId: editionId,
+      after: { order: dto.items.map((item) => item.id) },
+      ipAddress,
+    });
+    return this.listForEdition(editionId);
   }
 
   async updateAssignment(id: string, dto: UpdateAssignmentDto, actorId: string, ipAddress?: string) {

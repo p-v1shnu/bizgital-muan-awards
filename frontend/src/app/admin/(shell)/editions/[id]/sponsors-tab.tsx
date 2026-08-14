@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, Plus, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,26 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
     'DELETE',
     [path, '/admin/dashboard'],
   );
+  const reorder = useApiMutation<{ items: { id: string; sortOrder: number }[] }>(
+    `${path}/reorder`,
+    'POST',
+    [path],
+  );
+
+  /**
+   * The list is grouped by tier, so a sponsor moves within its own tier only —
+   * dragging a gold logo above a title one would say something the tier does
+   * not, and the year page groups by tier anyway.
+   */
+  function move(index: number, direction: -1 | 1) {
+    if (!data) return;
+    const target = index + direction;
+    if (target < 0 || target >= data.length) return;
+    if (data[target].tier !== data[index].tier) return;
+    const next = [...data];
+    [next[index], next[target]] = [next[target], next[index]];
+    reorder.mutate({ items: next.map((row, position) => ({ id: row.id, sortOrder: position })) });
+  }
 
   return (
     <>
@@ -53,9 +73,9 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
           }
         />
 
-        {error != null && (
+        {(error != null || reorder.error != null) && (
           <div className="p-4">
-            <ErrorNote error={error} />
+            <ErrorNote error={error ?? reorder.error} />
           </div>
         )}
 
@@ -72,13 +92,35 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
             }
           />
         ) : (
-          data.map((sponsor) => {
+          data.map((sponsor, index) => {
             const logo = imagePublicUrl(sponsor.logoKey);
+            const canMoveUp = index > 0 && data[index - 1].tier === sponsor.tier;
+            const canMoveDown = index < data.length - 1 && data[index + 1].tier === sponsor.tier;
             return (
               <div
                 key={sponsor.id}
                 className="flex items-center gap-3 border-b border-hairline px-4 py-2.5 last:border-b-0"
               >
+                <div className="flex flex-col">
+                  <button
+                    type="button"
+                    aria-label={`ຍ້າຍ ${sponsor.name} ຂຶ້ນ`}
+                    disabled={!canMoveUp || reorder.isPending}
+                    onClick={() => move(index, -1)}
+                    className="text-ink-3 hover:text-ink disabled:opacity-25"
+                  >
+                    <ChevronUp className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`ຍ້າຍ ${sponsor.name} ລົງ`}
+                    disabled={!canMoveDown || reorder.isPending}
+                    onClick={() => move(index, 1)}
+                    className="text-ink-3 hover:text-ink disabled:opacity-25"
+                  >
+                    <ChevronDown className="size-4" />
+                  </button>
+                </div>
                 {logo ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img

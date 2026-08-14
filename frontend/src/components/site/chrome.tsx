@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
@@ -19,9 +20,27 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-rule/70 bg-paper/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="foil size-7 rounded-lg" aria-hidden />
-          <span className="font-serif text-lg leading-none text-ink">ມ່ວນ ອະວອດ</span>
+        {/* The lockups are chosen per background, never recoloured with a CSS
+            filter (PRD §6.0.2) — the horizontal one already carries the name,
+            so the wordmark is not repeated in text beside it. */}
+        <Link href="/" className="flex items-center" aria-label="ມ່ວນ ອະວອດ · Muan Awards">
+          <Image
+            src="/brand/horizontal-black.png"
+            alt="ມ່ວນ ອະວອດ"
+            width={1100}
+            height={340}
+            priority
+            className="hidden h-8 w-auto sm:block"
+          />
+          <Image
+            src="/brand/brandmark-black.png"
+            alt=""
+            width={512}
+            height={399}
+            priority
+            className="h-8 w-auto sm:hidden"
+          />
+          <span className="ml-2 font-serif text-lg leading-none text-ink sm:hidden">ມ່ວນ ອະວອດ</span>
         </Link>
 
         <nav className="ml-auto flex items-center gap-1 text-[13px]">
@@ -79,10 +98,15 @@ export async function SiteFooter() {
       <div className="mx-auto max-w-6xl px-5 py-12">
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="foil size-7 rounded-lg" aria-hidden />
-              <span className="font-serif text-xl">ມ່ວນ ອະວອດ</span>
-            </div>
+            {/* The footer is the one dark ground on the site, which is where
+                the full-colour lockup is meant to sit (PRD §6.0.2). */}
+            <Image
+              src="/brand/horizontal-full-color.png"
+              alt="ມ່ວນ ອະວອດ"
+              width={1100}
+              height={339}
+              className="h-10 w-auto"
+            />
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">
               {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ'}
             </p>

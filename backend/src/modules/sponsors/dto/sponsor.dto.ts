@@ -1,6 +1,18 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { SponsorTier } from '@prisma/client';
-import { IsEnum, IsInt, IsOptional, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  IsUrl,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateSponsorDto {
   @ApiProperty()
@@ -32,3 +44,23 @@ export class CreateSponsorDto {
 }
 
 export class UpdateSponsorDto extends PartialType(CreateSponsorDto) {}
+
+class ReorderItem {
+  @ApiProperty()
+  @IsString()
+  id!: string;
+
+  @ApiProperty()
+  @IsInt()
+  sortOrder!: number;
+}
+
+/** Sponsors are shown by tier, then by this order inside the tier. */
+export class ReorderSponsorsDto {
+  @ApiProperty({ type: [ReorderItem] })
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => ReorderItem)
+  items!: ReorderItem[];
+}

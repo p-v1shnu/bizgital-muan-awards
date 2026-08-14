@@ -2,7 +2,13 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 
-import { AssignJudgeDto, CreateJudgeDto, UpdateAssignmentDto, UpdateJudgeDto } from './dto/judge.dto';
+import {
+  AssignJudgeDto,
+  CreateJudgeDto,
+  ReorderPanelDto,
+  UpdateAssignmentDto,
+  UpdateJudgeDto,
+} from './dto/judge.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { JudgesService } from './judges.service';
@@ -64,6 +70,18 @@ export class EditionJudgesController {
     @Req() req: Request,
   ) {
     return this.judges.assign(editionId, dto, actor.id, req.ip);
+  }
+
+  @Post('reorder')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Save the order the panel is shown in' })
+  reorder(
+    @Param('editionId') editionId: string,
+    @Body() dto: ReorderPanelDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    return this.judges.reorderPanel(editionId, dto, actor.id, req.ip);
   }
 
   @Patch(':assignmentId')

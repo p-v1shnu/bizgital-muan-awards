@@ -198,6 +198,28 @@ test('a year with many categories gets a filter above the picker', async ({ page
   await expect(picker.locator('option')).toHaveText([/ອາຫານ/]);
 });
 
+test('the brand is the real logo, and a bare link still shares a picture', async ({ page }) => {
+  await page.goto('/');
+
+  // The lockups ship as separate files per background; a CSS filter must never
+  // stand in for one (PRD §6.0.2).
+  const nav = page.getByRole('banner').getByRole('img').first();
+  await expect(nav).toHaveAttribute('src', /brand%2Fhorizontal-black|brand\/horizontal-black/);
+  for (const image of await page.getByRole('img').all()) {
+    const filter = await image.evaluate((element) => getComputedStyle(element).filter);
+    expect(filter, 'no logo may be recoloured with invert()').not.toContain('invert');
+  }
+
+  await expect(page.locator('meta[property="og:image"]').first()).toHaveAttribute(
+    'content',
+    /og-default\.png/,
+  );
+
+  // A page that has its own picture keeps it rather than the fallback.
+  await page.goto('/awards/2025/creator-of-the-year');
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /ຜູ້ສ້າງສັນ/);
+});
+
 test('every page has exactly one h1', async ({ page }) => {
   for (const route of [
     '/',

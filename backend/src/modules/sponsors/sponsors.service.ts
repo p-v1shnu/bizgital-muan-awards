@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
-import { CreateSponsorDto, UpdateSponsorDto } from './dto/sponsor.dto';
+import { CreateSponsorDto, ReorderSponsorsDto, UpdateSponsorDto } from './dto/sponsor.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -40,6 +40,36 @@ export class SponsorsService {
       ipAddress,
     });
     return sponsor;
+  }
+
+  async reorder(editionId: string, dto: ReorderSponsorsDto, actorId: string, ipAddress?: string) {
+    const owned = await this.prisma.editionSponsor.findMany({
+      where: { editionId },
+      select: { id: true },
+    });
+    const ownedIds = new Set(owned.map((sponsor) => sponsor.id));
+    if (dto.items.some((item) => !ownedIds.has(item.id))) {
+      throw new BadRequestException('Every sponsor must belong to this edition');
+    }
+
+    await this.prisma.$transaction(
+      dto.items.map((item) =>
+        this.prisma.editionSponsor.update({
+          where: { id: item.id },
+          data: { sortOrder: item.sortOrder },
+        }),
+      ),
+    );
+
+    await this.audit.log({
+      userId: actorId,
+      action: 'sponsor.reordered',
+      targetType: 'Edition',
+      targetId: editionId,
+      after: { order: dto.items.map((item) => item.id) },
+      ipAddress,
+    });
+    return this.listByEdition(editionId);
   }
 
   async update(id: string, dto: UpdateSponsorDto, actorId: string, ipAddress?: string) {

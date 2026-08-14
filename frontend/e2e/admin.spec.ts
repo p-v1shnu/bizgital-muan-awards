@@ -68,6 +68,40 @@ test.describe('the edition page', () => {
     await expect(page.getByText('ເພີ່ມຮູບ')).toBeVisible();
   });
 
+  test('the panel can be reordered and a new judge made without leaving', async ({ page }) => {
+    const url = page.url().split('?')[0];
+    await page.goto(`${url}?tab=judges`);
+
+    // A judge created from inside the tab lands on the panel straight away —
+    // the alternative was leaving the year half-set-up to visit another page.
+    await page.getByRole('button', { name: /ເລືອກຈາກຄັງ/ }).first().click();
+    const dialog = page.locator('dialog[open]');
+    // The first box in the dialog is the library search; the two below it are
+    // the new judge's name and position.
+    await dialog.getByRole('textbox').nth(1).fill('ກຳມະການ ທົດສອບ');
+    await dialog.getByRole('textbox').nth(2).fill('ນັກຂ່າວອາວຸໂສ');
+    await dialog.getByRole('button', { name: 'ສ້າງ ແລະ ເປັນກຳມະການ' }).click();
+    // Assigned straight away: the dialog marks the new name as already on
+    // this year, and it is on the panel behind the dialog too.
+    await expect(dialog.getByText('ຢູ່ໃນປີນີ້ແລ້ວ').first()).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByText('ກຳມະການ ທົດສອບ').first()).toBeVisible();
+
+    const rows = page.locator('[aria-label^="ຍ້າຍ"][aria-label$="ຂຶ້ນ"]');
+    await expect(rows.first()).toBeVisible();
+    // The first row cannot move up; something below it must be able to.
+    await expect(rows.first()).toBeDisabled();
+  });
+
+  test('sponsors can be reordered inside their tier', async ({ page }) => {
+    const url = page.url().split('?')[0];
+    await page.goto(`${url}?tab=sponsors`);
+
+    const up = page.locator('[aria-label^="ຍ້າຍ"][aria-label$="ຂຶ້ນ"]');
+    await expect(up.first()).toBeVisible();
+    await expect(up.first(), 'the top of a tier has nowhere to go').toBeDisabled();
+  });
+
   test('the publish checklist names what it blocks', async ({ page }) => {
     await expect(page.getByText('ບລັອກຂັ້ນ').first()).toBeVisible();
   });

@@ -42,6 +42,15 @@ export const metadata: Metadata = {
   },
   description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://muanawards.com'),
+  // Most visitors arrive from a Facebook post (PRD §10), and a share with no
+  // picture is a share nobody opens. Pages with their own image — a year, a
+  // category, a creator — override this; everything else falls back to the
+  // brand card, so no link is ever posted bare.
+  openGraph: {
+    type: 'website',
+    siteName: 'ມ່ວນ ອະວອດ · Muan Awards',
+    images: [{ url: '/brand/og-default.png', width: 1200, height: 630 }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

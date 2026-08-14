@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req } from
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 
-import { CreateSponsorDto, UpdateSponsorDto } from './dto/sponsor.dto';
+import { CreateSponsorDto, ReorderSponsorsDto, UpdateSponsorDto } from './dto/sponsor.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { SponsorsService } from './sponsors.service';
@@ -27,6 +27,18 @@ export class SponsorsAdminController {
     @Req() req: Request,
   ) {
     return this.sponsors.create(editionId, dto, actor.id, req.ip);
+  }
+
+  @Post('reorder')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Save a new display order within each tier' })
+  reorder(
+    @Param('editionId') editionId: string,
+    @Body() dto: ReorderSponsorsDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    return this.sponsors.reorder(editionId, dto, actor.id, req.ip);
   }
 }
 

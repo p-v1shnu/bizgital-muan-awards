@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Search, Trash2 } from 'lucide-react';
 
 import { Avatar } from './nominees-tab';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,24 @@ export function JudgesTab({ edition }: { edition: Edition }) {
     (vars) => ({ role: vars.role }),
   );
   const unassign = useApiMutation<{ id: string }>((vars) => `${path}/${vars.id}`, 'DELETE', invalidate);
+  const reorder = useApiMutation<{ items: { id: string; sortOrder: number }[] }>(
+    `${path}/reorder`,
+    'POST',
+    invalidate,
+  );
+
+  /**
+   * Swaps a row with its neighbour. The panel is listed chair first, so this
+   * moves people within their role rather than across it.
+   */
+  function move(index: number, direction: -1 | 1) {
+    if (!data) return;
+    const target = index + direction;
+    if (target < 0 || target >= data.length) return;
+    const next = [...data];
+    [next[index], next[target]] = [next[target], next[index]];
+    reorder.mutate({ items: next.map((row, position) => ({ id: row.id, sortOrder: position })) });
+  }
 
   return (
     <>
@@ -45,9 +63,9 @@ export function JudgesTab({ edition }: { edition: Edition }) {
           }
         />
 
-        {error != null && (
+        {(error != null || reorder.error != null) && (
           <div className="p-4">
-            <ErrorNote error={error} />
+            <ErrorNote error={error ?? reorder.error} />
           </div>
         )}
 
@@ -64,11 +82,31 @@ export function JudgesTab({ edition }: { edition: Edition }) {
             }
           />
         ) : (
-          data.map((assignment) => (
+          data.map((assignment, index) => (
             <div
               key={assignment.id}
               className="flex items-center gap-3 border-b border-hairline px-4 py-2.5 last:border-b-0"
             >
+              <div className="flex flex-col">
+                <button
+                  type="button"
+                  aria-label={`ຍ້າຍ ${assignment.judge.nameLo} ຂຶ້ນ`}
+                  disabled={index === 0 || reorder.isPending}
+                  onClick={() => move(index, -1)}
+                  className="text-ink-3 hover:text-ink disabled:opacity-25"
+                >
+                  <ChevronUp className="size-4" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`ຍ້າຍ ${assignment.judge.nameLo} ລົງ`}
+                  disabled={index === data.length - 1 || reorder.isPending}
+                  onClick={() => move(index, 1)}
+                  className="text-ink-3 hover:text-ink disabled:opacity-25"
+                >
+                  <ChevronDown className="size-4" />
+                </button>
+              </div>
               <Avatar name={assignment.judge.nameLo} avatarKey={assignment.judge.avatarKey} />
               <div className="min-w-0">
                 <p className="truncate font-serif text-[15.5px] leading-tight text-ink">
@@ -150,6 +188,28 @@ function PickJudgeDialog({
     [`/admin/editions/${editionId}/judges`, '/admin/dashboard'],
   );
 
+  // The panel is usually settled in one sitting, and half the names will not
+  // be in the library yet (PRD §6.2) — sending the team to another page to
+  // type two fields and come back is how a list gets left half done.
+  const [creating, setCreating] = useState({ nameLo: '', positionLo: '' });
+  const create = useApiMutation<Record<string, unknown>, Judge>('/admin/judges', 'POST', [
+    '/admin/judges',
+  ]);
+
+  function createAndAssign(role: JudgeRole) {
+    create.mutate(
+      { nameLo: creating.nameLo, positionLo: creating.positionLo },
+      {
+        onSuccess: (judge) => {
+          assign.mutate(
+            { judgeId: judge.id, role },
+            { onSuccess: () => setCreating({ nameLo: '', positionLo: '' }) },
+          );
+        },
+      },
+    );
+  }
+
   return (
     <Dialog open={open} onClose={onClose} title="ເລືອກກຳມະການຈາກຄັງ" width="lg">
       <div className="relative mb-3">
@@ -170,9 +230,7 @@ function PickJudgeDialog({
 
       <ul className="max-h-80 overflow-y-auto rounded-[var(--radius-ui-sm)] border border-rule bg-white">
         {!data?.data.length ? (
-          <li className="px-3 py-3 text-[12.5px] text-ink-3">
-            ບໍ່ພົບໃນຄັງ — ໄປໜ້າ “ຄັງກຳມະການ” ເພື່ອເພີ່ມຄົນໃໝ່
-          </li>
+          <li className="px-3 py-3 text-[12.5px] text-ink-3">ບໍ່ພົບໃນຄັງ — ສ້າງຄົນໃໝ່ຂ້າງລຸ່ມໄດ້ເລີຍ</li>
         ) : (
           data.data.map((judge) => {
             const already = assigned.has(judge.id);
@@ -213,6 +271,47 @@ function PickJudgeDialog({
           })
         )}
       </ul>
+
+      <div className="mt-4 rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2 p-3">
+        <p className="mb-2 text-[12px] font-semibold text-ink-2">ບໍ່ມີໃນຄັງ? ສ້າງໃໝ່ໄດ້ເລີຍ</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Field label="ຊື່">
+            <Input
+              value={creating.nameLo}
+              onChange={(event) => setCreating({ ...creating, nameLo: event.target.value })}
+            />
+          </Field>
+          <Field label="ຕຳແໜ່ງ / ອົງກອນ">
+            <Input
+              value={creating.positionLo}
+              onChange={(event) => setCreating({ ...creating, positionLo: event.target.value })}
+            />
+          </Field>
+        </div>
+
+        {create.error && <ErrorNote error={create.error} />}
+
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            disabled={!creating.nameLo || !creating.positionLo || create.isPending}
+            onClick={() => createAndAssign('MEMBER')}
+          >
+            ສ້າງ ແລະ ເປັນກຳມະການ
+          </Button>
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={!creating.nameLo || !creating.positionLo || create.isPending}
+            onClick={() => createAndAssign('CHAIR')}
+          >
+            ສ້າງ ແລະ ເປັນປະທານ
+          </Button>
+        </div>
+        <p className="mt-2 text-[11px] text-ink-3">
+          ຮູບ ແລະ ປະຫວັດຫຍໍ້ ເພີ່ມພາຍຫຼັງໄດ້ທີ່ໜ້າ “ຄັງກຳມະການ”
+        </p>
+      </div>
     </Dialog>
   );
 }

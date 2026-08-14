@@ -149,4 +149,75 @@ describe('edition lifecycle', () => {
       expect(timeline.body.data.map((e: { year: number }) => e.year)).toEqual([2030, 2019]);
     });
   });
+
+  /**
+   * Both lists are shown in an order the team chooses, so both need a way to
+   * save one. The API had the field but no endpoint to set it in bulk, and the
+   * back office had no control at all — the order was whatever creation order
+   * happened to be.
+   */
+  describe('the panel and the sponsor wall keep the order the team sets', () => {
+    let hostId: string;
+    let otherId: string;
+
+    beforeAll(async () => {
+      hostId = (await createEdition({ year: 2041, slug: '2041', titleLo: 'ງານ 2041' })).body.data.id;
+      otherId = (await createEdition({ year: 2042, slug: '2042', titleLo: 'ງານ 2042' })).body.data.id;
+    });
+
+    it('reorders judges within one edition, and refuses another edition’s row', async () => {
+      const people = await Promise.all(
+        ['ກຳມະການ ກ', 'ກຳມະການ ຂ'].map((nameLo) =>
+          api(h)
+            .post(path('/admin/judges'))
+            .set(h.auth)
+            .send({ nameLo, positionLo: 'ຜູ້ຊ່ຽວຊານ' })
+            .expect(201),
+        ),
+      );
+      const assignments = await Promise.all(
+        people.map((person) =>
+          api(h)
+            .post(path(`/admin/editions/${hostId}/judges`))
+            .set(h.auth)
+            .send({ judgeId: person.body.data.id, role: 'MEMBER' })
+            .expect(201),
+        ),
+      );
+      const [a, b] = assignments.map((assignment) => assignment.body.data.id);
+
+      const reordered = await api(h)
+        .post(path(`/admin/editions/${hostId}/judges/reorder`))
+        .set(h.auth)
+        .send({ items: [{ id: b, sortOrder: 0 }, { id: a, sortOrder: 1 }] })
+        .expect(200);
+      expect(reordered.body.data.map((row: { id: string }) => row.id)).toEqual([b, a]);
+
+      await api(h)
+        .post(path(`/admin/editions/${otherId}/judges/reorder`))
+        .set(h.auth)
+        .send({ items: [{ id: a, sortOrder: 0 }] })
+        .expect(400);
+    });
+
+    it('reorders sponsors within one edition', async () => {
+      const added = await Promise.all(
+        ['Beerlao', 'Lao Telecom'].map((name) =>
+          api(h)
+            .post(path(`/admin/editions/${hostId}/sponsors`))
+            .set(h.auth)
+            .send({ name, tier: 'GOLD' })
+            .expect(201),
+        ),
+      );
+      const [first, second] = added.map((sponsor) => sponsor.body.data.id);
+
+      const reordered = await api(h)
+        .post(path(`/admin/editions/${hostId}/sponsors/reorder`))
+        .set(h.auth)
+        .send({ items: [{ id: second, sortOrder: 0 }, { id: first, sortOrder: 1 }] })
+        .expect(200);
+      expect(reordered.body.data.map((row: { id: string }) => row.id)).toEqual([second, first]);
+    });
+  });
 });

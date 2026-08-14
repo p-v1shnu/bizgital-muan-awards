@@ -1,6 +1,17 @@
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { JudgeRole } from '@prisma/client';
-import { IsEnum, IsInt, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 
 export class CreateJudgeDto {
   @ApiProperty({ example: 'ທ່ານ ສົມສັກ ພົມມະວົງ' })
@@ -72,4 +83,24 @@ export class UpdateAssignmentDto {
   @IsOptional()
   @IsInt()
   sortOrder?: number;
+}
+
+class ReorderItem {
+  @ApiProperty()
+  @IsString()
+  id!: string;
+
+  @ApiProperty()
+  @IsInt()
+  sortOrder!: number;
+}
+
+/** The order the panel is shown in, under the chair (PRD §6.1.2 §6). */
+export class ReorderPanelDto {
+  @ApiProperty({ type: [ReorderItem], description: 'Assignment ids, not judge ids' })
+  @IsArray()
+  @ArrayMaxSize(200)
+  @ValidateNested({ each: true })
+  @Type(() => ReorderItem)
+  items!: ReorderItem[];
 }
