@@ -709,6 +709,7 @@ erDiagram
 
 | ไฟล์ | เนื้อหา |
 |---|---|
+| `docs/design/admin.html` | **หลังบ้าน** — แดชบอร์ด + หน้าจัดการปี (แท็บข้อมูลงาน/นอมินี) |
 | `docs/design/style-guide.html` | **ค่าที่ล็อกแล้ว** — color token, กฎผสมฟอนต์ลาว, radius, component |
 | `docs/design/home.html` | หน้าแรกฉบับเต็ม (รูปจริง + animation) |
 | `docs/design/pages.html` | หน้าสาขา / ทำเนียบ / ฟอร์ม / โปรไฟล์ / about — desktop + mobile |
