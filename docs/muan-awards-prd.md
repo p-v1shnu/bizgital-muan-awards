@@ -538,7 +538,7 @@ erDiagram
 
 ## 12. แผนงานถัดไป (หลัง PRD ผ่าน)
 
-1. ~~**Design** — ทำ wireframe/mockup หน้า public หลัก~~ **ทำแล้วบางส่วน:** art direction เลือกแล้ว (แบบสูจิบัตร) พร้อม style guide ที่ล็อกค่าทั้งหมด — `docs/design/style-guide.html` · **เหลือ:** ยกหน้าแรก / หน้าสาขา / ทำเนียบผู้ชนะ / ฟอร์ม มาใช้ระบบที่ล็อกแล้ว และเวอร์ชันมือถือของทุกหน้า
+1. ~~**Design** — ทำ wireframe/mockup หน้า public หลัก~~ **ทำแล้ว:** art direction (แบบสูจิบัตร) + style guide ที่ล็อกค่าทั้งหมด `docs/design/style-guide.html` + mockup ครบทั้ง 7 หน้าตาม sitemap `docs/design/pages.html` (หน้าปีอยู่ในสไตล์ไกด์) พร้อมเวอร์ชันมือถือของหน้าหลัก
 2. **Scaffold** — ตั้งโปรเจกต์ตาม stack มาตรฐาน + Prisma schema ตามข้อ 8
 3. **พัฒนา Backend + Admin** — workflow หลังบ้านครบวงจรก่อน (เพราะเป็นเงื่อนไขของข้อมูลทุกหน้า)
 4. **พัฒนาเว็บ Public** — ต่อ API จริง
