@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+
+/**
+ * Design tokens — locked in docs/muan-awards-prd.md §6.0.2.
+ * Do not invent new colours here; every value below has a recorded contrast
+ * ratio against paper and was chosen to clear WCAG AA.
+ */
+@theme {
+  /* Surfaces — warm paper, never pure white */
+  --color-paper: #f1ece2;
+  --color-panel: #fbf8f2;
+  --color-panel-2: #f4efe5;
+  --color-rule: #cfc4b2;
+
+  /* Ink — the only text colours */
+  --color-ink: #221c19; /* 14.29:1 on paper */
+  --color-ink-2: #5c5149; /*  6.54:1 on paper */
+  --color-ink-3: #736558; /*  4.78:1 on paper */
+
+  /* Brand purple — accents and small marks, not large fills */
+  --color-brand: #8d3ea8; /*  5.27:1 on paper */
+  --color-brand-deep: #6f2c86; /*  7.49:1 on paper */
+  --color-brand-soft: #f3ecf6;
+
+  /* Corners — "medium round", per the design review */
+  --radius-btn: 14px;
+  --radius-box: 14px;
+  --radius-sm: 10px;
+
+  /**
+   * Serif carries names and headings from 18px up; sans carries anything
+   * pressable, fillable, scannable, or under 17px. Every stack ends in a Lao
+   * family so Lao glyphs never fall back to a mismatched face.
+   */
+  --font-serif: var(--font-bodoni), 'Bodoni Moda', var(--font-noto-serif-lao), 'Noto Serif Lao', serif;
+  --font-sans: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
+}
+
+/* The foil gradient is a decoration, never a text colour. */
+@utility foil {
+  background-image: linear-gradient(90deg, #f9b8d5, #e897c9 46%, #c896d8);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    font-family: var(--font-sans);
+  }
+
+  /**
+   * Never use the `font:` shorthand anywhere in this project: it resets
+   * font-family and silently drops the Lao fallback, which renders Lao text
+   * in a face that does not match the rest of the page.
+   */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-soft);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}

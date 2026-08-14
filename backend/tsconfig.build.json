@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  // Keeping prisma/ out of the build leaves src/ as the root, so the compiled
+  // entry point stays at dist/main.js — which is what the Dockerfile runs.
+  "exclude": ["node_modules", "dist", "test", "prisma", "prisma.config.ts", "**/*.spec.ts"]
+}

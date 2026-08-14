@@ -1,0 +1,339 @@
+// Muan Awards — database schema
+// Source of truth: docs/muan-awards-prd.md §8 (v1.2)
+//
+// Design principle: permanent libraries (Creator, Judge) are separate from
+// per-year assignments (Nomination, EditionJudge, EditionSponsor), so a person
+// is entered once and reused every year.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+/// What the public edition page displays. PRD §4.1.
+/// Submissions are NOT part of this — see Edition.submissionsOpen (§4.2).
+enum EditionPhase {
+  DRAFT
+  PUBLISHED
+  NOMINEES_ANNOUNCED
+  WINNERS_ANNOUNCED
+}
+
+enum JudgeRole {
+  CHAIR
+  MEMBER
+}
+
+enum SponsorTier {
+  TITLE
+  GOLD
+  SILVER
+  SUPPORTER
+  PARTNER
+  MEDIA
+}
+
+enum SubmissionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  MERGED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+}
+
+// ─────────────────────────────────────────────────────────────
+// Edition — one awards year
+// ─────────────────────────────────────────────────────────────
+
+model Edition {
+  id            String  @id @default(cuid())
+  year          Int     @unique
+  slug          String  @unique
+  titleLo       String
+  titleEn       String?
+  descriptionLo String? @db.Text
+  descriptionEn String? @db.Text
+
+  /// Display state only. Forward-only once past DRAFT (PRD §4.4).
+  phase EditionPhase @default(DRAFT)
+
+  /// Submission switch, independent of phase (PRD §4.2).
+  /// At most one edition may have this true — enforced in EditionsService.
+  submissionsOpen Boolean @default(false)
+
+  /// Optional auto-close. The form counts as open only while
+  /// submissionsOpen is true AND (this is null OR now < this).
+  /// Evaluated per request, so no scheduler is required.
+  submissionsCloseAt DateTime?
+
+  eventDate DateTime?
+  venueLo   String?
+  venueEn   String?
+
+  /// Object storage keys — never full URLs (PRD §8 storage rules).
+  heroImageKey     String?
+  galleryImageKeys Json?
+
+  /// External services run by other providers; a button appears only when set.
+  ticketUrl String?
+  voteUrl   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  categories Category[]
+  judges     EditionJudge[]
+  sponsors   EditionSponsor[]
+
+  @@index([phase, year])
+  @@map("editions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Category — an award within one edition
+// ─────────────────────────────────────────────────────────────
+
+model Category {
+  id        String @id @default(cuid())
+  editionId String
+
+  slug          String
+  nameLo        String
+  nameEn        String?
+  descriptionLo String? @db.Text
+
+  /// Optional grouping heading, used when a year runs long (PRD §7.6).
+  /// Blank on every category means a flat list.
+  groupLo String?
+
+  sortOrder Int @default(0)
+
+  /// Drives the homepage highlight, /winners rows and which accordions
+  /// open first. Recommended 3-6 per edition.
+  isFeatured Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  edition     Edition            @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  nominations Nomination[]
+  submissions PublicSubmission[]
+
+  @@unique([editionId, slug])
+  @@index([editionId, sortOrder])
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Permanent libraries — entered once, reused every year
+// ─────────────────────────────────────────────────────────────
+
+model Creator {
+  id     String  @id @default(cuid())
+  slug   String  @unique
+  nameLo String
+  nameEn String?
+
+  bioLo     String? @db.Text
+  avatarKey String?
+
+  /// { "facebook": "...", "tiktok": "...", "youtube": "...", "instagram": "..." }
+  socialLinks Json?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  nominations       Nomination[]
+  matchedSubmission PublicSubmission[]
+
+  @@index([deletedAt])
+  @@map("creators")
+}
+
+model Judge {
+  id     String  @id @default(cuid())
+  nameLo String
+  nameEn String?
+
+  positionLo String
+  positionEn String?
+  bioLo      String? @db.Text
+  avatarKey  String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  editions EditionJudge[]
+
+  @@index([deletedAt])
+  @@map("judges")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Per-year assignments
+// ─────────────────────────────────────────────────────────────
+
+model EditionJudge {
+  id        String @id @default(cuid())
+  editionId String
+  judgeId   String
+
+  role      JudgeRole @default(MEMBER)
+  sortOrder Int       @default(0)
+
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  judge   Judge   @relation(fields: [judgeId], references: [id], onDelete: Cascade)
+
+  @@unique([editionId, judgeId])
+  @@index([editionId, sortOrder])
+  @@map("edition_judges")
+}
+
+model EditionSponsor {
+  id        String @id @default(cuid())
+  editionId String
+
+  name       String
+  logoKey    String?
+  websiteUrl String?
+  tier       SponsorTier @default(SUPPORTER)
+  sortOrder  Int         @default(0)
+
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@index([editionId, tier, sortOrder])
+  @@map("edition_sponsors")
+}
+
+model Nomination {
+  id         String @id @default(cuid())
+  categoryId String
+  creatorId  String
+
+  /// At most one true per category — enforced in NominationsService.
+  isWinner  Boolean @default(false)
+  sortOrder Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  creator  Creator  @relation(fields: [creatorId], references: [id], onDelete: Restrict)
+
+  @@unique([categoryId, creatorId])
+  @@index([categoryId, sortOrder])
+  @@index([creatorId])
+  @@map("nominations")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Public submissions
+// ─────────────────────────────────────────────────────────────
+
+model PublicSubmission {
+  id         String @id @default(cuid())
+  categoryId String
+
+  /// Exactly as the visitor typed it — kept verbatim as evidence.
+  creatorNameRaw String
+  creatorLink    String?
+  reason         String? @db.Text
+
+  submitterName  String?
+  submitterEmail String?
+
+  /// Hashed, never the raw address (PRD §10 privacy).
+  ipHash String
+
+  status SubmissionStatus @default(PENDING)
+
+  /// Set once an admin matches this entry to a creator in the library.
+  matchedCreatorId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category       Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  matchedCreator Creator? @relation(fields: [matchedCreatorId], references: [id], onDelete: SetNull)
+
+  @@index([categoryId, status])
+  @@index([ipHash, createdAt])
+  @@map("public_submissions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Site-level content — evergreen, not tied to any edition (PRD §6.1.1)
+// ─────────────────────────────────────────────────────────────
+
+model SiteSetting {
+  /// Single row. Seeded with id "singleton".
+  id String @id @default("singleton")
+
+  heroImageKey     String?
+  heroCaptionLo    String?
+  brandStatementLo String  @db.Text
+  aboutSummaryLo   String  @db.Text
+  galleryImageKeys Json?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Admin & audit
+// ─────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(ADMIN)
+
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  auditLogs AuditLog[]
+
+  @@index([deletedAt])
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id     String @id @default(cuid())
+  userId String
+
+  /// Dotted action name, e.g. "edition.phase.changed", "nomination.winner.set".
+  action     String
+  targetType String
+  targetId   String
+
+  before    Json?
+  after     Json?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+
+  user AdminUser @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
