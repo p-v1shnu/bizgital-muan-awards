@@ -9,6 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AdminRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'node:crypto';
 
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -133,10 +134,10 @@ export class AuthService {
   }
 
   /**
-   * Refresh tokens are stateless JWTs signed with a separate secret — the PRD
-   * (§8) keeps no session table. What makes them revocable anyway is the
-   * version stamped inside them: logging out or changing a password bumps the
-   * one on the account, and every token carrying an older number stops here.
+   * Refresh tokens are stateless JWTs signed with a separate secret. Two
+   * things can still cancel one: the session id inside it may have been
+   * signed out (that browser only), or the account's version may have moved
+   * on because the password changed (every browser at once).
    */
   async refresh(refreshToken: string | undefined) {
     if (!refreshToken) throw new UnauthorizedException('Missing refresh token');
@@ -150,26 +151,47 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const user = await this.prisma.adminUser.findFirst({
-      where: { id: payload.sub, deletedAt: null },
-      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
-    });
+    const [user, revoked] = await Promise.all([
+      this.prisma.adminUser.findFirst({
+        where: { id: payload.sub, deletedAt: null },
+        select: { id: true, email: true, name: true, role: true, tokenVersion: true },
+      }),
+      payload.sid
+        ? this.prisma.revokedSession.findUnique({ where: { id: payload.sid } })
+        : Promise.resolve(null),
+    ]);
     if (!user) throw new UnauthorizedException('Account is no longer active');
-    if ((payload.tv ?? 0) !== user.tokenVersion) {
+    // Two different endings: this session was signed out, or every session was
+    // (a password change).
+    if (revoked || (payload.tv ?? 0) !== user.tokenVersion) {
       throw new UnauthorizedException('This session has been signed out');
     }
 
     const { tokenVersion, ...profile } = user;
-    return { user: profile, tokens: await this.issueTokens(user) };
+    return { user: profile, tokens: await this.issueTokens(user, payload.sid ?? randomUUID()) };
   }
 
-  async logout(userId: string, ipAddress?: string) {
-    // Ends the refresh token in the cookie the browser is throwing away, and
-    // any access token still in flight, rather than trusting the client.
-    await this.prisma.adminUser.update({
-      where: { id: userId },
-      data: { tokenVersion: { increment: 1 } },
-    });
+  /**
+   * Ends this one session — the phone signs out, the laptop stays signed in.
+   * The note covers the refresh token in the cookie the browser is throwing
+   * away and the access token that may still be in flight, so neither can be
+   * replayed by whoever might have copied them.
+   */
+  async logout(userId: string, sessionId: string | undefined, ipAddress?: string) {
+    if (sessionId) {
+      await this.prisma.revokedSession.upsert({
+        where: { id: sessionId },
+        create: {
+          id: sessionId,
+          userId,
+          expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_SECONDS * 1000),
+        },
+        update: {},
+      });
+      // Nothing schedules a cleanup, so each logout clears what has expired.
+      await this.prisma.revokedSession.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+    }
+
     await this.audit.log({
       userId,
       action: 'admin.logout',
@@ -179,17 +201,17 @@ export class AuthService {
     });
   }
 
-  private async issueTokens(user: {
-    id: string;
-    email: string;
-    role: AdminRole;
-    tokenVersion: number;
-  }) {
+  private async issueTokens(
+    user: { id: string; email: string; role: AdminRole; tokenVersion: number },
+    /** Kept across refreshes, so signing out cancels the whole chain. */
+    sessionId: string = randomUUID(),
+  ) {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
       role: user.role,
       tv: user.tokenVersion,
+      sid: sessionId,
     };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(payload, {

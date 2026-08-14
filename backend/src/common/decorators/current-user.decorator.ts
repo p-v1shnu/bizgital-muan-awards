@@ -5,6 +5,8 @@ export interface AuthenticatedUser {
   email: string;
   name: string;
   role: 'SUPER_ADMIN' | 'ADMIN';
+  /** The session this token belongs to, so logout can end just this one. */
+  sessionId?: string;
 }
 
 export const CurrentUser = createParamDecorator(

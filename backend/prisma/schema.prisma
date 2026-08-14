@@ -334,6 +334,25 @@ model AdminUser {
   @@map("admin_users")
 }
 
+/// One row per session that was signed out before its token expired.
+///
+/// The PRD (§8) keeps no session table, and this is not one: nothing is
+/// written when signing *in*. Only a logout leaves a note here, saying that
+/// this one session is finished — which is what lets signing out of a phone
+/// leave the laptop alone. Rows are dropped once the token they cancel would
+/// have expired anyway, so the table stays roughly as small as the number of
+/// people who signed out this week.
+model RevokedSession {
+  /// The session id carried inside both tokens.
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("revoked_sessions")
+}
+
 model AuditLog {
   id     String @id @default(cuid())
   userId String

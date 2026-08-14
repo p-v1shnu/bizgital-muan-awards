@@ -133,15 +133,19 @@ describe('access control', () => {
   /**
    * Signing out used to clear the cookie and nothing else: the refresh token
    * inside it stayed valid for a week, so a stolen one outlived the logout.
+   * It now ends that session — and only that session, because a team member
+   * signing out of a phone should not be signed out of the desk they are at.
    */
   describe('signing out', () => {
-    it('kills the refresh token and the access token that were issued with it', async () => {
-      const login = await api(h)
+    const signIn = (from: string) =>
+      api(h)
         .post(path('/auth/login'))
-        .set('X-Forwarded-For', '198.51.100.30')
+        .set('X-Forwarded-For', from)
         .send({ email: 'editor@test.local', password: 'another-long-password' })
         .expect(200);
 
+    it('kills the refresh token and the access token that were issued with it', async () => {
+      const login = await signIn('198.51.100.30');
       const token = { Authorization: `Bearer ${login.body.data.accessToken}` };
       const cookie = login.headers['set-cookie'];
       await api(h).get(path('/auth/me')).set(token).expect(200);
@@ -151,9 +155,42 @@ describe('access control', () => {
       await api(h).get(path('/auth/me')).set(token).expect(401);
       await api(h).post(path('/auth/refresh')).set('Cookie', cookie).expect(401);
     });
+
+    it('leaves the other browser signed in', async () => {
+      const phone = await signIn('198.51.100.32');
+      const laptop = await signIn('198.51.100.33');
+      const phoneToken = { Authorization: `Bearer ${phone.body.data.accessToken}` };
+      const laptopToken = { Authorization: `Bearer ${laptop.body.data.accessToken}` };
+
+      await api(h).post(path('/auth/logout')).set(phoneToken).expect(204);
+
+      await api(h).get(path('/auth/me')).set(phoneToken).expect(401);
+      await api(h).get(path('/auth/me')).set(laptopToken).expect(200);
+      await api(h)
+        .post(path('/auth/refresh'))
+        .set('Cookie', laptop.headers['set-cookie'])
+        .expect(200);
+    });
+
+    it('survives a refresh: the new tokens belong to the same session', async () => {
+      const login = await signIn('198.51.100.34');
+      const refreshed = await api(h)
+        .post(path('/auth/refresh'))
+        .set('Cookie', login.headers['set-cookie'])
+        .expect(200);
+
+      const token = { Authorization: `Bearer ${refreshed.body.data.accessToken}` };
+      await api(h).post(path('/auth/logout')).set(token).expect(204);
+
+      // The cookie handed back by the refresh is dead too, not just the token.
+      await api(h)
+        .post(path('/auth/refresh'))
+        .set('Cookie', refreshed.headers['set-cookie'])
+        .expect(401);
+    });
   });
 
-  it('ends other sessions when the password changes', async () => {
+  it('ends every session when the password changes — unlike a logout', async () => {
     const login = await api(h)
       .post(path('/auth/login'))
       .set('X-Forwarded-For', '198.51.100.31')
@@ -161,14 +198,23 @@ describe('access control', () => {
       .expect(200);
     const token = { Authorization: `Bearer ${login.body.data.accessToken}` };
 
+    const second = await api(h)
+      .post(path('/auth/login'))
+      .set('X-Forwarded-For', '198.51.100.35')
+      .send({ email: 'editor@test.local', password: 'another-long-password' })
+      .expect(200);
+    const other = { Authorization: `Bearer ${second.body.data.accessToken}` };
+
     await api(h)
       .post(path('/admin/users/me/password'))
       .set(token)
       .send({ currentPassword: 'another-long-password', newPassword: 'a-third-long-password' })
       .expect(204);
 
-    // The token that made the change is spent along with the rest.
+    // Every browser at once, including the one that made the change: a
+    // password is usually changed because it may be in someone else's hands.
     await api(h).get(path('/auth/me')).set(token).expect(401);
+    await api(h).get(path('/auth/me')).set(other).expect(401);
   });
 
   it('answers an oversized body with 413 rather than 500', async () => {

@@ -9,8 +9,10 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: AuthenticatedUser['role'];
-  /** Session generation — see AuthService. Absent on tokens issued before it existed. */
+  /** Session generation — bumped by a password change, which ends every session. */
   tv?: number;
+  /** This browser's session, so signing out here leaves other browsers alone. */
+  sid?: string;
 }
 
 @Injectable()
@@ -30,17 +32,23 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
     // `name` is included because the admin shell reads the session from
     // /auth/me after a reload, and the sidebar shows who is signed in.
-    const user = await this.prisma.adminUser.findFirst({
-      where: { id: payload.sub, deletedAt: null },
-      select: { id: true, email: true, name: true, role: true, tokenVersion: true },
-    });
+    const [user, revoked] = await Promise.all([
+      this.prisma.adminUser.findFirst({
+        where: { id: payload.sub, deletedAt: null },
+        select: { id: true, email: true, name: true, role: true, tokenVersion: true },
+      }),
+      payload.sid
+        ? this.prisma.revokedSession.findUnique({ where: { id: payload.sid }, select: { id: true } })
+        : Promise.resolve(null),
+    ]);
     if (!user) throw new UnauthorizedException('Account is no longer active');
-    // Signing out elsewhere, or changing the password, ends this token too.
-    if ((payload.tv ?? 0) !== user.tokenVersion) {
+    // Either this session was signed out, or the password changed and took
+    // every session with it.
+    if (revoked || (payload.tv ?? 0) !== user.tokenVersion) {
       throw new UnauthorizedException('This session has been signed out');
     }
 
     const { tokenVersion, ...profile } = user;
-    return profile;
+    return { ...profile, sessionId: payload.sid };
   }
 }
