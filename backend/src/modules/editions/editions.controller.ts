@@ -1,76 +1,26 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  NotFoundException,
-  Param,
-  Patch,
-  Post,
-  Req,
-} from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 
-import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { Public } from '../../common/decorators/public.decorator';
 import { ChangePhaseDto } from './dto/change-phase.dto';
 import { CreateEditionDto } from './dto/create-edition.dto';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { EditionsService } from './editions.service';
+import { PreviewService } from '../public-site/preview.service';
 import { SubmissionsSwitchDto } from './dto/submissions-switch.dto';
 import { UpdateEditionDto } from './dto/update-edition.dto';
 
-@ApiTags('editions')
-@Controller('editions')
-export class EditionsController {
-  constructor(private readonly editions: EditionsService) {}
-
-  @Public()
-  @Get()
-  @ApiOperation({ summary: 'Every edition the public may see, newest first' })
-  list() {
-    return this.editions.listPublic();
-  }
-
-  @Public()
-  @Get('latest')
-  @ApiOperation({ summary: 'The newest published edition — what the nav points at' })
-  async latest() {
-    const edition = await this.editions.findLatestPublished();
-    if (!edition) throw new NotFoundException('No published edition yet');
-    return edition;
-  }
-
-  @Public()
-  @Get('latest-winners')
-  @ApiOperation({ summary: 'The newest edition that has winners — the homepage strip' })
-  async latestWinners() {
-    const edition = await this.editions.findLatestWithWinners();
-    if (!edition) throw new NotFoundException('No edition has announced winners yet');
-    return edition;
-  }
-
-  @Public()
-  @Get('accepting-submissions')
-  @ApiOperation({ summary: 'The edition currently collecting entries, or null' })
-  accepting() {
-    return this.editions.findAcceptingSubmissions();
-  }
-
-  @Public()
-  @Get(':slug')
-  @ApiOperation({ summary: 'One edition by slug' })
-  bySlug(@Param('slug') slug: string) {
-    return this.editions.findPublicBySlug(slug);
-  }
-}
+// The visitor-facing reads live in PublicSiteController, so the order of the
+// public routes stays visible in one file.
 
 @ApiTags('editions-admin')
 @Controller('admin/editions')
 export class EditionsAdminController {
-  constructor(private readonly editions: EditionsService) {}
+  constructor(
+    private readonly editions: EditionsService,
+    private readonly preview: PreviewService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: 'Every edition including drafts' })
@@ -88,6 +38,20 @@ export class EditionsAdminController {
   @ApiOperation({ summary: 'Create an edition' })
   create(@Body() dto: CreateEditionDto, @CurrentUser() actor: AuthenticatedUser, @Req() req: Request) {
     return this.editions.create(dto, actor.id, req.ip);
+  }
+
+  @Post(':id/preview-token')
+  @ApiOperation({ summary: 'Mint a 7-day link that opens this year before it is published' })
+  async previewToken(
+    @Param('id') id: string,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    // Confirms the edition exists (and 404s if not) before minting anything.
+    const edition = await this.editions.findById(id);
+    const minted = await this.preview.mint(edition.id);
+    await this.editions.recordPreviewLink(edition, actor.id, minted.expiresAt, req.ip);
+    return { ...minted, slug: edition.slug };
   }
 
   @Patch(':id')

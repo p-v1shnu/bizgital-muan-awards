@@ -2,7 +2,7 @@
 
 import { Suspense, use } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ArrowRight, Eye, Info } from 'lucide-react';
+import { Eye, Info } from 'lucide-react';
 
 import { ButtonLink } from '@/components/ui/button';
 import { CategoriesTab } from './categories-tab';
@@ -13,6 +13,7 @@ import { JudgesTab } from './judges-tab';
 import { NomineesTab } from './nominees-tab';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { PhaseBadge } from '@/components/ui/badge';
+import { PreviewLink } from '@/components/admin/preview-link';
 import { PublishPanel } from './publish-panel';
 import { SponsorsTab } from './sponsors-tab';
 import { useApi } from '@/lib/api/hooks';
@@ -69,14 +70,9 @@ function EditionDetail({ id }: { id: string }) {
         <div className="flex flex-wrap items-center gap-2.5 bg-ink px-6 py-2.5 text-xs text-[#f0e9df]">
           <Info className="size-4 shrink-0" />
           ປີນີ້ຍັງເປັນ<b className="mx-0.5">ຮ່າງ</b>— ຄົນນອກຍັງເຂົ້າບໍ່ໄດ້ ແກ້ໄຂໄດ້ຢ່າງອິດສະລະ
-          <ButtonLink
-            href={`/awards/${edition.slug}?preview=1`}
-            size="sm"
-            target="_blank"
-            className="ml-auto border-[#5c5149] bg-transparent text-[#f0e9df] hover:bg-[#332b26] hover:text-white"
-          >
-            ເປີດພຣີວິວ <ArrowRight className="size-3.5" />
-          </ButtonLink>
+          <span className="ml-auto">
+            <PreviewLink editionId={edition.id} slug={edition.slug} />
+          </span>
         </div>
       )}
 

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { CreatorsAdminController, CreatorsController } from './creators.controller';
+import { CreatorsAdminController } from './creators.controller';
 import { CreatorsService } from './creators.service';
 
 @Module({
-  controllers: [CreatorsController, CreatorsAdminController],
+  controllers: [CreatorsAdminController],
   providers: [CreatorsService],
   exports: [CreatorsService],
 })

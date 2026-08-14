@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Star, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Star, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -105,6 +105,24 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
     'DELETE',
     invalidate,
   );
+  const reorder = useApiMutation<{ items: { id: string; sortOrder: number }[] }>(
+    `${path}/reorder`,
+    'POST',
+    invalidate,
+  );
+
+  /**
+   * Swaps a row with its neighbour. The list is sorted winner-first, so only
+   * the nominees below the winner can be moved relative to each other.
+   */
+  function move(index: number, direction: -1 | 1) {
+    if (!data) return;
+    const target = index + direction;
+    if (target < 0 || target >= data.length) return;
+    const next = [...data];
+    [next[index], next[target]] = [next[target], next[index]];
+    reorder.mutate({ items: next.map((nomination, position) => ({ id: nomination.id, sortOrder: position })) });
+  }
 
   const alreadyIn = new Set((data ?? []).map((nomination) => nomination.creatorId));
 
@@ -146,11 +164,32 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
       ) : !data?.length ? (
         <EmptyState title="ຍັງບໍ່ມີນອມິນີໃນສາຂານີ້" description="ຄົ້ນຫາຄຣີເອເຕີຈາກຄັງຂ້າງເທິງ" />
       ) : (
-        data.map((nomination) => (
+        data.map((nomination, index) => (
           <div
             key={nomination.id}
             className="flex items-center gap-3 border-b border-hairline px-4 py-2.5 last:border-b-0"
           >
+            <div className="flex flex-col">
+              <button
+                type="button"
+                aria-label="ຍ້າຍຂຶ້ນ"
+                disabled={index === 0 || reorder.isPending}
+                onClick={() => move(index, -1)}
+                className="text-ink-3 hover:text-ink disabled:opacity-30"
+              >
+                <ChevronUp className="size-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="ຍ້າຍລົງ"
+                disabled={index === data.length - 1 || reorder.isPending}
+                onClick={() => move(index, 1)}
+                className="text-ink-3 hover:text-ink disabled:opacity-30"
+              >
+                <ChevronDown className="size-4" />
+              </button>
+            </div>
+
             <Avatar name={nomination.creator.nameLo} avatarKey={nomination.creator.avatarKey} />
 
             <div className="min-w-0">
@@ -198,7 +237,7 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
       )}
 
       <p className="mt-auto border-t border-rule px-4 py-3 text-[11.5px] text-ink-3">
-        ຕິດ “ຜູ້ຊະນະ” ໄດ້ພຽງ 1 ຄົນຕໍ່ສາຂາ — ຕິດຄົນໃໝ່ ຄົນເກົ່າຈະຫຼຸດອອກເອງ
+        ລູກສອນເພື່ອຮຽງລຳດັບ · ຕິດ “ຜູ້ຊະນະ” ໄດ້ພຽງ 1 ຄົນຕໍ່ສາຂາ — ຕິດຄົນໃໝ່ ຄົນເກົ່າຈະຫຼຸດອອກເອງ
       </p>
 
       {setWinner.error && (

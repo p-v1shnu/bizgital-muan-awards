@@ -16,6 +16,7 @@ import { HealthModule } from './modules/health/health.module';
 import { IdentityAccessModule } from './modules/identity-access/identity-access.module';
 import { JudgesModule } from './modules/judges/judges.module';
 import { NominationsModule } from './modules/nominations/nominations.module';
+import { PublicSiteModule } from './modules/public-site/public-site.module';
 import { SiteSettingsModule } from './modules/site-settings/site-settings.module';
 import { SponsorsModule } from './modules/sponsors/sponsors.module';
 import { StorageModule } from './modules/storage/storage.module';
@@ -39,6 +40,7 @@ import { SubmissionsModule } from './modules/submissions/submissions.module';
     NominationsModule,
     SponsorsModule,
     SubmissionsModule,
+    PublicSiteModule,
     SiteSettingsModule,
     DashboardModule,
     HealthModule,

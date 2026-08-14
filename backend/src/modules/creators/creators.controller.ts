@@ -2,25 +2,14 @@ import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, Req
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 
+import { CreateCreatorDto, UpdateCreatorDto } from './dto/creator.dto';
 import { CreatorsService } from './creators.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
-import { CreateCreatorDto, UpdateCreatorDto } from './dto/creator.dto';
 import { PaginationDto } from '../../common/dto/pagination.dto';
-import { Public } from '../../common/decorators/public.decorator';
 
-@ApiTags('creators')
-@Controller('creators')
-export class CreatorsController {
-  constructor(private readonly creators: CreatorsService) {}
-
-  @Public()
-  @Get(':slug')
-  @ApiOperation({ summary: 'Public creator profile with the years they appear in' })
-  bySlug(@Param('slug') slug: string) {
-    return this.creators.findPublicBySlug(slug);
-  }
-}
+// The public creator profile lives in PublicSiteController, alongside the
+// other visitor-facing reads.
 
 @ApiTags('creators-admin')
 @Controller('admin/creators')

@@ -1,10 +1,14 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 
-import { EditionsAdminController, EditionsController } from './editions.controller';
+import { EditionsAdminController } from './editions.controller';
 import { EditionsService } from './editions.service';
+import { PublicSiteModule } from '../public-site/public-site.module';
 
 @Module({
-  controllers: [EditionsController, EditionsAdminController],
+  // PublicSiteModule needs EditionsService for the "latest" queries, and this
+  // module needs PreviewService to mint links — hence the forward reference.
+  imports: [forwardRef(() => PublicSiteModule)],
+  controllers: [EditionsAdminController],
   providers: [EditionsService],
   exports: [EditionsService],
 })

@@ -49,6 +49,23 @@ npm run dev                 # http://localhost:3000
 `DATABASE_URL` in `.env` points at the `mysql` service name for Compose. When
 running the backend on the host, change the host to `127.0.0.1:3306`.
 
+### Tests
+
+```bash
+cd backend
+# One-off: a throwaway schema the suite is allowed to wipe.
+mysql -h 127.0.0.1 -u root -p -e "CREATE DATABASE muan_awards_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+DATABASE_URL="$TEST_DATABASE_URL" npx prisma migrate deploy
+
+npm test
+```
+
+The suite runs against a real MySQL rather than a mocked Prisma, because
+almost every rule worth testing is a database rule — unique slugs, one winner
+per category, one year accepting entries at a time. It boots the actual
+application with the same pipes, filters and guards as `main.ts`, so a test
+cannot pass on a route production would reject.
+
 ### First admin account
 
 There is no seeded admin — the first one is created through the app so the

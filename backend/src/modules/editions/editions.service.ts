@@ -264,6 +264,26 @@ export class EditionsService {
     return after;
   }
 
+  /**
+   * A preview link hands an outsider a way in, so who minted one and when it
+   * lapses belongs in the trail even though nothing about the year changed.
+   */
+  async recordPreviewLink(
+    edition: { id: string; year: number },
+    actorId: string,
+    expiresAt: Date,
+    ipAddress?: string,
+  ) {
+    await this.audit.log({
+      userId: actorId,
+      action: 'edition.preview.minted',
+      targetType: 'Edition',
+      targetId: edition.id,
+      after: { year: edition.year, expiresAt },
+      ipAddress,
+    });
+  }
+
   /** A DRAFT year can be deleted outright; anything the public has seen cannot. */
   async remove(id: string, actorId: string, ipAddress?: string) {
     const edition = await this.findById(id);
