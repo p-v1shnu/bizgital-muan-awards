@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -97,11 +98,13 @@ export function Avatar({
   const box = size === 'lg' ? 'size-28' : 'size-16';
 
   if (src) {
-    // eslint-disable-next-line @next/next/no-img-element
+    const px = size === 'lg' ? 112 : 64;
     return (
-      <img
+      <Image
         src={src}
         alt=""
+        width={px}
+        height={px}
         className={cn(box, 'shrink-0 rounded-full border border-rule object-cover')}
       />
     );

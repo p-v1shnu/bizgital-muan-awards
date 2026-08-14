@@ -1,0 +1,36 @@
+import Link from 'next/link';
+
+import { ActionLink, Section } from '@/components/site/primitives';
+
+/**
+ * Sits inside the site group so a wrong URL keeps the header and footer —
+ * the reader is one click from somewhere useful rather than at a dead end.
+ */
+export default function NotFound() {
+  return (
+    <Section className="py-24">
+      <div className="foil mb-6 h-[3px] w-16 rounded-sm" aria-hidden />
+      <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">ບໍ່ພົບໜ້ານີ້</h1>
+      <p className="mt-4 max-w-md text-[15px] leading-relaxed text-ink-2">
+        ໜ້າທີ່ທ່ານຊອກຫາອາດຖືກຍ້າຍ ຫຼື ຍັງບໍ່ໄດ້ເຜີຍແຜ່
+      </p>
+
+      <div className="mt-8 flex flex-wrap gap-2">
+        <ActionLink href="/">ກັບໜ້າແຮກ</ActionLink>
+        <ActionLink href="/awards/latest" tone="quiet">
+          ງານປີລ່າສຸດ
+        </ActionLink>
+        <ActionLink href="/winners" tone="quiet">
+          ທຳນຽບຜູ້ຊະນະ
+        </ActionLink>
+      </div>
+
+      <p className="mt-10 text-[13px] text-ink-3">
+        ຖ້າທ່ານມາຈາກລິງກ໌ເກົ່າ ລອງເລີ່ມທີ່{' '}
+        <Link href="/" className="text-brand-deep hover:underline">
+          ໜ້າແຮກ
+        </Link>
+      </p>
+    </Section>
+  );
+}

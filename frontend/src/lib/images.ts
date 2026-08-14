@@ -9,8 +9,8 @@ export function imageUrl(key: string | null | undefined): string | null {
   return `${BASE}/${key}`;
 }
 
-/** Keys the team has not filled in yet, so a page still has something to show. */
-export function imageUrlList(keys: unknown): string[] {
+/** galleryImageKeys arrives as JSON, so it is narrowed rather than trusted. */
+export function imageKeyList(keys: unknown): string[] {
   if (!Array.isArray(keys)) return [];
-  return keys.filter((key): key is string => typeof key === 'string').map((key) => `${BASE}/${key}`);
+  return keys.filter((key): key is string => typeof key === 'string');
 }

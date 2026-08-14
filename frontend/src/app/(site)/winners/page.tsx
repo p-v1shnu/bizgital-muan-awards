@@ -2,8 +2,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import { ActionLink, Avatar, Section } from '@/components/site/primitives';
+import { SiteImage } from '@/components/site/site-image';
 import { getPublic } from '@/lib/api/server';
-import { imageUrl } from '@/lib/images';
 import type { WinnersYear } from '@/types/public';
 
 export const metadata: Metadata = {
@@ -28,7 +28,6 @@ export default async function WinnersPage() {
       ) : (
         <div className="space-y-6">
           {years.map((year) => {
-            const hero = imageUrl(year.heroImageKey);
             // Featured categories lead; the rest fill the row if there is space.
             const shown = [...year.categories]
               .sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured))
@@ -39,13 +38,8 @@ export default async function WinnersPage() {
                 key={year.id}
                 className="grid overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel md:grid-cols-[300px_1fr]"
               >
-                <Link href={`/awards/${year.slug}`} className="relative block bg-panel-2">
-                  {hero ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={hero} alt="" className="h-full min-h-44 w-full object-cover" />
-                  ) : (
-                    <div className="h-full min-h-44 w-full bg-[linear-gradient(140deg,#f4efe5,#e4d8c4)]" />
-                  )}
+                <Link href={`/awards/${year.slug}`} className="relative block min-h-44 bg-panel-2">
+                  <SiteImage imageKey={year.heroImageKey} sizes="(max-width: 768px) 100vw, 300px" />
                   <span className="absolute bottom-3 left-4 font-serif text-4xl text-white drop-shadow">
                     {year.year}
                   </span>

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { RevalidationService } from './revalidation.service';
 
 export interface AuditEntry {
   userId: string;
@@ -19,7 +20,10 @@ export interface AuditEntry {
  */
 @Injectable()
 export class AuditService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly revalidation: RevalidationService,
+  ) {}
 
   async log(entry: AuditEntry) {
     await this.prisma.auditLog.create({
@@ -33,5 +37,10 @@ export class AuditService {
         ipAddress: entry.ipAddress,
       },
     });
+
+    // Every content change lands here, which makes this the one place that
+    // sees them all — so the site cache is cleared from here rather than from
+    // each service, where a new write path would eventually be forgotten.
+    this.revalidation.trigger(entry.action);
   }
 }

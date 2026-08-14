@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same branch cancels the first: the older answer is not
+# worth waiting for.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — build and test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: muan_awards_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      # The suite wipes this schema between runs, so it must be a throwaway.
+      TEST_DATABASE_URL: mysql://root:root@127.0.0.1:3306/muan_awards_test
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/muan_awards_test
+      JWT_SECRET: ci-jwt-secret-that-is-long-enough-0123456789
+      REFRESH_TOKEN_SECRET: ci-refresh-secret-that-is-long-enough-0123456789
+      SETUP_ENABLED: 'true'
+      CORS_ORIGINS: http://localhost:3000
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npx prisma migrate deploy
+      - run: npm run build
+      - run: npm test
+
+      # A vulnerable dependency should fail the build, not sit in a report
+      # nobody opens.
+      - run: npm audit --audit-level=high
+
+  frontend:
+    name: Frontend — build and typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm audit --audit-level=high
+
+  e2e:
+    name: End to end — the browser pass
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: muan_awards
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/muan_awards
+      JWT_SECRET: ci-jwt-secret-that-is-long-enough-0123456789
+      REFRESH_TOKEN_SECRET: ci-refresh-secret-that-is-long-enough-0123456789
+      SETUP_ENABLED: 'true'
+      CORS_ORIGINS: http://localhost:3000
+      BACKEND_PORT: '3001'
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:3001/api/v1
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build and start the API
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npx prisma migrate deploy
+          npm run build
+          node dist/main.js &
+          npx wait-on http://127.0.0.1:3001/api/v1/health --timeout 60000
+
+      - name: Build and start the site
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npm start &
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Run the browser pass
+        working-directory: frontend
+        run: |
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7

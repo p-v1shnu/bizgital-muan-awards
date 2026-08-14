@@ -20,3 +20,8 @@ npm-debug.log*
 
 # Local infrastructure state
 docker/data/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

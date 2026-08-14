@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { ClipboardList, Gavel, Megaphone, Trophy } from 'lucide-react';
 
 import { ActionLink, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
+import { SiteImage } from '@/components/site/site-image';
 import { getPublic } from '@/lib/api/server';
-import { imageUrl, imageUrlList } from '@/lib/images';
+import { imageKeyList } from '@/lib/images';
 import type { Edition, SiteSettings } from '@/types/api';
 
 interface WinnersYear {
@@ -36,8 +37,8 @@ export default async function HomePage() {
     getPublic<{ years: number; categories: number; creators: number }>('/stats'),
   ]);
 
-  const hero = imageUrl(site?.heroImageKey);
-  const gallery = imageUrlList(site?.galleryImageKeys);
+  const heroKey = site?.heroImageKey ?? null;
+  const gallery = imageKeyList(site?.galleryImageKeys);
   const latestWinners = winnerYears?.[0];
   const featuredWinners = (latestWinners?.categories ?? [])
     .filter((category) => category.isFeatured)
@@ -48,9 +49,9 @@ export default async function HomePage() {
       {/* 2 — hero, with the two entry cards overlapping its lower edge */}
       <section className="relative">
         <div className="relative h-[58vh] min-h-[380px] w-full overflow-hidden bg-panel-2">
-          {hero ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={hero} alt="" className="size-full object-cover" />
+          {heroKey ? (
+            // The one image above the fold, so it is what LCP measures.
+            <SiteImage imageKey={heroKey} sizes="100vw" priority />
           ) : (
             <div className="grid size-full place-items-center bg-[linear-gradient(160deg,#f4efe5,#e9e0d0)]">
               <p className="px-6 text-center text-[13px] text-ink-3">
@@ -126,15 +127,14 @@ export default async function HomePage() {
               (item, index) => (
                 <div
                   key={index}
-                  className={`overflow-hidden rounded-[var(--radius-sm)] bg-panel-2 ${
+                  className={`relative aspect-square overflow-hidden rounded-[var(--radius-sm)] bg-panel-2 ${
                     index === 0 ? 'col-span-2 row-span-2' : ''
                   }`}
                 >
                   {typeof item === 'string' ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item} alt="" className="size-full object-cover" />
+                    <SiteImage imageKey={item} sizes="(max-width: 768px) 33vw, 200px" />
                   ) : (
-                    <div className="aspect-square size-full border border-dashed border-rule" />
+                    <div className="size-full border border-dashed border-rule" />
                   )}
                 </div>
               ),
@@ -219,17 +219,12 @@ export default async function HomePage() {
                 href={`/awards/${edition.slug}`}
                 className="group overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-colors hover:border-ink-3"
               >
-                <div className="aspect-[16/9] overflow-hidden bg-panel-2">
-                  {imageUrl(edition.heroImageKey) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={imageUrl(edition.heroImageKey) as string}
-                      alt=""
-                      className="size-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="size-full bg-[linear-gradient(140deg,#f4efe5,#e7dcc9)]" />
-                  )}
+                <div className="relative aspect-[16/9] overflow-hidden bg-panel-2">
+                  <SiteImage
+                    imageKey={edition.heroImageKey}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+                    className="transition-transform group-hover:scale-105"
+                  />
                 </div>
                 <div className="flex items-baseline gap-3 p-4">
                   <span className="font-serif text-2xl text-ink">{edition.year}</span>
@@ -245,14 +240,10 @@ export default async function HomePage() {
       {gallery.length > 0 && (
         <Section eyebrow="ບັນຍາກາດ" title="ຄັງພາບ">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {gallery.slice(0, 6).map((src) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={src}
-                src={src}
-                alt=""
-                className="aspect-[4/3] w-full rounded-[var(--radius-sm)] object-cover"
-              />
+            {gallery.slice(0, 6).map((key) => (
+              <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2">
+                <SiteImage imageKey={key} sizes="(max-width: 768px) 50vw, 380px" />
+              </div>
             ))}
           </div>
         </Section>

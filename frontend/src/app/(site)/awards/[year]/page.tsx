@@ -4,8 +4,9 @@ import { CalendarDays, Eye, MapPin } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
 import { cn } from '@/lib/utils';
+import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
-import { imageUrl, imageUrlList } from '@/lib/images';
+import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
 
@@ -53,8 +54,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
     getPublic<Edition[]>('/editions'),
   ]);
 
-  const hero = imageUrl(edition.heroImageKey);
-  const gallery = imageUrlList(edition.galleryImageKeys);
+  const gallery = imageKeyList(edition.galleryImageKeys);
   const showNominees = edition.categories.some((category) => category.nominees.length > 0);
   const winners = edition.categories
     .map((category) => ({ category, winner: category.nominees.find((n) => n.isWinner) }))
@@ -74,12 +74,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 1 — hero: the only place a year is allowed its own look */}
       <section className="relative overflow-hidden bg-panel-2">
         <div className="relative h-[46vh] min-h-[320px]">
-          {hero ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={hero} alt="" className="size-full object-cover" />
-          ) : (
-            <div className="size-full bg-[linear-gradient(150deg,#f4efe5,#e4d8c4)]" />
-          )}
+          <SiteImage imageKey={edition.heroImageKey} sizes="100vw" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent" />
 
           <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-5 pb-8">
@@ -299,10 +294,14 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 {sponsors.map((sponsor) => {
-                  const logo = imageUrl(sponsor.logoKey);
-                  const inner = logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logo} alt={sponsor.name} className="h-10 w-auto object-contain" />
+                  const inner = sponsor.logoKey ? (
+                    <SiteImageFixed
+                      imageKey={sponsor.logoKey}
+                      alt={sponsor.name}
+                      width={160}
+                      height={40}
+                      className="h-10 w-auto object-contain"
+                    />
                   ) : (
                     <span className="text-[13px] text-ink-2">{sponsor.name}</span>
                   );
@@ -331,14 +330,10 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {gallery.length > 0 && (
         <Section eyebrow="ບັນຍາກາດ" title={`ພາບບັນຍາກາດງານ ${edition.year}`}>
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {gallery.map((src) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={src}
-                src={src}
-                alt=""
-                className="aspect-[4/3] w-full rounded-[var(--radius-sm)] object-cover"
-              />
+            {gallery.map((key) => (
+              <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2">
+                <SiteImage imageKey={key} sizes="(max-width: 768px) 50vw, 380px" />
+              </div>
             ))}
           </div>
         </Section>
