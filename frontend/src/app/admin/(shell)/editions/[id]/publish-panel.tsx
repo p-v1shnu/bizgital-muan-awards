@@ -10,6 +10,7 @@ import { ErrorNote, Note } from '@/components/ui/feedback';
 import { Field, Input, Switch } from '@/components/ui/field';
 import { PHASE_LABEL } from '@/components/ui/badge';
 import { PHASE_ORDER } from '@/components/admin/phase-steps';
+import { fromVientianeInput, toVientianeInput } from '@/lib/dates';
 import { useApiMutation } from '@/lib/api/hooks';
 import type { Category, Edition, EditionPhase } from '@/types/api';
 
@@ -118,7 +119,7 @@ export function PublishPanel({ edition, categories }: { edition: Edition; catego
 }
 
 function SubmissionsPanel({ edition }: { edition: Edition }) {
-  const [closeAt, setCloseAt] = useState(toLocalInput(edition.submissionsCloseAt));
+  const [closeAt, setCloseAt] = useState(toVientianeInput(edition.submissionsCloseAt));
 
   const setSubmissions = useApiMutation<{ submissionsOpen: boolean; submissionsCloseAt: string | null }>(
     `/admin/editions/${edition.id}/submissions`,
@@ -139,7 +140,7 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
             checked={edition.submissionsOpen}
             disabled={setSubmissions.isPending}
             label="ເປີດ/ປິດຟອມສົ່ງລາຍຊື່"
-            onChange={(next) => save(next, closeAt ? new Date(closeAt).toISOString() : null)}
+            onChange={(next) => save(next, fromVientianeInput(closeAt))}
           />
           <span>
             <span className="block text-[13px] font-semibold text-ink">
@@ -151,14 +152,14 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
           </span>
         </div>
 
-        <Field label="ວັນປິດຮັບອັດຕະໂນມັດ" hint="— ບໍ່ບັງຄັບ">
+        <Field label="ວັນປິດຮັບອັດຕະໂນມັດ" hint="— ບໍ່ບັງຄັບ · ເວລາລາວ (UTC+7)">
           <Input
             type="datetime-local"
             value={closeAt}
             onChange={(event) => setCloseAt(event.target.value)}
             onBlur={() =>
               edition.submissionsOpen &&
-              save(true, closeAt ? new Date(closeAt).toISOString() : null)
+              save(true, fromVientianeInput(closeAt))
             }
           />
         </Field>
@@ -229,10 +230,3 @@ function buildChecklist(
   ];
 }
 
-/** <input type="datetime-local"> wants local wall-clock, not an ISO string. */
-function toLocalInput(iso: string | null) {
-  if (!iso) return '';
-  const date = new Date(iso);
-  const offset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-}

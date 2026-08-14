@@ -44,9 +44,10 @@ export async function SiteHeader() {
         </Link>
 
         <nav className="ml-auto flex items-center gap-1 text-[13px]">
-          <NavLink href={latest ? `/awards/${latest.slug}` : '/awards/latest'}>
-            ງານປີ {latest?.year ?? ''}
-          </NavLink>
+          {/* Before the first year is published there is nothing to point at,
+              and an item reading "ງານປີ" with no year — linking to a page that
+              answers 404 — is worse than no item at all. */}
+          {latest && <NavLink href={`/awards/${latest.slug}`}>ງານປີ {latest.year}</NavLink>}
           <NavLink href="/winners">ທຳນຽບຜູ້ຊະນະ</NavLink>
           <NavLink href="/about" className="hidden sm:inline-flex">
             ກ່ຽວກັບງານ
@@ -90,7 +91,10 @@ function NavLink({
 }
 
 export async function SiteFooter() {
-  const site = await getPublic<SiteSettings>('/site');
+  const [site, latest] = await Promise.all([
+    getPublic<SiteSettings>('/site'),
+    getPublic<Edition>('/editions/latest'),
+  ]);
 
   return (
     <footer className="mt-24 bg-ink text-[#e8e1d7]">
@@ -115,7 +119,7 @@ export async function SiteFooter() {
           <FooterColumn
             title="ລາງວັນ"
             links={[
-              { href: '/awards/latest', label: 'ງານປີລ່າສຸດ' },
+              ...(latest ? [{ href: '/awards/latest', label: 'ງານປີລ່າສຸດ' }] : []),
               { href: '/winners', label: 'ທຳນຽບຜູ້ຊະນະ' },
               { href: '/submit', label: 'ສົ່ງລາຍຊື່' },
             ]}

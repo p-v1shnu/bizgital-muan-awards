@@ -16,6 +16,26 @@ interface Options {
   preview?: string;
 }
 
+/**
+ * Thrown when the API could not answer at all. It is deliberately not the same
+ * thing as "the API said this does not exist": treating an outage as an empty
+ * database published the awards as though no year had ever happened — the
+ * homepage fell back to its pre-launch placeholders, the hall of winners said
+ * there were none, and a real year answered 404, which is the one status that
+ * tells a search engine to drop the page for good. An outage has to read as
+ * temporary, so it surfaces as a 500 and Next renders the error page.
+ */
+class ApiUnavailableError extends Error {}
+
+/**
+ * The build is the one time an unreachable API must not throw: `npm run build`
+ * runs in CI and on a fresh server with nothing else up yet, and a build that
+ * needs a live database to succeed is a build that fails at the worst moment.
+ * The pages baked here carry a 60-second revalidate and none of them can 404,
+ * so an empty one repairs itself on the first request after the API is up.
+ */
+const BUILDING = process.env.NEXT_PHASE === 'phase-production-build';
+
 export async function getPublic<T>(path: string, options: Options = {}): Promise<T | null> {
   const url = new URL(`${BASE_URL}${path}`);
   if (options.preview) url.searchParams.set('preview', options.preview);
@@ -25,13 +45,17 @@ export async function getPublic<T>(path: string, options: Options = {}): Promise
     response = await fetch(url, {
       next: { revalidate: options.revalidate ?? DEFAULT_REVALIDATE },
     });
-  } catch {
-    // The API being briefly unreachable should degrade the page, not break it.
-    return null;
+  } catch (caught) {
+    if (BUILDING) return null;
+    throw new ApiUnavailableError(`${path} could not be reached: ${String(caught)}`);
   }
 
+  // The only answer that means "there is no such thing".
   if (response.status === 404) return null;
-  if (!response.ok) return null;
+  if (!response.ok) {
+    if (BUILDING) return null;
+    throw new ApiUnavailableError(`${path} answered ${response.status}`);
+  }
 
   const payload = await response.json().catch(() => null);
   return (payload?.data ?? null) as T | null;
