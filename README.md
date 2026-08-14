@@ -12,7 +12,7 @@ Design system and page mockups: [`docs/design/`](docs/design/) — open `style-g
 | Layer | Choice |
 |---|---|
 | Backend | NestJS 11, REST under `/api/v1/`, Swagger at `/api/docs` |
-| Frontend | Next.js 15 App Router, Tailwind v4, shadcn/ui |
+| Frontend | Next.js 16 App Router, Tailwind v4 |
 | Database | MySQL 8.4 + Prisma 6 |
 | Auth | JWT access token + refresh token in an HttpOnly cookie |
 | Storage | MinIO locally, DigitalOcean Spaces in production |
@@ -90,6 +90,14 @@ sudo caddy reload --config /etc/caddy/Caddyfile
 Migrations run automatically on container start (`prisma migrate deploy`), so a
 deploy needs no manual database step.
 
+**Read [`docs/deployment.md`](docs/deployment.md) before the first deploy.** It
+carries the post-deploy checklist — the checks that catch the failures which
+only appear on a real server: an image host that does not match what was baked
+into the build, bucket CORS refusing the upload, a proxy that hides the
+visitor's IP so one rate-limit bucket is shared by everyone. `docker compose
+up` has never been run against this repository, only validated, so treat the
+first deploy as an exercise to be watched rather than a formality.
+
 ---
 
 ## Repository layout
@@ -98,11 +106,17 @@ deploy needs no manual database step.
 backend/          NestJS API
   prisma/         schema.prisma — the single source of truth for the database
   src/common/     guards, filters, interceptors, decorators
-  src/modules/    identity-access, editions, audit, health
+  src/modules/    identity-access, editions, categories, creators, judges,
+                  nominations, sponsors, submissions, site-settings, storage,
+                  public-site, dashboard, audit, health
+  test/           e2e specs, run against a real MySQL
 frontend/         Next.js App Router
-  src/app/        routes; globals.css holds the locked design tokens
-  src/lib/api/    typed fetch client
-docs/             PRD, design system, mockups, logo assets
+  src/app/(site)/ the seven public pages
+  src/app/admin/  the ten back-office pages
+  src/app/        globals.css holds the locked design tokens
+  src/lib/api/    server reads and the browser client
+  e2e/            Playwright specs — the browser pass
+docs/             PRD, deployment guide, design system, mockups, logo assets
 ```
 
 ---
