@@ -20,7 +20,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year, category } = await params;
   const page = await tryGetPublic<PublicCategoryPage>(`/editions/${year}/categories/${category}`);
-  if (!page) return { title: 'ບໍ່ພົບສາຂານີ້' };
+  if (!page) return { title: 'Category not found' };
 
   const title = `${page.nameLo} · ${page.edition.titleLo}`;
   return {

@@ -16,7 +16,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const profile = await tryGetPublic<PublicProfile>(`/creators/${slug}`);
-  if (!profile) return { title: 'ບໍ່ພົບຄຣີເອເຕີ' };
+  if (!profile) return { title: 'Creator not found' };
 
   return {
     title: profile.nameLo,

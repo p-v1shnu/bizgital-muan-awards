@@ -21,7 +21,11 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year } = await params;
   const edition = await tryGetPublic<PublicEdition>(`/editions/${year}`);
-  if (!edition) return { title: 'ບໍ່ພົບປີນີ້' };
+  // English, like the rest of a failure state. In practice the page below
+  // calls notFound() on the same miss and the title the reader sees comes from
+  // (site)/not-found.tsx — this is the honest answer for the branch, not the
+  // one that ships.
+  if (!edition) return { title: 'Year not found' };
 
   return {
     title: edition.titleLo,
