@@ -43,9 +43,15 @@ export class PublicThrottlerGuard extends ThrottlerGuard {
    * Mobile networks in Laos put a great many subscribers behind one public
    * address, so the limit is shared by strangers: measured against a single
    * address, the eleventh entry was refused and the sender was shown
-   * "ThrottlerException: Too Many Requests" — in English, naming a class.
+   * "ThrottlerException: Too Many Requests" — naming a class, which tells them
+   * nothing about what to do.
+   *
+   * English on the owner's instruction: every message on a failure path in this
+   * project is, because a failure is by definition the one thing nobody sees
+   * during a review, and unreviewed Lao is worse than plain English. Everything
+   * a visitor meets in ordinary use stays in Lao.
    */
   protected async getErrorMessage(): Promise<string> {
-    return 'ສົ່ງເລື້ອຍເກີນໄປ — ອິນເຕີເນັດມືຖືມັກໃຊ້ທີ່ຢູ່ຮ່ວມກັນຫຼາຍຄົນ ກະລຸນາລໍຖ້າແລ້ວລອງໃໝ່ ຫຼື ປ່ຽນເປັນ Wi-Fi';
+    return 'Too many entries from this connection. Mobile networks share one address between many people — please wait a while and try again, or switch to Wi-Fi.';
   }
 }

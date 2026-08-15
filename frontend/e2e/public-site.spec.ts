@@ -202,7 +202,9 @@ test.describe('a year page follows its phase', () => {
   test('an unknown year is a 404, not an error', async ({ page }) => {
     const response = await page.goto('/awards/2099');
     expect(response?.status()).toBe(404);
-    await expect(page.getByText('ບໍ່ພົບໜ້ານີ້')).toBeVisible();
+    // Failure pages are in English by the owner's decision — an error is the
+    // one screen nobody reviews, so unreviewed Lao is worse than plain English.
+    await expect(page.getByText('Page not found')).toBeVisible();
   });
 });
 

@@ -22,9 +22,9 @@ export default function GlobalError({
     <main className="grid min-h-screen place-items-center bg-paper px-5">
       <div className="max-w-md text-center">
         <div className="foil mx-auto mb-6 h-[3px] w-16 rounded-sm" aria-hidden />
-        <h1 className="font-serif text-3xl text-ink">ມີບາງຢ່າງຜິດພາດ</h1>
+        <h1 className="font-serif text-3xl text-ink">Something went wrong</h1>
         <p className="mt-3 text-[14.5px] leading-relaxed text-ink-2">
-          ລອງໂຫລດໃໝ່ອີກຄັ້ງ · ຖ້າຍັງເປັນຢູ່ ກະລຸນາແຈ້ງທີມງານ
+          Please reload the page. If it keeps happening, let the team know.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2">
@@ -33,13 +33,13 @@ export default function GlobalError({
             onClick={reset}
             className="rounded-[var(--radius-btn)] bg-ink px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-deep"
           >
-            ລອງໃໝ່
+            Reload
           </button>
           <a
             href="/"
             className="rounded-[var(--radius-btn)] border border-rule bg-panel px-5 py-3 text-[14px] font-semibold text-ink-2 hover:bg-panel-2 hover:text-ink"
           >
-            ກັບໜ້າແຮກ
+            Home
           </a>
         </div>
 

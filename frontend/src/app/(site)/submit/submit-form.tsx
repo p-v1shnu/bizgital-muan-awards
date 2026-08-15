@@ -62,14 +62,14 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
       }
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
-        throw new Error(payload?.message ?? 'ສົ່ງບໍ່ສຳເລັດ ລອງໃໝ່ອີກຄັ້ງ');
+        throw new Error(payload?.message ?? 'Could not send this entry. Please try again.');
       }
       setState('sent');
       // The number PRD §2 leads with: entries sent, split by category. Guarded
       // because gtag only exists once analytics is configured for the build.
       window.gtag?.('event', 'submission_sent', { category_id: values.categoryId });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'ສົ່ງບໍ່ສຳເລັດ');
+      setError(caught instanceof Error ? caught.message : 'Could not send this entry.');
       setState('idle');
     }
   }
