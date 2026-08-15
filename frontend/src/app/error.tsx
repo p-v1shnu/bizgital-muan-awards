@@ -33,13 +33,13 @@ export default function GlobalError({
             onClick={reset}
             className="rounded-[var(--radius-btn)] bg-ink px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-deep"
           >
-            Reload
+            ລອງໃໝ່
           </button>
           <a
             href="/"
             className="rounded-[var(--radius-btn)] border border-rule bg-panel px-5 py-3 text-[14px] font-semibold text-ink-2 hover:bg-panel-2 hover:text-ink"
           >
-            Home
+            ກັບໜ້າແຮກ
           </a>
         </div>
 
