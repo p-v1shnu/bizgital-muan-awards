@@ -150,7 +150,11 @@ export class EditionsService {
       where: { id },
       data: {
         ...dto,
-        eventDate: dto.eventDate === undefined ? undefined : new Date(dto.eventDate),
+        // Three cases, not two. Absent means leave it; a date means set it;
+        // null means the team cleared the box and wants it gone. `new Date(null)`
+        // is 1 January 1970, so folding the last two together would have put a
+        // 1970 date on the year page the first time anyone emptied the field.
+        eventDate: dto.eventDate == null ? (dto.eventDate as null | undefined) : new Date(dto.eventDate),
       },
     });
 
@@ -170,6 +174,13 @@ export class EditionsService {
    * Phase moves forward only. While an edition is still DRAFT it may jump to
    * any phase — that is how an old year is backfilled straight to
    * WINNERS_ANNOUNCED — but once it has left DRAFT it can never go back.
+   *
+   * Nothing about the year's *content* is checked here. PRD §4.3.3 asks for a
+   * checklist that warns and does not block, and this refused the move
+   * instead: a year with an empty category could not be published, and a
+   * backfilled 2023 whose winners are known but whose categories were never
+   * fully filled in could not be recorded at all. The list is shown on the
+   * page beside the button, where a warning belongs.
    */
   async changePhase(id: string, dto: ChangePhaseDto, actorId: string, ipAddress?: string) {
     const edition = await this.findById(id);
@@ -181,7 +192,6 @@ export class EditionsService {
         `Cannot move a published edition back from ${edition.phase} to ${dto.phase}`,
       );
     }
-    if (dto.phase !== EditionPhase.DRAFT) await this.assertReadyToPublish(edition.id, dto.phase);
 
     const after = await this.prisma.edition.update({ where: { id }, data: { phase: dto.phase } });
     await this.audit.log({
@@ -310,35 +320,6 @@ export class EditionsService {
     });
   }
 
-  /**
-   * The pre-publish checklist of PRD §4.3.3, as far as the database can check
-   * it. Everything here is required content — the rest of the checklist is
-   * editorial and stays with the team.
-   */
-  private async assertReadyToPublish(editionId: string, target: EditionPhase) {
-    const problems: string[] = [];
-
-    const categories = await this.prisma.category.count({ where: { editionId } });
-    if (categories === 0) problems.push('the edition has no categories');
-
-    if (target === EditionPhase.NOMINEES_ANNOUNCED || target === EditionPhase.WINNERS_ANNOUNCED) {
-      const empty = await this.prisma.category.count({
-        where: { editionId, nominations: { none: {} } },
-      });
-      if (empty > 0) problems.push(`${empty} category(ies) have no nominees`);
-    }
-
-    if (target === EditionPhase.WINNERS_ANNOUNCED) {
-      const withoutWinner = await this.prisma.category.count({
-        where: { editionId, nominations: { none: { isWinner: true } } },
-      });
-      if (withoutWinner > 0) problems.push(`${withoutWinner} category(ies) have no winner`);
-    }
-
-    if (problems.length > 0) {
-      throw new BadRequestException(`Not ready to publish: ${problems.join('; ')}`);
-    }
-  }
 }
 
 /** Re-exported so other modules can filter by the same definition of "public". */

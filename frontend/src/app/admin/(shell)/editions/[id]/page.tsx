@@ -92,7 +92,7 @@ function EditionDetail({ id }: { id: string }) {
           <div className="grid items-start gap-4 xl:grid-cols-[1fr_336px]">
             <DetailsTab edition={edition} />
             <div className="flex flex-col gap-3.5">
-              <PublishPanel edition={edition} categories={categories ?? []} />
+              <PublishPanel edition={edition} categories={categories ?? []} judges={judges?.length ?? 0} />
             </div>
           </div>
         ) : tab === 'categories' ? (

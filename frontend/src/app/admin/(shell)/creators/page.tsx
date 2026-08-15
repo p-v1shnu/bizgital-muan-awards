@@ -16,6 +16,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Creator } from '@/types/api';
+import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
 
@@ -201,10 +202,10 @@ function CreatorDialog({
           action.mutate(
             {
               nameLo: form.nameLo,
-              nameEn: form.nameEn || undefined,
+              nameEn: emptyToNull(form.nameEn),
               slug: form.slug,
-              bioLo: form.bioLo || undefined,
-              avatarKey: avatarKey ?? undefined,
+              bioLo: emptyToNull(form.bioLo),
+              avatarKey: avatarKey ?? null,
               socialLinks: socials,
             },
             { onSuccess: onClose },

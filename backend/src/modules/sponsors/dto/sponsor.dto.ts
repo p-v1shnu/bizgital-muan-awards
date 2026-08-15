@@ -25,12 +25,12 @@ export class CreateSponsorDto {
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  logoKey?: string;
+  logoKey?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsUrl({ require_protocol: true })
-  websiteUrl?: string;
+  websiteUrl?: string | null;
 
   @ApiPropertyOptional({ enum: SponsorTier, default: SponsorTier.SUPPORTER })
   @IsOptional()

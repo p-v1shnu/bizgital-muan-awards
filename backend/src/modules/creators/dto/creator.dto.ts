@@ -18,23 +18,23 @@ export class CreateCreatorDto {
   @IsOptional()
   @IsString()
   @MaxLength(160)
-  nameEn?: string;
+  nameEn?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  bioLo?: string;
+  bioLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  bioEn?: string;
+  bioEn?: string | null;
 
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  avatarKey?: string;
+  avatarKey?: string | null;
 
   @ApiPropertyOptional({
     example: { facebook: 'https://…', tiktok: 'https://…' },

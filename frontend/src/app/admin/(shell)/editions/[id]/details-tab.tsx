@@ -11,6 +11,7 @@ import { ImageUpload } from '@/components/admin/image-upload';
 import { imageKeyList } from '@/lib/images';
 import { useApiMutation } from '@/lib/api/hooks';
 import type { Edition } from '@/types/api';
+import { emptyToNull } from '@/lib/utils';
 
 /** Everything about the event itself. The two switches live in the right rail. */
 export function DetailsTab({ edition }: { edition: Edition }) {
@@ -43,13 +44,13 @@ export function DetailsTab({ edition }: { edition: Edition }) {
         slug: form.slug,
         titleLo: form.titleLo,
         // Empty text fields clear the value rather than saving "".
-        descriptionLo: form.descriptionLo || undefined,
-        eventDate: form.eventDate ? new Date(form.eventDate).toISOString() : undefined,
-        venueLo: form.venueLo || undefined,
-        activitiesLo: form.activitiesLo || undefined,
-        ticketUrl: form.ticketUrl || undefined,
-        voteUrl: form.voteUrl || undefined,
-        heroImageKey: heroImageKey ?? undefined,
+        descriptionLo: emptyToNull(form.descriptionLo),
+        eventDate: form.eventDate ? new Date(form.eventDate).toISOString() : null,
+        venueLo: emptyToNull(form.venueLo),
+        activitiesLo: emptyToNull(form.activitiesLo),
+        ticketUrl: emptyToNull(form.ticketUrl),
+        voteUrl: emptyToNull(form.voteUrl),
+        heroImageKey: heroImageKey ?? null,
         galleryImageKeys: gallery,
       },
       { onSuccess: () => setSaved(true) },

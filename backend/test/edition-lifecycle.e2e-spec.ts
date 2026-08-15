@@ -51,13 +51,27 @@ describe('edition lifecycle', () => {
       expect(response.body.message).toContain('Cannot move a published edition back');
     });
 
-    it('refuses to announce nominees while a category is empty', async () => {
-      const response = await api(h)
+    /**
+     * PRD §4.3.3 asks the checklist to warn and not block, and this used to
+     * refuse. Blocking reads as prudent until a year has to be recorded as it
+     * actually was: an old edition whose winners are known but whose category
+     * list was never filled in completely could not be entered at all, which
+     * is the backfill §7.5 exists for. The warning lives beside the button in
+     * the back office, where the person deciding can see it.
+     */
+    it('announces nominees even with an empty category, warning rather than refusing', async () => {
+      await api(h)
         .patch(path(`/admin/editions/${editionId}/phase`))
         .set(h.auth)
         .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(200);
+
+      // Still forward-only — that rule is structural and stays enforced.
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
         .expect(400);
-      expect(response.body.message).toContain('no nominees');
     });
 
     it('refuses to delete a published edition', async () => {
@@ -218,6 +232,66 @@ describe('edition lifecycle', () => {
         .send({ items: [{ id: second, sortOrder: 0 }, { id: first, sortOrder: 1 }] })
         .expect(200);
       expect(reordered.body.data.map((row: { id: string }) => row.id)).toEqual([second, first]);
+    });
+  });
+
+  /**
+   * A field that can be filled in has to be emptiable, or the back office is a
+   * one-way door: PRD §7.4 asks the team to clear a finished year's ticket link
+   * so the button disappears from the archive instead of pointing at a page
+   * that no longer sells anything.
+   *
+   * The forms used to send `undefined` for a cleared box, which JSON drops
+   * entirely and Prisma reads as "leave this column alone".
+   */
+  describe('clearing a field that was filled in', () => {
+    let editionId: string;
+
+    beforeAll(async () => {
+      editionId = (
+        await api(h)
+          .post(path('/admin/editions'))
+          .set(h.auth)
+          .send({
+            year: 2046,
+            slug: '2046',
+            titleLo: 'ປີທົດສອບການລຶບ',
+            ticketUrl: 'https://tickets.example.com/2041',
+            venueLo: 'ຫໍປະຊຸມແຫ່ງຊາດ',
+            eventDate: '2046-11-20T12:00:00.000Z',
+          })
+          .expect(201)
+      ).body.data.id;
+    });
+
+    it('empties a link, a place and a date when null is sent', async () => {
+      const cleared = await api(h)
+        .patch(path(`/admin/editions/${editionId}`))
+        .set(h.auth)
+        .send({ ticketUrl: null, venueLo: null, eventDate: null })
+        .expect(200);
+
+      expect(cleared.body.data.ticketUrl).toBeNull();
+      expect(cleared.body.data.venueLo).toBeNull();
+      // Not 1970: `new Date(null)` is the epoch, and folding "clear this" in
+      // with "set this" would have written that date onto the year page.
+      expect(cleared.body.data.eventDate).toBeNull();
+    });
+
+    it('still leaves a field alone when it is simply not mentioned', async () => {
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}`))
+        .set(h.auth)
+        .send({ ticketUrl: 'https://tickets.example.com/again' })
+        .expect(200);
+
+      const untouched = await api(h)
+        .patch(path(`/admin/editions/${editionId}`))
+        .set(h.auth)
+        .send({ titleLo: 'ຊື່ໃໝ່' })
+        .expect(200);
+
+      expect(untouched.body.data.ticketUrl).toBe('https://tickets.example.com/again');
     });
   });
 });

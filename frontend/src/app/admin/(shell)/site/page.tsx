@@ -11,6 +11,7 @@ import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { SiteSettings } from '@/types/api';
+import { emptyToNull } from '@/lib/utils';
 
 /**
  * The evergreen content of the homepage (PRD §6.1.1). Nothing here may name a
@@ -62,8 +63,8 @@ export default function SitePage() {
               {
                 brandStatementLo: form.brandStatementLo,
                 aboutSummaryLo: form.aboutSummaryLo,
-                heroCaptionLo: form.heroCaptionLo || undefined,
-                heroImageKey: heroImageKey ?? undefined,
+                heroCaptionLo: emptyToNull(form.heroCaptionLo),
+                heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
               },
               { onSuccess: () => setSaved(true) },

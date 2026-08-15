@@ -61,6 +61,55 @@ test.describe('the edition page', () => {
     await expect(page.locator('textarea').nth(1)).toHaveValue('ຍ່າງພົມແດງ\nປະກາດຜົນລາງວັນ');
   });
 
+  /**
+   * PRD §7.4: clearing the URL removes the button, so a year that has finished
+   * does not keep sending people to a ticket page that no longer sells
+   * anything. Emptying the box used to change nothing at all — the field was
+   * sent as `undefined`, which never reached the database.
+   */
+  test('a link that was added can be taken away again', async ({ page }) => {
+    const ticket = page.getByRole('textbox', { name: 'ລິງກ໌ຊື້ບັດ' });
+    // The seed puts a link here and a later test reads it, so whatever is
+    // found gets put back at the end.
+    const seeded = await ticket.inputValue();
+    await ticket.fill('https://tickets.example.com/muan');
+    await page.getByRole('button', { name: 'ບັນທຶກ' }).first().click();
+    await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
+
+    const publicPage = await page.context().newPage();
+    try {
+      await expect(async () => {
+        await publicPage.goto('/awards/2026');
+        await expect(publicPage.getByRole('main').getByRole('link', { name: 'ຊື້ບັດ' })).toBeVisible();
+      }).toPass({ timeout: 15_000 });
+
+      await ticket.fill('');
+      await page.getByRole('button', { name: 'ບັນທຶກ' }).first().click();
+      await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
+
+      await expect(async () => {
+        await publicPage.goto('/awards/2026');
+        await expect(publicPage.getByRole('main').getByRole('link', { name: 'ຊື້ບັດ' })).toBeHidden();
+      }).toPass({ timeout: 15_000 });
+
+      // And it stayed gone in the back office, not just on the page.
+      await page.reload();
+      await expect(page.getByRole('textbox', { name: 'ລິງກ໌ຊື້ບັດ' })).toHaveValue('');
+    } finally {
+      const after = page.getByRole('textbox', { name: 'ລິງກ໌ຊື້ບັດ' });
+      await after.fill(seeded);
+      await page.getByRole('button', { name: 'ບັນທຶກ' }).first().click();
+      await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
+      // Wait for the public page to agree before letting go — the cache purge
+      // lands after the save, and a later spec reads this same link.
+      await expect(async () => {
+        await publicPage.goto('/awards/2026');
+        await expect(publicPage.getByRole('main').getByRole('link', { name: 'ຊື້ບັດ' })).toBeVisible();
+      }).toPass({ timeout: 15_000 });
+      await publicPage.close();
+    }
+  });
+
   test('photos of the night can be managed on the year itself', async ({ page }) => {
     // Without this card the gallery on the year page could never be filled —
     // the column existed and the public page rendered it, but nothing wrote it.
@@ -102,8 +151,32 @@ test.describe('the edition page', () => {
     await expect(up.first(), 'the top of a tier has nowhere to go').toBeDisabled();
   });
 
-  test('the publish checklist names what it blocks', async ({ page }) => {
-    await expect(page.getByText('ບລັອກຂັ້ນ').first()).toBeVisible();
+  /**
+   * PRD §4.3.3 lists five things to check before publishing and says to warn,
+   * not block. Four of the five were missing and the button was disabled
+   * instead — which would have made backfilling an old year impossible, since
+   * a 2023 has no key visual, no venue and no panel and still has to reach
+   * "winners announced".
+   */
+  test('the publish checklist warns about all five things and blocks none of them', async ({
+    page,
+  }) => {
+    for (const item of [
+      'ມີສາຂາຢ່າງໜ້ອຍ 1 ສາຂາ',
+      'ຕັ້ງສາຂາເດັ່ນ 3–6 ສາຂາ',
+      'ມີວັນທີຈັດງານ ແລະ ສະຖານທີ່',
+      'ມີຮູບ key visual ຂອງປີ',
+      'ມີຄະນະກຳມະການຢ່າງໜ້ອຍ 1 ທ່ານ',
+    ]) {
+      // The label also appears inside the confirm dialog's summary, so the
+      // first match is the checklist row itself.
+      await expect(page.getByText(item).first()).toBeVisible();
+    }
+
+    // 2026 is missing its key visual in the seed, so something is outstanding
+    // — and the button is still pressable.
+    const advance = page.getByRole('button', { name: /ໄປຂັ້ນ/ });
+    await expect(advance).toBeEnabled();
   });
 
   test('crowning a winner un-crowns the previous one', async ({ page }) => {

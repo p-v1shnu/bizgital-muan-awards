@@ -22,3 +22,22 @@ export function safeHttpUrl(value: string | null | undefined) {
     return null;
   }
 }
+
+/**
+ * What an emptied field has to be sent as, for a saved value to be removable.
+ *
+ * These forms used to send `undefined` for a box the team had cleared. That is
+ * not "no value" on the way to the database — `JSON.stringify` drops the key
+ * entirely, so the field never reaches the API, and Prisma reads a missing
+ * field as "leave this column alone". The result was a one-way door: a ticket
+ * link could be added and never taken away, so the "buy tickets" button stayed
+ * on a year that finished months ago, pointing at a page that no longer sells
+ * anything — the dead link PRD §7.4 exists to prevent. The same for the venue,
+ * the date, the hero image and a category's group heading.
+ *
+ * `null` is the difference. It survives the encoding and Prisma writes it.
+ */
+export function emptyToNull(value: string | null | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}

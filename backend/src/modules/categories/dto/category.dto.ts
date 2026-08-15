@@ -30,23 +30,23 @@ export class CreateCategoryDto {
   @IsOptional()
   @IsString()
   @MaxLength(160)
-  nameEn?: string;
+  nameEn?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  descriptionLo?: string;
+  descriptionLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  descriptionEn?: string;
+  descriptionEn?: string | null;
 
   @ApiPropertyOptional({ description: 'Grouping heading, used when a year runs long (PRD §7.6)' })
   @IsOptional()
   @IsString()
   @MaxLength(120)
-  groupLo?: string;
+  groupLo?: string | null;
 
   @ApiPropertyOptional({ description: 'Recommended 3-6 per edition' })
   @IsOptional()

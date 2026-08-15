@@ -160,6 +160,14 @@ test.describe('a year page follows its phase', () => {
       }).toPass({ timeout: 15_000 });
     } finally {
       await setEntries(2026, true);
+      // Put the page back too, not just the row. The API purges the site's
+      // cache after a save, and that lands a moment later — a test that ends
+      // the instant the row changes hands the next one a page that still says
+      // entries are closed, which is what made six unrelated tests fail.
+      await expect(async () => {
+        await page.goto('/awards/2026');
+        await expect(main.getByRole('link', { name: 'ສົ່ງລາຍຊື່' })).toBeVisible();
+      }).toPass({ timeout: 15_000 });
     }
 
     // A backfilled year says nothing about entries at all — neither an

@@ -11,6 +11,7 @@ import { EmptyState, ErrorNote, LoadingBlock, Note } from '@/components/ui/feedb
 import { Field, Input, Select, Switch, Textarea } from '@/components/ui/field';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { Category, Edition } from '@/types/api';
+import { emptyToNull } from '@/lib/utils';
 
 export function CategoriesTab({ edition }: { edition: Edition }) {
   const path = `/admin/editions/${edition.id}/categories`;
@@ -209,8 +210,8 @@ function CategoryDialog({
       {
         slug: form.slug,
         nameLo: form.nameLo,
-        groupLo: form.groupLo || undefined,
-        descriptionLo: form.descriptionLo || undefined,
+        groupLo: emptyToNull(form.groupLo),
+        descriptionLo: emptyToNull(form.descriptionLo),
         isFeatured: form.isFeatured,
       },
       { onSuccess: onClose },

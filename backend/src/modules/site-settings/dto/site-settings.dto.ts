@@ -7,19 +7,19 @@ export class UpdateSiteSettingsDto {
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  heroImageKey?: string;
+  heroImageKey?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  heroCaptionLo?: string;
+  heroCaptionLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  heroCaptionEn?: string;
+  heroCaptionEn?: string | null;
 
   @ApiPropertyOptional({ description: 'The one-line statement under the homepage title' })
   @IsOptional()

@@ -24,7 +24,7 @@ export class CreateJudgeDto {
   @IsOptional()
   @IsString()
   @MaxLength(160)
-  nameEn?: string;
+  nameEn?: string | null;
 
   @ApiProperty({ example: 'ຜູ້ອຳນວຍການ, Muan Media' })
   @IsString()
@@ -36,23 +36,23 @@ export class CreateJudgeDto {
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  positionEn?: string;
+  positionEn?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  bioLo?: string;
+  bioLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  bioEn?: string;
+  bioEn?: string | null;
 
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
   @IsOptional()
   @IsString()
   @MaxLength(300)
-  avatarKey?: string;
+  avatarKey?: string | null;
 }
 
 export class UpdateJudgeDto extends PartialType(CreateJudgeDto) {}

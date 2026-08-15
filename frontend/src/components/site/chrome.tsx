@@ -27,16 +27,19 @@ export async function SiteHeader() {
           <Image
             src="/brand/horizontal-black.png"
             alt="ມ່ວນ ອະວອດ"
-            width={1100}
-            height={340}
+            // The rendered size, not the file's. Declaring the full 1100 made
+            // Next ask its optimiser for the largest device width it knows —
+            // a 1200px re-encode of a logo that is drawn 104 pixels wide.
+            width={104}
+            height={32}
             priority
             className="hidden h-8 w-auto sm:block"
           />
           <Image
             src="/brand/brandmark-black.png"
             alt=""
-            width={512}
-            height={399}
+            width={41}
+            height={32}
             priority
             className="h-8 w-auto sm:hidden"
           />
@@ -107,8 +110,8 @@ export async function SiteFooter() {
             <Image
               src="/brand/horizontal-full-color.png"
               alt="ມ່ວນ ອະວອດ"
-              width={1100}
-              height={339}
+              width={130}
+              height={40}
               className="h-10 w-auto"
             />
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">

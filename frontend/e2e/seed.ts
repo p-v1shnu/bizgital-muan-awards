@@ -42,9 +42,15 @@ export default async function seed() {
     await api.dispose();
   };
 
-  // Already seeded by an earlier run.
+  // Already seeded by an earlier run — but two fixtures are switches that the
+  // specs themselves flip (entries open, the ticket link) and restore. A run
+  // killed part-way leaves them the wrong way round and eight later tests fail
+  // for a reason that has nothing to do with them, so they are re-established
+  // on every seed rather than only on the first.
   const existing = await (await api.get('editions')).json();
   if ((existing.data ?? []).length >= 2) {
+    const seeded = existing.data.find((row: { year: number }) => row.year === 2026);
+    if (seeded) await openEntriesOn(api, auth, seeded.id);
     await purge();
     return;
   }
@@ -174,17 +180,24 @@ export default async function seed() {
       if (phase === finalPhase) break;
     }
 
-    if (year === 2026) {
-      await api.patch(`admin/editions/${editionId}/submissions`, {
-        headers: auth,
-        data: { submissionsOpen: true },
-      });
-      await api.patch(`admin/editions/${editionId}`, {
-        headers: auth,
-        data: { ticketUrl: 'https://tickets.example.la', voteUrl: 'https://vote.example.la' },
-      });
-    }
+    if (year === 2026) await openEntriesOn(api, auth, editionId);
   }
 
   await purge();
+}
+
+/** The two fixtures the specs are allowed to change and expected to put back. */
+async function openEntriesOn(
+  api: Awaited<ReturnType<typeof request.newContext>>,
+  auth: Record<string, string>,
+  editionId: string,
+) {
+  await api.patch(`admin/editions/${editionId}/submissions`, {
+    headers: auth,
+    data: { submissionsOpen: true },
+  });
+  await api.patch(`admin/editions/${editionId}`, {
+    headers: auth,
+    data: { ticketUrl: 'https://tickets.example.la', voteUrl: 'https://vote.example.la' },
+  });
 }

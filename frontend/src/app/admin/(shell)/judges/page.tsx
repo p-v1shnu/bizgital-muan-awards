@@ -16,6 +16,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Judge } from '@/types/api';
+import { emptyToNull } from '@/lib/utils';
 
 export default function JudgesPage() {
   const [term, setTerm] = useState('');
@@ -187,10 +188,10 @@ function JudgeDialog({
           action.mutate(
             {
               nameLo: form.nameLo,
-              nameEn: form.nameEn || undefined,
+              nameEn: emptyToNull(form.nameEn),
               positionLo: form.positionLo,
-              bioLo: form.bioLo || undefined,
-              avatarKey: avatarKey ?? undefined,
+              bioLo: emptyToNull(form.bioLo),
+              avatarKey: avatarKey ?? null,
             },
             { onSuccess: onClose },
           );

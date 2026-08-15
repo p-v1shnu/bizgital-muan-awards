@@ -12,6 +12,7 @@ import { Field, Input, Select } from '@/components/ui/field';
 import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { Edition, Sponsor, SponsorTier } from '@/types/api';
+import { emptyToNull } from '@/lib/utils';
 
 export const TIER_LABEL: Record<SponsorTier, string> = {
   TITLE: 'ຜູ້ສະໜັບສະໜູນຫຼັກ',
@@ -252,9 +253,9 @@ function SponsorDialog({
           action.mutate(
             {
               name: form.name,
-              websiteUrl: form.websiteUrl || undefined,
+              websiteUrl: emptyToNull(form.websiteUrl),
               tier: form.tier,
-              logoKey: logoKey ?? undefined,
+              logoKey: logoKey ?? null,
             },
             { onSuccess: onClose },
           );

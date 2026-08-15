@@ -39,17 +39,17 @@ export class CreateEditionDto {
   @IsOptional()
   @IsString()
   @MaxLength(160)
-  titleEn?: string;
+  titleEn?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  descriptionLo?: string;
+  descriptionLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  descriptionEn?: string;
+  descriptionEn?: string | null;
 
   /**
    * Backfilled years are entered at their final phase directly. A new year is
@@ -63,19 +63,19 @@ export class CreateEditionDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsDateString()
-  eventDate?: string;
+  eventDate?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  venueLo?: string;
+  venueLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  venueEn?: string;
+  venueEn?: string | null;
 
   @ApiPropertyOptional({
     description: 'What happens on the night — one item per line (PRD §6.1.2 §5)',
@@ -83,7 +83,7 @@ export class CreateEditionDto {
   @IsOptional()
   @IsString()
   @MaxLength(4000)
-  activitiesLo?: string;
+  activitiesLo?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -94,7 +94,7 @@ export class CreateEditionDto {
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
   @IsOptional()
   @IsString()
-  heroImageKey?: string;
+  heroImageKey?: string | null;
 
   @ApiPropertyOptional({
     type: [String],
@@ -109,10 +109,10 @@ export class CreateEditionDto {
   @ApiPropertyOptional({ description: 'External ticketing site; the button hides when unset' })
   @IsOptional()
   @IsUrl({ require_protocol: true })
-  ticketUrl?: string;
+  ticketUrl?: string | null;
 
   @ApiPropertyOptional({ description: 'External voting site; the button hides when unset' })
   @IsOptional()
   @IsUrl({ require_protocol: true })
-  voteUrl?: string;
+  voteUrl?: string | null;
 }
