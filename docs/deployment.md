@@ -157,21 +157,49 @@ curl -s -o /dev/null -w "รูป   %{http_code}\n" "https://<bucket-url>/site/
 
 ## 3. ตั้ง Caddy
 
-```bash
-sudo cp Caddyfile.example /etc/caddy/Caddyfile
-sudo nano /etc/caddy/Caddyfile        # แก้โดเมนให้ตรง
+> ### ⛔ ถ้าเครื่องนี้มีเว็บอื่นรันผ่าน Caddy อยู่แล้ว ห้าม `cp` ทับ
+>
+> `cp Caddyfile.example /etc/caddy/Caddyfile` **ลบ config ของเว็บอื่นทั้งหมดทันที** ใช้ได้
+> เฉพาะเซิร์ฟเวอร์เปล่าที่ยังไม่มีอะไรเลย · บนเครื่องที่ใช้ร่วมกันให้**เติม block ต่อท้าย**
+> โดยเปิดไฟล์แล้ววาง หรือใช้ `>>` ซึ่งเขียนทับไม่ได้แม้จะอยากก็ตาม
+>
+> ```bash
+> cp /etc/caddy/Caddyfile /etc/caddy/Caddyfile.bak-$(date +%F)
+> grep -n "import" /etc/caddy/Caddyfile   # ถ้ามี import ให้สร้างไฟล์แยกในโฟลเดอร์นั้นแทน
+> ```
 
-# หน้าที่ผู้ใช้จะเห็นตอนเว็บมีปัญหา — Caddyfile ชี้มาที่ path นี้
+```bash
+# 3.1 หน้าที่ผู้ใช้จะเห็นตอนเว็บมีปัญหา — Caddyfile ชี้มาที่ path นี้
 sudo mkdir -p /srv/muan/error-pages
 sudo cp error-pages/outage.html /srv/muan/error-pages/
 sudo chmod 755 /srv/muan /srv/muan/error-pages
 sudo chmod 644 /srv/muan/error-pages/outage.html
+sudo -u caddy cat /srv/muan/error-pages/outage.html > /dev/null && echo "caddy อ่านได้ ✓"
 
-sudo caddy validate --config /etc/caddy/Caddyfile   # ตรวจก่อนโหลด
+# 3.2 โฟลเดอร์ log — ต้องมีและ caddy ต้องเขียนได้ ถ้า block มี directive `log`
+sudo mkdir -p /var/log/caddy
+sudo chown -R caddy:caddy /var/log/caddy       # เช็ก user จริงด้วย: systemctl show caddy -p User
+sudo chmod 755 /var/log/caddy
+
+# 3.3 เติม block (ดู Caddyfile.example) แล้วตรวจก่อนโหลดเสมอ
+sudo caddy validate --config /etc/caddy/Caddyfile
 sudo caddy reload --config /etc/caddy/Caddyfile
 ```
 
 Caddy ขอใบรับรอง TLS เองอัตโนมัติ
+
+> **ใช้ `caddy reload` ไม่ใช่ `systemctl reload caddy`** — ตัวหลังกลืน error ไปเงียบๆ แล้วคืน
+> exit 0 ทั้งที่ config ใหม่ถูกปฏิเสธ · ของจริงที่เกิดขึ้น: โฟลเดอร์ `/var/log/caddy` เขียนไม่ได้
+> Caddy จึงทิ้ง config ทั้งก้อน (block ใหม่ไม่ถูกโหลด ไม่มีใบรับรอง เบราว์เซอร์ขึ้น
+> `ERR_SSL_PROTOCOL_ERROR`) แต่ terminal ไม่แสดงอะไรเลย · `caddy reload` พ่นสาเหตุออกมาตรงๆ
+>
+> ยืนยันว่าโหลดจริงหลัง reload ทุกครั้ง — `validate` ผ่านไม่ได้แปลว่าโหลดแล้ว:
+> ```bash
+> journalctl -u caddy -n 20 --no-pager | grep -i "automatic TLS"   # ต้องเห็นโดเมนใหม่ในรายชื่อ
+> curl -s localhost:2019/config/ | grep -c <โดเมน>                  # ต้องได้ ≥1
+> ```
+>
+> **ข้อดีที่ควรรู้:** ถ้า config ใหม่ผิด Caddy จะรันของเดิมต่อ เว็บอื่นบนเครื่องไม่ดับ
 
 > **ถ้าลืมคัดลอก `outage.html`** เวลาเว็บพังผู้ใช้จะเห็นหน้าขาวเปล่า ๆ แทนข้อความภาษาລาว
 > — Caddy ไม่ได้ error ตอน reload เพราะไฟล์หายไป มันจะรู้ตอนมีคนเข้าเว็บตอนระบบพังแล้วเท่านั้น
@@ -185,10 +213,39 @@ Caddy ขอใบรับรอง TLS เองอัตโนมัติ
 
 ## 4. เช็กลิสต์หลัง deploy — หยุดตรวจทีละข้อ
 
+### 4.0 URL ที่ถูกอบไว้ในไฟล์ JS — ตรวจข้อนี้ก่อนเพื่อน
+
+`NEXT_PUBLIC_*` ทุกตัว**ถูกฝังลงในไฟล์ JS ตอน build** ไม่ได้อ่านจาก `.env` ตอนรัน ·
+แก้ `.env` แล้ว `restart` เฉยๆ **ไม่มีผล** ต้อง `docker compose up -d --build frontend`
+
+ที่ทำให้ข้อนี้อันตรายคือ**หน้าเว็บจะดูปกติทุกอย่าง**: หน้าสาธารณะเรนเดอร์ที่เซิร์ฟเวอร์
+และคุยกับ backend ผ่านเน็ตเวิร์กภายใน Docker ไม่ได้ใช้ค่านี้เลย · ที่พังคือทุกอย่างที่
+**เบราว์เซอร์**เป็นคนเรียก — ล็อกอินหลังบ้าน, สร้างแอดมินคนแรก, อัปโหลดรูป, ฟอร์มส่งชื่อ
+— ขึ้นเป็น `Failed to fetch` ซึ่งไม่ได้บอกเลยว่าสาเหตุคืออะไร
+
+```bash
+# ค่าที่ถูกอบไว้จริง — ต้องเป็นโดเมนที่กำลังเปิดอยู่ ไม่ใช่โดเมนอื่น
+curl -s https://<โดเมน>/admin/setup \
+  | grep -oE '/_next/static/chunks/[a-zA-Z0-9_.-]+\.js' | sort -u \
+  | while read c; do curl -s "https://<โดเมน>$c" \
+      | grep -ohE 'https?://[a-zA-Z0-9.:_-]+/api/v1'; done | sort -u
+```
+
+ต้องได้ `https://<โดเมนนี้>/api/v1` **ค่าเดียว** · ถ้าได้โดเมนอื่น แก้ `.env` แล้ว
+
+```bash
+docker compose up -d --build frontend
+docker compose up -d backend        # ถ้าแก้ CORS_ORIGINS ด้วย
+```
+
+แล้วเปิดหน้าใน incognito — ไฟล์ JS เก่ายังค้างในเบราว์เซอร์
+
 ```bash
 # ── ระบบขึ้นแล้วจริง ──
 curl -s https://muanawards.com/api/v1/health
 #   คาดหวัง: {"data":{"status":"ok",...}}
+#   ถ้าได้ HTML ของหน้า outage แทน JSON → Caddy proxy ไปพอร์ตที่ไม่มีใครฟัง
+#   เทียบสามอย่าง: docker compose ps · BACKEND_HOST_PORT ใน .env · เลขใน handle /api/*
 
 # ── หน้าเว็บเสิร์ฟได้ ──
 curl -s -o /dev/null -w '%{http_code}\n' https://muanawards.com/

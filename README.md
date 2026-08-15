@@ -2,7 +2,7 @@
 
 ເວັບໄຊລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ — annual awards site for Lao content creators, run by the Muan business unit at Bizgital.
 
-Product contract: [`docs/muan-awards-prd.md`](docs/muan-awards-prd.md) (v1.3).
+Product contract: [`docs/muan-awards-prd.md`](docs/muan-awards-prd.md) (v1.4).
 Design system and page mockups: [`docs/design/`](docs/design/) — open `style-guide.html` first.
 
 ---
@@ -16,6 +16,7 @@ Design system and page mockups: [`docs/design/`](docs/design/) — open `style-g
 | `docs/lao-copy-review.md` | **ຄົນລາວທີ່ກວດພາສາ** — ທຸກຂໍ້ຄວາມທີ່ AI ຂຽນ ແລະ ຍັງບໍ່ມີເຈົ້າຂອງພາສາກວດ |
 | `docs/threat-model.md` | ບົດວິເຄາະຄວາມສ່ຽງດ້ານຄວາມປອດໄພ (STRIDE) — ສິ່ງທີ່ພົບ ແລະ ສິ່ງທີ່ຍອມຮັບຄວາມສ່ຽງໄວ້ |
 | `docs/monitoring.md` | ຄົນທີ່ດູແລເຊີບເວີ — ຕັ້ງລະບົບເຕືອນເມື່ອເວັບລົ່ມ + ສິ່ງທີ່ຕ້ອງເຮັດເມື່ອມັນດັງ |
+| `docs/seo.md` | ການຖືກຄົ້ນເຈີ — ສິ່ງທີ່ເຮັດແລ້ວສຳລັບ Google ແລະ AI ແລະ ສິ່ງທີ່ຈົງໃຈບໍ່ເຮັດ |
 | `docs/muan-awards-prd.md` | ຂໍ້ກຳນົດທັງໝົດຂອງໂປຣເຈັກ |
 
 ## Stack
@@ -93,23 +94,50 @@ password is never written into a file.
 
 ## Production
 
+**[`docs/deployment.md`](docs/deployment.md) is the deployment procedure.** What
+follows is the shape of it, not a substitute — every step below has a way of
+failing that looks like something else, and that document is where each one is
+written down.
+
 ```bash
 cp .env.example .env        # real secrets, SETUP_ENABLED=true for the first deploy only
 docker compose up -d --build
-sudo cp Caddyfile.example /etc/caddy/Caddyfile   # edit the domain first
+# Caddy: ADD a site block — see below before touching /etc/caddy/Caddyfile
+sudo caddy validate --config /etc/caddy/Caddyfile
 sudo caddy reload --config /etc/caddy/Caddyfile
 ```
 
 Migrations run automatically on container start (`prisma migrate deploy`), so a
 deploy needs no manual database step.
 
-**Read [`docs/deployment.md`](docs/deployment.md) before the first deploy.** It
-carries the post-deploy checklist — the checks that catch the failures which
-only appear on a real server: an image host that does not match what was baked
-into the build, bucket CORS refusing the upload, a proxy that hides the
-visitor's IP so one rate-limit bucket is shared by everyone. `docker compose
-up` has never been run against this repository, only validated, so treat the
-first deploy as an exercise to be watched rather than a formality.
+### Four things that will bite on a server that already runs something
+
+Each of these was hit on a real first deploy, and each one presents as a
+different problem than it is.
+
+- **Never `cp Caddyfile.example /etc/caddy/Caddyfile` on a shared server.** It
+  replaces the whole file, taking every other site on the machine with it. Add
+  a block to the existing file instead. `Caddyfile.example` is a block to copy
+  *from*, not a file to copy *over*.
+- **3000 and 3001 are usually taken.** `FRONTEND_HOST_PORT` and
+  `BACKEND_HOST_PORT` in `.env` move the published ports; the Caddyfile has to
+  be changed to match, or every request is a 502. Note the names: `BACKEND_PORT`
+  is a different variable — the port the API binds to *inside* the container,
+  which stays 3001.
+- **`NEXT_PUBLIC_*` is baked into the JavaScript at build time.** Editing `.env`
+  and restarting does nothing; it needs `docker compose up -d --build frontend`.
+  Get it wrong and the public pages look perfect — they render server-side and
+  never use the value — while everything the *browser* calls fails with `Failed
+  to fetch`: signing in, creating the first admin, uploading a picture, the
+  public entry form.
+- **`caddy reload`, not `systemctl reload caddy`.** The systemd wrapper swallows
+  the error and returns 0 while Caddy rejects the new config and keeps running
+  the old one. The symptom is a browser TLS error on a domain whose block looks
+  correct in the file — because it was never loaded.
+
+`docker compose up` had never been run against this repository when it was
+written, only validated, so treat the first deploy on any new machine as an
+exercise to be watched rather than a formality.
 
 ---
 
