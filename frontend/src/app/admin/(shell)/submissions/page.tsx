@@ -157,6 +157,11 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
 
       {expanded && (
         <ul className="border-t border-hairline bg-panel-2/60 px-4 py-2">
+          {group.count > group.entries.length && (
+            <li className="border-b border-hairline py-2 text-[11.5px] text-ink-3">
+              ສະແດງ {group.entries.length} ລາຍການລ່າສຸດ ຈາກທັງໝົດ {group.count} ລາຍການ
+            </li>
+          )}
           {group.entries.map((entry) => (
             <li key={entry.id} className="border-b border-hairline py-2 last:border-b-0">
               <p className="text-[12.5px] text-ink-2">

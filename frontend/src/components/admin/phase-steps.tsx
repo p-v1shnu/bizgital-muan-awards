@@ -38,7 +38,11 @@ export function PhaseSteps({ current }: { current: EditionPhase }) {
               'min-w-0 flex-1 border-r border-rule px-3 py-2 last:border-r-0',
               done && 'bg-panel',
               now && 'bg-white shadow-[inset_0_-3px_0_var(--color-brand)]',
-              !done && !now && 'opacity-50',
+              // A step still to come used to be faded with opacity, which took
+              // its text down to 2:1 against the panel — readable to whoever
+              // designed it and to nobody else. It reads as "later" from the
+              // words and the dotted rule instead.
+              !done && !now && 'border-dashed bg-panel-2/60',
             )}
           >
             <p

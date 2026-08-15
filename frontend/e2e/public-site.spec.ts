@@ -220,6 +220,28 @@ test('the brand is the real logo, and a bare link still shares a picture', async
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /ຜູ້ສ້າງສັນ/);
 });
 
+test('no page fails an automated accessibility check', async ({ page }) => {
+  // Contrast, labels, roles, landmarks — the machine-checkable half of WCAG
+  // 2.1 AA. It caught footer headings at 4.29:1 and a faded panel at 2:1.
+  const AxeBuilder = (await import('@axe-core/playwright')).default;
+  for (const path of ['/', '/awards/2025', '/winners', '/creators/khamla', '/submit', '/about']) {
+    await page.goto(path, { waitUntil: 'networkidle' });
+    const { violations } = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    expect(violations.map((v) => `${path} ${v.id}`)).toEqual([]);
+  }
+});
+
+test('the keyboard reaches the content without walking the nav', async ({ page }) => {
+  await page.goto('/');
+  await page.keyboard.press('Tab');
+  const skip = page.getByRole('link', { name: 'ຂ້າມໄປເນື້ອຫາຫຼັກ' });
+  await expect(skip).toBeFocused();
+  await skip.press('Enter');
+  await expect(page.locator('#content')).toBeVisible();
+});
+
 test('every page has exactly one h1', async ({ page }) => {
   for (const route of [
     '/',

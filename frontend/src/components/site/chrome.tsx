@@ -141,7 +141,7 @@ export async function SiteFooter() {
           />
         </div>
 
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#3a322c] pt-6 text-[11.5px] text-[#8a7f72]">
+        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#3a322c] pt-6 text-[11.5px] text-[#a89c8e]">
           <span>© {new Date().getFullYear()} Muan Awards</span>
           <span>ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ</span>
           <a href="#top" className="ml-auto inline-flex items-center gap-1 hover:text-white">
@@ -162,7 +162,7 @@ function FooterColumn({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a7f72]">{title}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#b4a898]">{title}</p>
       <ul className="mt-3 space-y-2 text-[13px]">
         {links.map((link) => (
           <li key={link.href}>

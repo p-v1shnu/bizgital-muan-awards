@@ -1,5 +1,15 @@
+import { Children, cloneElement, isValidElement, useId } from 'react';
+
 import { cn } from '@/lib/utils';
 
+/**
+ * A labelled control.
+ *
+ * The label used to be a plain `<label>` sitting above the field with nothing
+ * tying the two together, so a screen reader announced an unlabelled box —
+ * axe called it out on the textareas in /admin/site. The id is generated here
+ * and handed to the control, which also makes the label clickable.
+ */
 export function Field({
   label,
   hint,
@@ -17,15 +27,24 @@ export function Field({
   children: React.ReactNode;
   className?: string;
 }) {
+  const generatedId = useId();
+  const only = Children.only(children);
+  const controlId = isValidElement<{ id?: string }>(only)
+    ? (only.props.id ?? generatedId)
+    : generatedId;
+  const control = isValidElement<{ id?: string }>(only)
+    ? cloneElement(only, { id: controlId })
+    : only;
+
   return (
     <div className={cn('mb-4 last:mb-0', className)}>
       {label && (
-        <label className="mb-1.5 block text-xs font-semibold text-ink-2">
+        <label htmlFor={controlId} className="mb-1.5 block text-xs font-semibold text-ink-2">
           {label}
           {hint && <span className="ml-1 font-normal text-ink-3">{hint}</span>}
         </label>
       )}
-      {children}
+      {control}
       {/* An error replaces the help text rather than stacking under it. */}
       {error ? (
         <p className="mt-1.5 text-xs text-stop">{error}</p>

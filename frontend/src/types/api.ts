@@ -112,8 +112,10 @@ export interface SubmissionGroup {
   key: string;
   creatorNameRaw: string;
   category: Category & { edition: Edition };
+  /** Every time this name was sent in — may exceed `entries.length`. */
   count: number;
   latestAt: string;
+  /** The most recent few only; a name sent in 200 times does not ship 200. */
   entries: SubmissionEntry[];
 }
 

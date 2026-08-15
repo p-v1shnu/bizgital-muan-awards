@@ -169,17 +169,30 @@ curl -s -o /dev/null -w '%{content_type} %{size_download}\n' \
 
 ---
 
-## 6. สำรองข้อมูล — **ยังไม่ได้ทำ ต้องตั้งเอง**
+## 6. สำรองข้อมูล + **ซ้อมกู้คืน**
 
-ยังไม่มีระบบสำรองข้อมูลอัตโนมัติในโปรเจกต์นี้ ตัวอย่างที่ใช้ได้ทันที:
+มีสคริปต์ให้แล้วสองตัว ต้องตั้ง cron เอง:
 
 ```bash
-# /etc/cron.daily/muan-backup
-docker compose -f /srv/muan/docker-compose.yml exec -T mysql \
-  mysqldump -u root -p"$MYSQL_ROOT_PASSWORD" muan_awards \
-  | gzip > /srv/backups/muan-$(date +%F).sql.gz
-find /srv/backups -name 'muan-*.sql.gz' -mtime +30 -delete
+# ทุกคืนตี 3
+0 3 * * *  cd /srv/muan && MYSQL_ROOT_PASSWORD=xxx ./scripts/backup.sh >> /var/log/muan-backup.log 2>&1
 ```
+
+`scripts/backup.sh` ไม่ได้แค่ dump — **ตรวจไฟล์ที่เพิ่ง dump ทุกครั้ง** (gzip อ่านได้ไหม
+และมีตาราง `editions` จริงไหม) ถ้าไม่ผ่านจะ exit 1 เพื่อให้ cron ส่งเมลแจ้ง
+ไฟล์เก่ากว่า 30 วันถูกลบอัตโนมัติ
+
+**ซ้อมกู้คืนอย่างน้อยเดือนละครั้ง — backup ที่กู้ไม่ได้เท่ากับไม่มี:**
+
+```bash
+MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วันที่>.sql.gz muan_restore_test
+# สคริปต์จะพิมพ์จำนวนแถวของทุกตารางหลักออกมา → เทียบกับของจริง ต้องตรงกัน
+```
+
+สคริปต์ **ปฏิเสธการเขียนทับฐานข้อมูลจริง** เว้นแต่สั่ง `I_MEAN_IT=yes`
+
+> **ซ้อมจริงแล้ว (14 ส.ค. 2026)** บนฐานข้อมูลที่มี 10,002 รายชื่อในคิว:
+> dump 868 KB → สร้างฐานใหม่ → กู้คืน → **จำนวนแถวตรงกันทุกตาราง และภาษาลาวไม่เพี้ยน**
 
 รูปภาพอยู่บน Spaces ซึ่งมีความทนทานของตัวเอง แต่ **ไม่มี version history**
 ถ้าลบผิดคือหายถาวร — ควรเปิด versioning ที่ bucket

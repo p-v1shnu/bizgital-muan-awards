@@ -8,6 +8,9 @@ import { EditionsService } from '../editions/editions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { paginate } from '../../common/dto/pagination.dto';
 
+/** How many of a group's entries travel with the queue page. */
+const ENTRIES_PER_GROUP = 20;
+
 @Injectable()
 export class SubmissionsService {
   constructor(
@@ -94,48 +97,88 @@ export class SubmissionsService {
    * creator sent in twenty times reads as one row with a count of twenty
    * (PRD §7.2) — that count is the useful signal, not twenty separate rows.
    */
+  /**
+   * The screening queue, one row per (name, category) with how many times it
+   * was sent (PRD §7.2).
+   *
+   * The grouping used to happen in memory over every entry of that status —
+   * fine at the few hundred it was written for, and 700ms per page view at ten
+   * thousand, which a campaign that goes well produces. The database groups it
+   * now, and only the entries belonging to the page being looked at are read.
+   */
   async listGrouped(query: ListSubmissionsDto) {
     const page = query.page ?? 1;
     const perPage = query.perPage ?? 25;
+    const status = query.status ?? SubmissionStatus.PENDING;
 
     const where: Prisma.PublicSubmissionWhereInput = {
-      status: query.status ?? SubmissionStatus.PENDING,
+      status,
       ...(query.categoryId ? { categoryId: query.categoryId } : {}),
       ...(query.editionId ? { category: { editionId: query.editionId } } : {}),
       ...(query.q ? { creatorNameRaw: { contains: query.q } } : {}),
     };
 
-    const rows = await this.prisma.publicSubmission.findMany({
-      where,
-      include: { category: { include: { edition: true } } },
-      orderBy: { createdAt: 'desc' },
+    const [pageGroups, totalGroups] = await Promise.all([
+      this.prisma.publicSubmission.groupBy({
+        by: ['categoryId', 'creatorNameRaw'],
+        where,
+        _count: { _all: true },
+        _max: { createdAt: true },
+        // Most-sent first, then most recent — the order the team screens in.
+        orderBy: [{ _count: { categoryId: 'desc' } }, { _max: { createdAt: 'desc' } }],
+        skip: (page - 1) * perPage,
+        take: perPage,
+      }),
+      this.prisma.publicSubmission
+        .groupBy({ by: ['categoryId', 'creatorNameRaw'], where, _count: { _all: true } })
+        .then((all) => all.length),
+    ]);
+
+    if (pageGroups.length === 0) return paginate([], totalGroups, page, perPage);
+
+    /**
+     * The reasons people wrote are evidence the team reads, but a name sent in
+     * two hundred times does not need two hundred of them on screen: sending
+     * every one made a single page of the queue 5.5 MB, which is a real wait
+     * on the phone this is often screened from. The count still comes from the
+     * grouping, so it stays exact.
+     */
+    const [rowsPerGroup, categories] = await Promise.all([
+      Promise.all(
+        pageGroups.map((group) =>
+          this.prisma.publicSubmission.findMany({
+            where: { status, categoryId: group.categoryId, creatorNameRaw: group.creatorNameRaw },
+            orderBy: { createdAt: 'desc' },
+            take: ENTRIES_PER_GROUP,
+          }),
+        ),
+      ),
+      // The category belongs to the group, not to each entry — sending it with
+      // all twenty was most of the weight of the page.
+      this.prisma.category.findMany({
+        where: { id: { in: [...new Set(pageGroups.map((group) => group.categoryId))] } },
+        include: { edition: true },
+      }),
+    ]);
+    const categoryById = new Map(categories.map((category) => [category.id, category]));
+
+    const groups: GroupedSubmission[] = pageGroups.flatMap((group, index) => {
+      const rows = rowsPerGroup[index];
+      const category = categoryById.get(group.categoryId);
+      if (!rows.length || !category) return [];
+      return [
+        {
+          key: `${group.categoryId}::${group.creatorNameRaw.trim().toLowerCase()}`,
+          creatorNameRaw: group.creatorNameRaw.trim(),
+          category,
+          count: group._count._all,
+          latestAt: group._max.createdAt ?? rows[0].createdAt,
+          entries: rows,
+        },
+      ];
     });
 
-    // Grouping in memory: the queue is small (hundreds, not millions) and a
-    // SQL GROUP BY here would lose the per-entry evidence the team reads.
-    const groups = new Map<string, GroupedSubmission>();
-    for (const row of rows) {
-      const key = `${row.categoryId}::${row.creatorNameRaw.trim().toLowerCase()}`;
-      const existing = groups.get(key);
-      if (existing) {
-        existing.count += 1;
-        existing.entries.push(row);
-        if (row.createdAt > existing.latestAt) existing.latestAt = row.createdAt;
-      } else {
-        groups.set(key, {
-          key,
-          creatorNameRaw: row.creatorNameRaw.trim(),
-          category: row.category,
-          count: 1,
-          latestAt: row.createdAt,
-          entries: [row],
-        });
-      }
-    }
-
-    const all = [...groups.values()].sort((a, b) => b.count - a.count || +b.latestAt - +a.latestAt);
-    const slice = all.slice((page - 1) * perPage, page * perPage);
-    return paginate(slice, all.length, page, perPage);
+    return paginate(groups, totalGroups, page, perPage);
   }
 
   async counts() {
@@ -282,18 +325,24 @@ export class SubmissionsService {
   }
 }
 
+type QueueCategory = Prisma.CategoryGetPayload<{ include: { edition: true } }>;
+
 type QueueRow = Prisma.PublicSubmissionGetPayload<{
   include: { category: { include: { edition: true } } };
 }>;
 
-/** One name in one category, however many times it was sent in. */
+/**
+ * One name in one category, however many times it was sent in. `count` is the
+ * true number; `entries` carries only the most recent few, since the reasons
+ * repeat and the page is often read on a phone.
+ */
 export interface GroupedSubmission {
   key: string;
   creatorNameRaw: string;
-  category: QueueRow['category'];
+  category: QueueCategory;
   count: number;
   latestAt: Date;
-  entries: QueueRow[];
+  entries: Prisma.PublicSubmissionGetPayload<object>[];
 }
 
 /**

@@ -287,6 +287,8 @@ model PublicSubmission {
 
   @@index([categoryId, status])
   @@index([ipHash, createdAt])
+  /// The screening queue groups by name inside a category, filtered by status.
+  @@index([status, categoryId, creatorNameRaw])
   @@map("public_submissions")
 }
 

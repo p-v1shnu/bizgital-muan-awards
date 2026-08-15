@@ -77,7 +77,7 @@ export function Sidebar() {
       {SECTIONS.map((section, index) => (
         <div key={section.heading ?? index}>
           {section.heading && (
-            <p className="px-2.5 pt-4 pb-1.5 text-[9.5px] font-bold uppercase tracking-[0.18em] text-[#8a7f72]">
+            <p className="px-2.5 pt-4 pb-1.5 text-[9.5px] font-bold uppercase tracking-[0.18em] text-[#b4a898]">
               {section.heading}
             </p>
           )}
