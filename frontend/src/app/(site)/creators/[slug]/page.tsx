@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { Avatar, Section } from '@/components/site/primitives';
+import { safeHttpUrl } from '@/lib/utils';
 import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
 import { imageUrl } from '@/lib/images';
 import type { PublicProfile } from '@/types/public';
@@ -43,7 +44,11 @@ export default async function CreatorPage({ params }: PageProps) {
   const profile = await getPublicOrNotFound<PublicProfile>(`/creators/${slug}`);
 
   const wins = profile.appearances.filter((appearance) => appearance.isWinner).length;
-  const socials = Object.entries(profile.socialLinks ?? {});
+  // Anything that is not a web address is dropped rather than linked.
+  const socials = Object.entries(profile.socialLinks ?? {}).flatMap(([platform, url]) => {
+    const safe = safeHttpUrl(url);
+    return safe ? [[platform, safe] as const] : [];
+  });
 
   return (
     <Section>

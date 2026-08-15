@@ -12,7 +12,7 @@
 |---|---|
 | เซิร์ฟเวอร์ Linux + Docker + Docker Compose | Caddy ติดตั้งอยู่แล้วบนเครื่อง |
 | โดเมน `muanawards.com` ชี้มาที่ IP เซิร์ฟเวอร์ | ต้องชี้ก่อน Caddy จะขอใบรับรอง TLS ได้ |
-| DigitalOcean Spaces (หรือ S3 ที่เข้ากันได้) | สร้าง bucket + ตั้งให้อ่านสาธารณะได้ |
+| DigitalOcean Spaces (หรือ S3 ที่เข้ากันได้) | สร้าง bucket + ตั้ง policy ตาม `docs/storage-policy.json` (**อ่านไฟล์ได้ แต่ list ไม่ได้** — ดูข้อ 4.1) |
 
 ---
 
@@ -71,6 +71,25 @@ Migration รันเองตอน container สตาร์ท (`prisma migr
 >
 > ส่วนหน้าปี/สาขา/โปรไฟล์ ไม่ถูกอบไว้ — ถ้า API ล่ม หน้าพวกนี้จะขึ้น **500 (ลองใหม่ภายหลัง)**
 > ไม่ใช่ 404 โดยตั้งใจ เพราะ 404 จะทำให้ Google ถอดหน้าออกจากดัชนีถาวร
+
+### 2.1 ตั้ง policy ของ bucket — อ่านได้ แต่ห้าม list
+
+ใช้ไฟล์ `docs/storage-policy.json` (แก้ชื่อ bucket ให้ตรง) — อนุญาตแค่ `s3:GetObject`
+**ห้ามใส่ `s3:ListBucket`**
+
+```bash
+# DigitalOcean Spaces / S3
+aws s3api put-bucket-policy --bucket muan-awards --policy file://docs/storage-policy.json \
+  --endpoint-url https://sgp1.digitaloceanspaces.com
+
+# ตรวจว่าถูกต้อง — ต้องได้ 403 กับ 200 ตามลำดับ
+curl -s -o /dev/null -w "list  %{http_code}\n" "https://<bucket-url>/?list-type=2"
+curl -s -o /dev/null -w "รูป   %{http_code}\n" "https://<bucket-url>/site/<ไฟล์ที่มีจริง>.png"
+```
+
+> **ทำไมต้องห้าม list:** ทีมอัปโหลดรูปผู้ชนะ **ก่อน**ประกาศผลเสมอ (นั่นคือวิธีทำงานตามข้อ 4.1)
+> ถ้า bucket ยอมให้ list ใครก็ตามไล่ดูไฟล์ทั้งหมดได้ → รู้ผลก่อนประกาศ
+> ทั้งที่ API กันไว้อย่างดีแล้ว · ทดสอบกับ MinIO ในเครื่องแล้วว่า policy นี้ทำงานถูก (list 403 / รูป 200)
 
 ---
 

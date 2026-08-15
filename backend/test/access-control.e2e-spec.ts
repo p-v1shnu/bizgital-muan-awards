@@ -223,4 +223,41 @@ describe('access control', () => {
       .send({ categoryId: 'x', creatorNameRaw: 'A'.repeat(500_000) })
       .expect(413);
   });
+
+  /**
+   * A back-office account in the wrong hands should not be able to leave a
+   * link that runs code on a public page (OWASP A05:2025). The keys were
+   * filtered before; the values were not.
+   */
+  it('refuses to store a social link that is not a web address', async () => {
+    const created = await api(h)
+      .post(path('/admin/creators'))
+      .set(h.auth)
+      .send({
+        slug: 'link-probe',
+        nameLo: 'ທົດສອບລິງກ໌',
+        socialLinks: {
+          facebook: 'javascript:alert(1)',
+          tiktok: 'https://tiktok.com/@ok',
+          youtube: 'not-a-url-at-all',
+        },
+      })
+      .expect(201);
+
+    expect(created.body.data.socialLinks).toEqual({ tiktok: 'https://tiktok.com/@ok' });
+  });
+
+  it('writes a failed sign-in to the audit trail, not only the successes', async () => {
+    await api(h)
+      .post(path('/auth/login'))
+      .set('X-Forwarded-For', '198.51.100.40')
+      .send({ email: 'editor@test.local', password: 'wrong-again' })
+      .expect(401);
+
+    const trail = await api(h)
+      .get(path('/admin/audit?action=admin.login.failed'))
+      .set(h.auth)
+      .expect(200);
+    expect(trail.body.data.length).toBeGreaterThan(0);
+  });
 });

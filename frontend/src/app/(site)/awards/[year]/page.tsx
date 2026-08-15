@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { CalendarDays, Eye, MapPin } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
-import { cn } from '@/lib/utils';
+import { cn, safeHttpUrl } from '@/lib/utils';
 import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
 import { imageKeyList, imageUrl } from '@/lib/images';
@@ -156,13 +156,13 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   ສົ່ງລາຍຊື່
                 </ActionLink>
               )}
-              {edition.ticketUrl && (
-                <ActionLink href={edition.ticketUrl} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+              {safeHttpUrl(edition.ticketUrl) && (
+                <ActionLink href={safeHttpUrl(edition.ticketUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
                   ຊື້ບັດ
                 </ActionLink>
               )}
-              {edition.voteUrl && (
-                <ActionLink href={edition.voteUrl} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+              {safeHttpUrl(edition.voteUrl) && (
+                <ActionLink href={safeHttpUrl(edition.voteUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
                   ໂຫວດ
                 </ActionLink>
               )}
@@ -387,8 +387,8 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                       key={sponsor.id}
                       className="grid h-20 min-w-40 place-items-center rounded-[var(--radius-sm)] border border-rule bg-panel px-5"
                     >
-                      {sponsor.websiteUrl ? (
-                        <a href={sponsor.websiteUrl} target="_blank" rel="noreferrer">
+                      {safeHttpUrl(sponsor.websiteUrl) ? (
+                        <a href={safeHttpUrl(sponsor.websiteUrl) as string} target="_blank" rel="noreferrer">
                           {inner}
                         </a>
                       ) : (

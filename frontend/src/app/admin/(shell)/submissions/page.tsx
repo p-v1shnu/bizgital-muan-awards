@@ -12,6 +12,7 @@ import { Field, Input, Select } from '@/components/ui/field';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { Pager } from '@/components/admin/pager';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
+import { safeHttpUrl } from '@/lib/utils';
 import { useDebounced } from '@/lib/use-debounced';
 import type { SubmissionGroup, SubmissionStatus } from '@/types/api';
 import { formatDateTime } from '@/lib/dates';
@@ -164,9 +165,9 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-3">
                 <span>{formatDateTime(entry.createdAt)}</span>
                 {entry.submitterName && <span>ໂດຍ {entry.submitterName}</span>}
-                {entry.creatorLink && (
+                {safeHttpUrl(entry.creatorLink) && (
                   <a
-                    href={entry.creatorLink}
+                    href={safeHttpUrl(entry.creatorLink) as string}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1 hover:text-brand-deep hover:underline"

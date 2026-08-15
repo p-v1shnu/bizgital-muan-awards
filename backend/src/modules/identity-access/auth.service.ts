@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -37,6 +38,7 @@ export const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   private readonly failures = new Map<string, { count: number; firstAt: number }>();
 
   constructor(
@@ -110,7 +112,24 @@ export class AuthService {
     const hash = user?.passwordHash ?? (await bcrypt.hash('no-such-user', 1));
     const ok = await bcrypt.compare(dto.password, hash);
     if (!user || !ok) {
-      this.recordFailure(attemptKey);
+      const failures = this.recordFailure(attemptKey);
+      // A run of these is what an attack looks like from the inside, and the
+      // trail held only successes — so nothing anyone could read afterwards
+      // said it had happened (OWASP A09:2025). Written against the account
+      // when there is one; an unknown address goes to the container log,
+      // since the audit table is keyed to a real user.
+      if (user) {
+        await this.audit.log({
+          userId: user.id,
+          action: 'admin.login.failed',
+          targetType: 'AdminUser',
+          targetId: user.id,
+          after: { failuresInWindow: failures },
+          ipAddress,
+        });
+      } else {
+        this.logger.warn(`Failed sign-in for an unknown address: ${dto.email}`);
+      }
       throw new UnauthorizedException('Invalid email or password');
     }
     this.failures.delete(attemptKey);
@@ -234,6 +253,7 @@ export class AuthService {
       return;
     }
     if (entry.count >= MAX_FAILURES) {
+      this.logger.warn(`Locked out after ${entry.count} failed attempts: ${key}`);
       throw new HttpException(
         'Too many failed sign-in attempts. Try again in a few minutes.',
         HttpStatus.TOO_MANY_REQUESTS,
@@ -241,13 +261,15 @@ export class AuthService {
     }
   }
 
+  /** Returns how many failures this account and address have inside the window. */
   private recordFailure(key: string) {
     const now = Date.now();
     const entry = this.failures.get(key);
     if (!entry || now - entry.firstAt > FAILURE_WINDOW_MS) {
       this.failures.set(key, { count: 1, firstAt: now });
-      return;
+      return 1;
     }
     entry.count += 1;
+    return entry.count;
   }
 }
