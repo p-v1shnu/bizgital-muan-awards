@@ -32,12 +32,21 @@ export async function uploadImage(file: File, folder: Folder) {
     body: { folder, contentType: file.type, sizeBytes: file.size },
   });
 
-  const response = await fetch(ticket.uploadUrl, {
-    method: 'PUT',
-    body: file,
-    headers: { 'Content-Type': file.type },
-  });
-  if (!response.ok) throw new Error('ອັບໂຫລດຮູບບໍ່ສຳເລັດ');
+  // The API can hand out a signed URL while storage itself is unreachable —
+  // signing is arithmetic and never touches the bucket. With MinIO stopped the
+  // browser threw its own "Failed to fetch", which reached the team untranslated
+  // and blamed the wrong thing.
+  let response: Response;
+  try {
+    response = await fetch(ticket.uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+  } catch {
+    throw new Error('ຕິດຕໍ່ບ່ອນເກັບຮູບບໍ່ໄດ້ — ຮູບອື່ນໆໃນເວັບກໍ່ອາດຈະບໍ່ຂຶ້ນຄືກັນ ກະລຸນາແຈ້ງຜູ້ດູແລລະບົບ');
+  }
+  if (!response.ok) throw new Error(`ອັບໂຫລດຮູບບໍ່ສຳເລັດ (${response.status})`);
   return ticket.key;
 }
 

@@ -5,7 +5,7 @@ import { CalendarDays, Eye, MapPin } from 'lucide-react';
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
-import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
+import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, editionJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
@@ -19,7 +19,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year } = await params;
-  const edition = await getPublic<PublicEdition>(`/editions/${year}`);
+  const edition = await tryGetPublic<PublicEdition>(`/editions/${year}`);
   if (!edition) return { title: 'ບໍ່ພົບປີນີ້' };
 
   return {

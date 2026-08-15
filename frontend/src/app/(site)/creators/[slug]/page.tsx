@@ -4,7 +4,7 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { Avatar, Section } from '@/components/site/primitives';
 import { safeHttpUrl } from '@/lib/utils';
-import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
+import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, creatorJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicProfile } from '@/types/public';
@@ -15,7 +15,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const profile = await getPublic<PublicProfile>(`/creators/${slug}`);
+  const profile = await tryGetPublic<PublicProfile>(`/creators/${slug}`);
   if (!profile) return { title: 'ບໍ່ພົບຄຣີເອເຕີ' };
 
   return {

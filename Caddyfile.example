@@ -6,12 +6,41 @@ muanawards.com, www.muanawards.com {
 	encode zstd gzip
 
 	# API and Swagger go to NestJS; everything else to Next.js.
+	#
+	# The API is left alone on purpose: its callers are the back office and the
+	# uptime monitor, both of which expect JSON and read the status code. Turning
+	# a failure here into a web page would only confuse them.
 	handle /api/* {
 		reverse_proxy 127.0.0.1:3001
 	}
 
 	handle {
-		reverse_proxy 127.0.0.1:3000
+		reverse_proxy 127.0.0.1:3000 {
+			# Next has no usable page of its own for this. Both `error.tsx` and
+			# `global-error.tsx` were tried against a stopped database and neither
+			# renders for a Server Component that throws on first paint — the
+			# answer was 500 with an empty body. Handing the failure back to Caddy
+			# gives it somewhere to go.
+			@broken status 5xx
+			handle_response @broken {
+				error 503
+			}
+		}
+	}
+
+	# Reached two ways: from the block above when the site answers badly, and on
+	# its own when the site does not answer at all — which is the case no page
+	# inside the application could ever have covered.
+	#
+	# 503 and 502 rather than 200: a search engine treats 200 as "this is the
+	# page now", and a whole site of outage notices is a hard thing to undo.
+	# Measured through Caddy 2.6 with the database stopped: 503 on a page that
+	# errored, 502 with the site process killed, and healthy pages untouched.
+	handle_errors {
+		root * /srv/muan/error-pages
+		rewrite * /outage.html
+		header Cache-Control "no-store"
+		file_server
 	}
 
 	header {

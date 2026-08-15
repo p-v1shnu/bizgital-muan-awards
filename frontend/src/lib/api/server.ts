@@ -61,6 +61,28 @@ export async function getPublic<T>(path: string, options: Options = {}): Promise
   return (payload?.data ?? null) as T | null;
 }
 
+/**
+ * Returns null on an outage instead of throwing. For the header, the footer and
+ * `generateMetadata` — the parts that decorate a page rather than being it.
+ * None of them is worth failing a request over: a page that could otherwise
+ * have rendered should not go down because a year was missing from the nav.
+ *
+ * Page bodies must keep using `getPublic` and keep throwing: a missing nav link
+ * or a generic <title> during an outage is a small loss, and content quietly
+ * reading as empty is the large one this file exists to prevent. What the
+ * visitor sees when a page body does throw is Caddy's business, not Next's —
+ * see `error-pages/outage.html`, because neither `error.tsx` nor
+ * `global-error.tsx` renders for a Server Component that throws on first paint.
+ */
+export async function tryGetPublic<T>(path: string, options: Options = {}): Promise<T | null> {
+  try {
+    return await getPublic<T>(path, options);
+  } catch (caught) {
+    if (caught instanceof ApiUnavailableError) return null;
+    throw caught;
+  }
+}
+
 /** Same, but a missing record renders the 404 page. */
 export async function getPublicOrNotFound<T>(path: string, options: Options = {}): Promise<T> {
   const data = await getPublic<T>(path, options);

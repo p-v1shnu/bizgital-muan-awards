@@ -1,0 +1,64 @@
+<!doctype html>
+<!--
+  Served by Caddy when the site behind it answers 5xx or cannot be reached at
+  all. It has to stand on its own: no stylesheet, no font file, no image, no
+  request of any kind back to a server that has just been shown to be in
+  trouble. Copy it to the server and point the Caddyfile at it.
+
+  Next's own error boundaries do not cover this. `error.tsx` and
+  `global-error.tsx` were both tried and neither renders for a Server Component
+  that throws during the first render of a page — measured with the database
+  stopped, the answer was status 500 with an empty body. Caddy sits further out
+  and still answers when the application is gone entirely, which no page inside
+  the application can do.
+-->
+<html lang="lo">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>ເວັບໄຊຂັດຂ້ອງຊົ່ວຄາວ · ມ່ວນ ອະວອດ</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        background: #faf7f2;
+        color: #1c1917;
+        font-family: 'Noto Sans Lao', 'Phetsarath OT', system-ui, -apple-system, sans-serif;
+        text-align: center;
+        line-height: 1.7;
+      }
+      .rule {
+        width: 64px;
+        height: 3px;
+        margin: 0 auto 28px;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #b45309, #d4a017, #b45309);
+      }
+      h1 { margin: 0 0 12px; font-size: 1.6rem; font-weight: 600; }
+      p { margin: 0; font-size: 15px; color: #57534e; }
+      a {
+        display: inline-block;
+        margin-top: 28px;
+        padding: 12px 22px;
+        border-radius: 8px;
+        background: #7c2d12;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main style="max-width: 30rem">
+      <div class="rule"></div>
+      <h1>ເວັບໄຊຂັດຂ້ອງຊົ່ວຄາວ</h1>
+      <p>ພວກເຮົາກຳລັງແກ້ໄຂຢູ່ · ກະລຸນາລອງໃໝ່ໃນອີກຄາວໜຶ່ງ</p>
+      <a href="/">ລອງໃໝ່</a>
+    </main>
+  </body>
+</html>

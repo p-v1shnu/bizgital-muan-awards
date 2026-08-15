@@ -260,4 +260,24 @@ describe('access control', () => {
       .expect(200);
     expect(trail.body.data.length).toBeGreaterThan(0);
   });
+
+  /**
+   * Two probes, deliberately separate. The uptime monitor watches the first and
+   * wakes somebody up; storage going down loses every picture on the site but
+   * leaves it readable, which is a thing to hear about in the morning, not at
+   * three. Both have to stay reachable without a token or the monitor cannot
+   * use them.
+   */
+  it('answers both health probes without a token, and keeps them apart', async () => {
+    await api(h).get(path('/health')).expect(200);
+
+    const storage = await api(h).get(path('/health/storage'));
+    // 200 with object storage running, 503 without — CI has none, a developer
+    // machine usually does. What matters is that it answers on its own terms
+    // and never turns into a 401 or a 404.
+    expect([200, 503]).toContain(storage.status);
+    if (storage.status === 503) {
+      expect(storage.body.message).toMatch(/storage/i);
+    }
+  });
 });

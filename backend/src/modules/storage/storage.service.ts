@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'node:crypto';
 
@@ -57,6 +57,23 @@ export class StorageService {
     // The key is what gets stored on the record; the public URL is derived
     // from it at render time so the CDN host can change without a migration.
     return { key, uploadUrl, publicUrl: this.publicUrl(key) };
+  }
+
+  /**
+   * Asks the bucket whether it is there, for the health probe.
+   *
+   * Nothing else in a request path notices that storage is down: signing a URL
+   * is arithmetic, and the pictures are fetched by the visitor's browser, not
+   * by us. Stopping MinIO left every page answering 200 with every picture
+   * missing — so the only way anyone finds out is to ask on purpose.
+   *
+   * The five-second ceiling is the point of the abort: the SDK's own retries
+   * would otherwise keep a probe waiting long past the moment the answer stops
+   * being useful.
+   */
+  async checkBucket() {
+    const abort = AbortSignal.timeout(5_000);
+    await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }), { abortSignal: abort });
   }
 
   publicUrl(key: string | null | undefined) {

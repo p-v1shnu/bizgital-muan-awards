@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 
 import { CreatorCard, Section } from '@/components/site/primitives';
-import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
+import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';
 
@@ -18,7 +18,7 @@ interface PageProps {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year, category } = await params;
-  const page = await getPublic<PublicCategoryPage>(`/editions/${year}/categories/${category}`);
+  const page = await tryGetPublic<PublicCategoryPage>(`/editions/${year}/categories/${category}`);
   if (!page) return { title: 'ບໍ່ພົບສາຂານີ້' };
 
   const title = `${page.nameLo} · ${page.edition.titleLo}`;

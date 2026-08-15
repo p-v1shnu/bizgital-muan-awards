@@ -99,10 +99,19 @@ curl -s -o /dev/null -w "รูป   %{http_code}\n" "https://<bucket-url>/site/
 ```bash
 sudo cp Caddyfile.example /etc/caddy/Caddyfile
 sudo nano /etc/caddy/Caddyfile        # แก้โดเมนให้ตรง
+
+# หน้าที่ผู้ใช้จะเห็นตอนเว็บมีปัญหา — Caddyfile ชี้มาที่ path นี้
+sudo mkdir -p /srv/muan/error-pages
+sudo cp error-pages/outage.html /srv/muan/error-pages/
+
+sudo caddy validate --config /etc/caddy/Caddyfile   # ตรวจก่อนโหลด
 sudo caddy reload --config /etc/caddy/Caddyfile
 ```
 
 Caddy ขอใบรับรอง TLS เองอัตโนมัติ
+
+> **ถ้าลืมคัดลอก `outage.html`** เวลาเว็บพังผู้ใช้จะเห็นหน้าขาวเปล่า ๆ แทนข้อความภาษาລาว
+> — Caddy ไม่ได้ error ตอน reload เพราะไฟล์หายไป มันจะรู้ตอนมีคนเข้าเว็บตอนระบบพังแล้วเท่านั้น
 
 ---
 
@@ -191,6 +200,9 @@ curl -s https://muanawards.com/admin/login | grep -c googletagmanager
 # ทุกคืนตี 3
 0 3 * * *  cd /srv/muan && MYSQL_ROOT_PASSWORD=xxx ./scripts/backup.sh >> /var/log/muan-backup.log 2>&1
 ```
+
+> **ใส่ `BACKUP_HEARTBEAT_URL` ด้วย** ไม่งั้นวันที่ backup พังจะไม่มีใครรู้ — วิธีตั้งอยู่ใน
+> [`docs/monitoring.md`](monitoring.md) ข้อ 8
 
 `scripts/backup.sh` ไม่ได้แค่ dump — **ตรวจไฟล์ที่เพิ่ง dump ทุกครั้ง** (gzip อ่านได้ไหม
 และมีตาราง `editions` จริงไหม) ถ้าไม่ผ่านจะ exit 1 เพื่อให้ cron ส่งเมลแจ้ง

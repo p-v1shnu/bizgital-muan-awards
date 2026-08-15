@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { getPublic } from '@/lib/api/server';
+import { tryGetPublic } from '@/lib/api/server';
 import type { Edition, SiteSettings } from '@/types/api';
 
 /**
@@ -13,8 +13,8 @@ import type { Edition, SiteSettings } from '@/types/api';
  */
 export async function SiteHeader() {
   const [latest, openEdition] = await Promise.all([
-    getPublic<Edition>('/editions/latest'),
-    getPublic<Edition | null>('/editions/accepting-submissions'),
+    tryGetPublic<Edition>('/editions/latest'),
+    tryGetPublic<Edition | null>('/editions/accepting-submissions'),
   ]);
 
   return (
@@ -92,8 +92,8 @@ function NavLink({
 
 export async function SiteFooter() {
   const [site, latest] = await Promise.all([
-    getPublic<SiteSettings>('/site'),
-    getPublic<Edition>('/editions/latest'),
+    tryGetPublic<SiteSettings>('/site'),
+    tryGetPublic<Edition>('/editions/latest'),
   ]);
 
   return (
