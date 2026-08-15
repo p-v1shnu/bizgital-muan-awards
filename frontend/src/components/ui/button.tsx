@@ -15,7 +15,11 @@ export const buttonStyles = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-brand-deep text-white border-transparent hover:bg-brand',
+        // PRD §6.0.2 rule 1: the primary button is ink, and brand is what
+        // happens on hover. It was the other way round everywhere, which spent
+        // the one colour the design reserves for six specific marks on every
+        // button on the site.
+        primary: 'bg-ink text-white border-transparent hover:bg-brand-deep',
         quiet: 'bg-panel text-ink-2 border-rule hover:bg-panel-2 hover:text-ink',
         ghost: 'bg-transparent text-ink-2 border-transparent hover:bg-panel-2 hover:text-ink',
         danger: 'bg-transparent text-stop border-rule hover:bg-stop-soft hover:border-stop',

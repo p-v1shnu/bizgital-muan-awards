@@ -221,6 +221,9 @@ export class EditionsService {
     if (dto.submissionsOpen && closeAt && closeAt.getTime() <= Date.now()) {
       throw new BadRequestException('submissionsCloseAt must be in the future');
     }
+    // A closing time may be set while entries are shut — deciding when it ends
+    // before opening it is the ordinary order of doing this.
+
 
     const { after, closedByThis } = await this.prisma.$transaction(async (tx) => {
       let closed: { id: string; year: number }[] = [];

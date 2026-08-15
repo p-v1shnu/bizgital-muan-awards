@@ -211,10 +211,11 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
             type="datetime-local"
             value={closeAt}
             onChange={(event) => setCloseAt(event.target.value)}
-            onBlur={() =>
-              edition.submissionsOpen &&
-              save(true, fromVientianeInput(closeAt))
-            }
+            // Saved whether entries are open or not. Setting the deadline
+            // before opening is the ordinary way round — decide when it shuts,
+            // then open it — and typing it while closed used to lose the value
+            // without a word.
+            onBlur={() => save(edition.submissionsOpen, fromVientianeInput(closeAt))}
           />
         </Field>
 

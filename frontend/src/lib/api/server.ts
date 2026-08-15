@@ -7,7 +7,11 @@ import { notFound } from 'next/navigation';
  */
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
-/** Public pages are rebuilt on a timer; the admin triggers nothing on save. */
+/**
+ * How long a public page may be stale. The API also clears these pages the
+ * moment the back office saves anything (RevalidationService), so this is the
+ * backstop rather than the mechanism.
+ */
 const DEFAULT_REVALIDATE = 60;
 
 interface Options {

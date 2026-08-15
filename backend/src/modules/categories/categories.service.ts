@@ -152,10 +152,16 @@ export class CategoriesService {
 
     const existing = await this.prisma.category.findMany({
       where: { editionId },
-      select: { slug: true },
+      select: { slug: true, sortOrder: true },
     });
     const taken = new Set(existing.map((c) => c.slug));
     const fresh = source.filter((c) => !taken.has(c.slug));
+
+    // Counting the rows gives the wrong first position the moment anything has
+    // been reordered — five categories can sit at 0,10,20,30,40, and starting
+    // the copy at 5 drops it into the middle of them. The highest number in use
+    // is the only safe place to carry on from.
+    const highest = existing.reduce((max, c) => Math.max(max, c.sortOrder), -1);
 
     if (fresh.length > 0) {
       await this.prisma.category.createMany({
@@ -165,9 +171,13 @@ export class CategoriesService {
           nameLo: c.nameLo,
           nameEn: c.nameEn,
           descriptionLo: c.descriptionLo,
+          // Copied alongside descriptionLo, which it always should have been:
+          // half a translation is worse than none, because the year page shows
+          // one language falling back to the other mid-list.
+          descriptionEn: c.descriptionEn,
           groupLo: c.groupLo,
           isFeatured: c.isFeatured,
-          sortOrder: existing.length + index,
+          sortOrder: highest + 1 + index,
         })),
       });
     }

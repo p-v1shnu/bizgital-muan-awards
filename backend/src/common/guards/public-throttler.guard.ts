@@ -1,5 +1,6 @@
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { verify } from 'jsonwebtoken';
 import type { Request } from 'express';
 
 /**
@@ -9,16 +10,32 @@ import type { Request } from 'express';
  * and the team enters hundreds of rows during a backfill (PRD §7.5) — they
  * would have been throttled doing exactly the work the tool is for.
  *
- * Signed-in routes are bounded by the person clicking and by the JWT guard in
- * front of them, so they are skipped here. `/admin/auth`-style entry points
- * are not under this prefix and stay limited, and the public submission form
- * keeps its own much stricter limit.
+ * So signed-in work is skipped. What decides "signed in" is the point: it used
+ * to be the path, and this guard runs *before* the one that checks tokens — so
+ * anyone at all could hold `/api/v1/admin/…` open with no ceiling and collect
+ * 401s as fast as the server could produce them. The address of the request
+ * makes no difference to that; a bad token does.
+ *
+ * Only the signature is checked here, not the session behind it. That is
+ * deliberate: it costs no database round trip, it cannot be forged without the
+ * secret, and the guard immediately after this one does the rest. The question
+ * being asked is "is this plausibly the team", not "is this person allowed".
  */
 @Injectable()
 export class PublicThrottlerGuard extends ThrottlerGuard {
   protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    return request.path.startsWith('/api/v1/admin/');
+    if (!request.path.startsWith('/api/v1/admin/')) return false;
+
+    const header = request.headers.authorization;
+    if (!header?.startsWith('Bearer ')) return false;
+
+    try {
+      verify(header.slice(7), process.env.JWT_SECRET as string);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**

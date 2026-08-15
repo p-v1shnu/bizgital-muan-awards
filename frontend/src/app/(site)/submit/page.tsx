@@ -19,15 +19,39 @@ export const revalidate = 30;
 export default async function SubmitPage() {
   const form = await getPublic<SubmissionForm | null>('/submission-form', { revalidate: 30 });
 
-  if (!form) {
+  // Someone who arrives the day after the deadline is not in the same position
+  // as someone who arrives before anything has opened, and telling both to wait
+  // is wrong for the first (PRD §4.2).
+  if (!form || form.state !== 'open') {
+    const closed = form?.state === 'closed' ? form : null;
+
     return (
-      <Section eyebrow="ສົ່ງລາຍຊື່" title="ຍັງບໍ່ເປີດຮັບ" titleAs="h1">
+      <Section
+        eyebrow="ສົ່ງລາຍຊື່"
+        title={closed ? 'ປິດຮັບແລ້ວ' : 'ຍັງບໍ່ເປີດຮັບ'}
+        titleAs="h1"
+      >
         <div className="max-w-xl rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-10">
           <p className="text-[15px] leading-relaxed text-ink-2">
-            ຕອນນີ້ຍັງບໍ່ໄດ້ເປີດຮັບການເສີນຊື່ · ເມື່ອເປີດແລ້ວປຸ່ມ “ສົ່ງລາຍຊື່”
-            ຈະຂຶ້ນຢູ່ເທິງສຸດຂອງທຸກໜ້າ
+            {closed ? (
+              <>
+                ການເສີນຊື່ຂອງງານປີ {closed.edition.year} ປິດແລ້ວ
+                {closed.closedAt ? ` ເມື່ອ ${formatDate(closed.closedAt)}` : ''} ·
+                ຕອນນີ້ຢູ່ລະຫວ່າງການຄັດກອງ ແລະ ຕັດສິນ
+              </>
+            ) : (
+              <>
+                ຕອນນີ້ຍັງບໍ່ໄດ້ເປີດຮັບການເສີນຊື່ · ເມື່ອເປີດແລ້ວປຸ່ມ “ສົ່ງລາຍຊື່”
+                ຈະຂຶ້ນຢູ່ເທິງສຸດຂອງທຸກໜ້າ
+              </>
+            )}
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
+            {closed && (
+              <ActionLink href={`/awards/${closed.edition.slug}`} tone="quiet">
+                ເບິ່ງງານປີ {closed.edition.year}
+              </ActionLink>
+            )}
             <ActionLink href="/awards/latest" tone="quiet">
               ເບິ່ງງານປີລ່າສຸດ
             </ActionLink>

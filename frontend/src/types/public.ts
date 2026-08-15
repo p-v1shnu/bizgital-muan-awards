@@ -101,8 +101,25 @@ export interface PublicProfile extends PublicCreator {
   }[];
 }
 
-export interface SubmissionForm {
+/**
+ * Three answers, not two (PRD §4.2). A bare null could not tell a visitor who
+ * arrived the day after the deadline from one who arrived before anything had
+ * opened, and both were told to come back later.
+ */
+export interface OpenSubmissionForm {
+  state: 'open';
   edition: PublicEditionSummary;
   closesAt: string | null;
-  categories: { id: string; slug: string; nameLo: string; groupLo: string | null; descriptionLo: string | null }[];
+  categories: {
+    id: string;
+    slug: string;
+    nameLo: string;
+    groupLo: string | null;
+    descriptionLo: string | null;
+  }[];
 }
+
+export type SubmissionForm =
+  | OpenSubmissionForm
+  | { state: 'closed'; edition: PublicEditionSummary; closedAt: string | null }
+  | { state: 'never-opened' };

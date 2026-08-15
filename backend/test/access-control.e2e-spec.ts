@@ -287,6 +287,30 @@ describe('access control', () => {
   });
 
   /**
+   * The rate limit skips the back office so the team is not throttled doing
+   * the work the tool is for — but it used to decide that by looking at the
+   * path, and it runs before anything checks a token. Anyone could hold those
+   * routes open with no ceiling at all.
+   */
+  it('does not let a stranger skip the rate limit by asking for an admin route', async () => {
+    const from = '198.51.100.77';
+    let sawLimit = false;
+
+    for (let attempt = 0; attempt < 130; attempt += 1) {
+      const response = await api(h).get(path('/admin/editions')).set('X-Forwarded-For', from);
+      if (response.status === 429) {
+        sawLimit = true;
+        break;
+      }
+      expect(response.status).toBe(401);
+    }
+
+    // Counted like anything else, rather than waved through for having the
+    // right prefix in the URL.
+    expect(sawLimit).toBe(true);
+  });
+
+  /**
    * Two probes, deliberately separate. The uptime monitor watches the first and
    * wakes somebody up; storage going down loses every picture on the site but
    * leaves it readable, which is a thing to hear about in the morning, not at

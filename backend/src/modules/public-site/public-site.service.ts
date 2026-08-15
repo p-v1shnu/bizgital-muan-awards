@@ -195,12 +195,31 @@ export class PublicSiteService {
 
   /**
    * What the public form needs to render: the year taking entries and the
-   * categories to choose from. Returns null when nothing is open, which is
-   * how the page decides to show the closed state instead.
+   * categories to choose from — or, when nothing is open, why not.
+   *
+   * It used to answer a bare null for every closed state, and the page could
+   * only say "not open yet". That is the wrong sentence in the case that
+   * matters most: somebody arriving the day after the deadline was told to
+   * wait for something that had already happened and closed. PRD §4.2 asks for
+   * three states and this is what tells them apart.
    */
   async submissionForm() {
     const edition = await this.editions.findAcceptingSubmissions();
-    if (!edition) return null;
+    if (!edition) {
+      // The most recent year that ever took entries, if there is one — its
+      // deadline is what a late arrival is looking for.
+      const closed = await this.prisma.edition.findFirst({
+        where: { phase: { in: VISIBLE }, submissionsOpenedAt: { not: null } },
+        orderBy: { year: 'desc' },
+      });
+      return closed
+        ? {
+            state: 'closed' as const,
+            edition: this.editionShape(closed),
+            closedAt: closed.submissionsCloseAt,
+          }
+        : { state: 'never-opened' as const };
+    }
 
     const categories = await this.prisma.category.findMany({
       where: { editionId: edition.id },
@@ -209,6 +228,7 @@ export class PublicSiteService {
     });
 
     return {
+      state: 'open' as const,
       edition: this.editionShape(edition),
       closesAt: edition.submissionsCloseAt,
       categories,

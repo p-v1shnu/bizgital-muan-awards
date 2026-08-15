@@ -2,6 +2,20 @@ import { expect, test } from '@playwright/test';
 
 import { ADMIN } from './seed';
 
+/**
+ * Each spec file signs in from its own address.
+ *
+ * `/auth/login` allows twenty attempts a minute from one address — a
+ * deliberate bound on password guessing (PRD §8). Every test here signs in for
+ * itself, and run together with the seed's own sign-ins that crosses twenty
+ * inside a minute, so the suite began throttling itself: the last two or three
+ * tests failed, never the same ones twice, and passed whenever they were run
+ * alone. The API trusts X-Forwarded-For from loopback, so giving each file its
+ * own address restores the separation the limit assumes without touching the
+ * limit.
+ */
+test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.11' } });
+
 test('a wrong password surfaces what the server said', async ({ page }) => {
   await page.goto('/admin/login');
   await page.fill('input[type=email]', ADMIN.email);
@@ -203,7 +217,9 @@ test.describe('the edition page', () => {
       await page.goto(`${url}?tab=categories`);
       await page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' }).click();
       await page.getByRole('button', { name: 'ລຶບ', exact: true }).click();
-      await expect(page.getByText('ສາຂາທົດສອບວ່າງເປົ່າ')).toBeHidden();
+      // The confirm dialog repeats the name, so waiting on the text alone
+      // matches two things. The row's own delete button is the row.
+      await expect(page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeHidden();
     }
 
     await page.goto(url);

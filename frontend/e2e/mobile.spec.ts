@@ -1,6 +1,20 @@
 import { expect, test } from '@playwright/test';
 
 /**
+ * Each spec file signs in from its own address.
+ *
+ * `/auth/login` allows twenty attempts a minute from one address — a
+ * deliberate bound on password guessing (PRD §8). Every test here signs in for
+ * itself, and run together with the seed's own sign-ins that crosses twenty
+ * inside a minute, so the suite began throttling itself: the last two or three
+ * tests failed, never the same ones twice, and passed whenever they were run
+ * alone. The API trusts X-Forwarded-For from loopback, so giving each file its
+ * own address restores the separation the limit assumes without touching the
+ * limit.
+ */
+test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.13' } });
+
+/**
  * Most visitors arrive from Facebook on a phone (PRD §10), and the failure
  * that ruins that experience is a page that scrolls sideways — usually one
  * wide element nobody noticed on a laptop.

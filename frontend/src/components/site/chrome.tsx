@@ -60,7 +60,7 @@ export async function SiteHeader() {
           {openEdition && (
             <Link
               href="/submit"
-              className="ml-2 rounded-[var(--radius-btn)] bg-brand-deep px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand"
+              className="ml-2 rounded-[var(--radius-btn)] bg-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-deep"
             >
               ສົ່ງລາຍຊື່
             </Link>

@@ -198,10 +198,16 @@ describe('public site', () => {
     });
   });
 
+  /**
+   * Three states, because two were not enough (PRD §4.2). A bare null meant
+   * the page could only ever say "not open yet", including to somebody who
+   * arrived the day after the deadline — told to wait for a thing that had
+   * already been and gone.
+   */
   describe('the submission form endpoint', () => {
-    it('returns null while nothing is open', async () => {
+    it('says nothing has ever opened, when nothing has', async () => {
       const response = await api(h).get(path('/submission-form')).expect(200);
-      expect(response.body.data).toBeNull();
+      expect(response.body.data.state).toBe('never-opened');
     });
 
     it('returns the open year and its categories once opened', async () => {
@@ -212,8 +218,21 @@ describe('public site', () => {
         .expect(200);
 
       const response = await api(h).get(path('/submission-form')).expect(200);
+      expect(response.body.data.state).toBe('open');
       expect(response.body.data.edition.year).toBe(2027);
       expect(response.body.data.categories).toHaveLength(1);
+    });
+
+    it('names the year that closed, rather than saying it never opened', async () => {
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .set(h.auth)
+        .send({ submissionsOpen: false })
+        .expect(200);
+
+      const response = await api(h).get(path('/submission-form')).expect(200);
+      expect(response.body.data.state).toBe('closed');
+      expect(response.body.data.edition.year).toBe(2027);
     });
   });
 

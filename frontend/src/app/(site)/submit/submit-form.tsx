@@ -5,7 +5,7 @@ import { CheckCircle2 } from 'lucide-react';
 
 import { ActionLink } from '@/components/site/primitives';
 import { useDebounced } from '@/lib/use-debounced';
-import type { SubmissionForm } from '@/types/public';
+import type { OpenSubmissionForm } from '@/types/public';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
@@ -19,7 +19,7 @@ declare global {
  * The public form. Personal details are optional on purpose (PRD §10): the
  * point is to learn about a creator, not to collect a database of senders.
  */
-export function SubmitForm({ form }: { form: SubmissionForm }) {
+export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
   const [values, setValues] = useState({
     categoryId: form.categories[0]?.id ?? '',
     creatorNameRaw: '',
@@ -53,8 +53,12 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
         }),
       });
 
+      // The server's own message says what happened and what to do about it,
+      // in Lao, and knows the actual limit. This used to overwrite it with
+      // "try again in a minute" — for a limit measured in hours.
       if (response.status === 429) {
-        throw new Error('ສົ່ງຖີ່ເກີນໄປ ລອງໃໝ່ໃນອີກໜຶ່ງນາທີ');
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message ?? 'ສົ່ງຖີ່ເກີນໄປ ກະລຸນາລໍຖ້າແລ້ວລອງໃໝ່');
       }
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
@@ -85,7 +89,7 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
               setValues({ ...values, creatorNameRaw: '', creatorLink: '', reason: '' });
               setState('idle');
             }}
-            className="rounded-[var(--radius-btn)] bg-brand-deep px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand"
+            className="rounded-[var(--radius-btn)] bg-ink px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-deep"
           >
             ສົ່ງອີກຄົນ
           </button>
@@ -149,6 +153,12 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
           onChange={(event) => setValues({ ...values, categoryId: event.target.value })}
           className="w-full rounded-[var(--radius-sm)] border border-rule bg-white px-3.5 py-2.5 text-[14px] text-ink"
         >
+          {/* Both branches read the filtered list. The ungrouped one used to
+              render every category regardless — so on a year that leaves
+              groupLo blank, typing in the filter box narrowed nothing while
+              quietly moving the selection to the first match. The sender saw
+              the whole list, their choice changed under them, and the entry
+              went to a category they had not picked. */}
           {hasGroups
             ? Object.entries(grouped).map(([group, categories]) => (
                 <optgroup key={group} label={group || 'ອື່ນໆ'}>
@@ -159,12 +169,15 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
                   ))}
                 </optgroup>
               ))
-            : form.categories.map((category) => (
+            : visibleCategories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.nameLo}
                 </option>
               ))}
         </select>
+        {needle && visibleCategories.length === 0 && (
+          <p className="mt-1.5 text-[12.5px] text-stop">ບໍ່ພົບສາຂາທີ່ກົງກັບ “{categoryFilter}”</p>
+        )}
       </Field>
 
       <CreatorNameField
@@ -239,7 +252,7 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
       <button
         type="submit"
         disabled={state === 'sending'}
-        className="mt-6 w-full rounded-[var(--radius-btn)] bg-brand-deep px-5 py-3.5 text-[15px] font-semibold text-white hover:bg-brand disabled:opacity-50"
+        className="mt-6 w-full rounded-[var(--radius-btn)] bg-ink px-5 py-3.5 text-[15px] font-semibold text-white hover:bg-brand-deep disabled:opacity-50"
       >
         {state === 'sending' ? 'ກຳລັງສົ່ງ…' : 'ສົ່ງລາຍຊື່'}
       </button>

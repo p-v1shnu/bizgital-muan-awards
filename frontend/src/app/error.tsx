@@ -31,7 +31,7 @@ export default function GlobalError({
           <button
             type="button"
             onClick={reset}
-            className="rounded-[var(--radius-btn)] bg-brand-deep px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand"
+            className="rounded-[var(--radius-btn)] bg-ink px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-deep"
           >
             ລອງໃໝ່
           </button>

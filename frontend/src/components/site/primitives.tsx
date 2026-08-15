@@ -64,7 +64,7 @@ export function ActionLink({
   const classes = cn(
     'inline-flex items-center gap-2 rounded-[var(--radius-btn)] px-5 py-3 text-[14px] font-semibold',
     tone === 'primary'
-      ? 'bg-brand-deep text-white hover:bg-brand'
+      ? 'bg-ink text-white hover:bg-brand-deep'
       : 'border border-rule bg-panel text-ink-2 hover:bg-panel-2 hover:text-ink',
     className,
   );

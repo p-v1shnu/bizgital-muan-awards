@@ -3,6 +3,20 @@ import { expect, request, test } from '@playwright/test';
 import { ADMIN, API } from './seed';
 
 /**
+ * Each spec file signs in from its own address.
+ *
+ * `/auth/login` allows twenty attempts a minute from one address — a
+ * deliberate bound on password guessing (PRD §8). Every test here signs in for
+ * itself, and run together with the seed's own sign-ins that crosses twenty
+ * inside a minute, so the suite began throttling itself: the last two or three
+ * tests failed, never the same ones twice, and passed whenever they were run
+ * alone. The API trusts X-Forwarded-For from loopback, so giving each file its
+ * own address restores the separation the limit assumes without touching the
+ * limit.
+ */
+test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.12' } });
+
+/**
  * Opens or closes entries on a year through the API, the way the back office
  * does. Saving triggers the site's cache purge, so the public pages follow.
  */
@@ -297,12 +311,35 @@ test('no page fails an automated accessibility check', async ({ page }) => {
   // 2.1 AA. It caught footer headings at 4.29:1 and a faded panel at 2:1.
   const AxeBuilder = (await import('@axe-core/playwright')).default;
   for (const path of ['/', '/awards/2025', '/winners', '/creators/khamla', '/submit', '/about']) {
-    await page.goto(path, { waitUntil: 'networkidle' });
+    // Not `networkidle`: after a fresh build the image optimiser is encoding
+    // every size for the first time, and the page can render perfectly well
+    // while a picture is still being produced. Axe reads the DOM, so waiting
+    // for the document is the condition that actually matters — waiting for
+    // the network to fall quiet made this fail for a reason unrelated to
+    // accessibility.
+    await page.goto(path, { waitUntil: 'domcontentloaded' });
     const { violations } = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
     expect(violations.map((v) => `${path} ${v.id}`)).toEqual([]);
   }
+});
+
+/**
+ * PRD §6.0.2 rule 1 and rule 2 together: the primary button is ink, brand
+ * shows on hover, and brand as a *background* is reserved for six specific
+ * marks. Every primary button on the site had it as its resting colour, which
+ * is what the rule exists to stop — the winner's badge and the foil rule stop
+ * meaning anything if the colour is everywhere.
+ */
+test('primary buttons rest on ink, not on the brand colour', async ({ page }) => {
+  await page.goto('/submit');
+  const submit = page.getByRole('button', { name: 'ສົ່ງລາຍຊື່' });
+  await expect(submit).toBeVisible();
+
+  const resting = await submit.evaluate((node) => getComputedStyle(node).backgroundColor);
+  // ink #221C19
+  expect(resting).toBe('rgb(34, 28, 25)');
 });
 
 test('the keyboard reaches the content without walking the nav', async ({ page }) => {
