@@ -1,5 +1,14 @@
 // Muan Awards — database schema
-// Source of truth: docs/muan-awards-prd.md §8 (v1.2)
+// Source of truth: docs/muan-awards-prd.md §8 (v1.3)
+//
+// A note on the `…En` columns. Two of them carry real content and are wired
+// end to end: Creator.nameEn and Judge.nameEn can be typed in the back office
+// and appear on the site. The rest — titleEn, descriptionEn, venueEn,
+// activitiesEn, bioEn, positionEn, heroCaptionEn — have no field to fill and
+// nothing that displays them. They are held for a bilingual site that is out
+// of MVP scope (PRD §5), not forgotten: adding inputs for values nothing shows
+// would put fifteen empty boxes in front of a team working entirely in Lao.
+// Whoever picks up the bilingual work should start here.
 //
 // Design principle: permanent libraries (Creator, Judge) are separate from
 // per-year assignments (Nomination, EditionJudge, EditionSponsor), so a person

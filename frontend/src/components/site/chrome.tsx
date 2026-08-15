@@ -94,9 +94,10 @@ function NavLink({
 }
 
 export async function SiteFooter() {
-  const [site, latest] = await Promise.all([
+  const [site, latest, openEdition] = await Promise.all([
     tryGetPublic<SiteSettings>('/site'),
     tryGetPublic<Edition>('/editions/latest'),
+    tryGetPublic<Edition | null>('/editions/accepting-submissions'),
   ]);
 
   return (
@@ -124,7 +125,10 @@ export async function SiteFooter() {
             links={[
               ...(latest ? [{ href: '/awards/latest', label: 'ງານປີລ່າສຸດ' }] : []),
               { href: '/winners', label: 'ທຳນຽບຜູ້ຊະນະ' },
-              { href: '/submit', label: 'ສົ່ງລາຍຊື່' },
+              // Shown on the same condition as the CTA in the nav. It used to
+              // sit here always, so the footer invited people to a form the
+              // header had already stopped offering.
+              ...(openEdition ? [{ href: '/submit', label: 'ສົ່ງລາຍຊື່' }] : []),
             ]}
           />
           <FooterColumn
