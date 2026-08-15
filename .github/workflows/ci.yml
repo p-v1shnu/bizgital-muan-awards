@@ -117,6 +117,10 @@ jobs:
       # prerendered from an empty database. This lets the seed purge them;
       # without it the browser pass reads a snapshot of nothing.
       REVALIDATE_SECRET: ci-revalidate-secret
+      # And this is what lets the API do the purging by itself, the way it does
+      # in production. A test that opens or closes entries and then reads the
+      # page needs the change to have reached the cache.
+      REVALIDATE_URL: http://127.0.0.1:3000/api/revalidate
 
     steps:
       - uses: actions/checkout@v4

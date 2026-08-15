@@ -6,6 +6,7 @@ import { ActionLink, CreatorCard, Placeholder, Section } from '@/components/site
 import { SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
+import { safeHttpUrl } from '@/lib/utils';
 import { imageKeyList } from '@/lib/images';
 import type { Edition, SiteSettings } from '@/types/api';
 
@@ -34,12 +35,16 @@ interface WinnersYear {
  * they belong to a year, and they live on the year page (PRD §6.1.1).
  */
 export default async function HomePage() {
-  const [site, current, winnerYears, editions, stats] = await Promise.all([
+  const [site, current, winnerYears, editions, stats, openEdition] = await Promise.all([
     getPublic<SiteSettings>('/site'),
     getPublic<Edition | null>('/editions/latest'),
     getPublic<WinnersYear[]>('/winners'),
     getPublic<Edition[]>('/editions'),
     getPublic<{ years: number; categories: number; creators: number }>('/stats'),
+    // Whether entries are open is the API's decision, not a column: it is the
+    // switch *and* the closing time, and asking the endpoint that already knows
+    // beats re-deriving it here (PRD §4.2).
+    getPublic<Edition | null>('/editions/accepting-submissions'),
   ]);
 
   const heroKey = site?.heroImageKey ?? null;
@@ -91,7 +96,10 @@ export default async function HomePage() {
         */}
         <div className="relative z-10 mx-auto -mt-24 max-w-6xl px-5">
           <div className="grid gap-4 md:grid-cols-2">
-            <CurrentEditionCard edition={current} />
+            <CurrentEditionCard
+              edition={current}
+              accepting={Boolean(current && openEdition && openEdition.id === current.id)}
+            />
             <Link
               href="/winners"
               className="flex flex-col justify-between rounded-[var(--radius-box)] border border-rule bg-panel p-6 transition-colors hover:border-ink-3"
@@ -300,7 +308,13 @@ function Stat({ value, label }: { value: number; label: string }) {
  * heading and call to action follow the phase, so the card is right whether
  * entries are open, nominees are out, or the results are in.
  */
-function CurrentEditionCard({ edition }: { edition: Edition | null }) {
+function CurrentEditionCard({
+  edition,
+  accepting,
+}: {
+  edition: Edition | null;
+  accepting: boolean;
+}) {
   if (!edition) {
     return (
       <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-6">
@@ -325,29 +339,66 @@ function CurrentEditionCard({ edition }: { edition: Edition | null }) {
     DRAFT: { eyebrow: 'ງານປີນີ້', title: 'ກຳລັງກຽມ', body: '' },
   }[edition.phase];
 
+  /**
+   * The card is the only place the current year appears on the homepage
+   * (PRD §6.1.1 §2), so it is also the only place that can say entries are
+   * open — and it was reading the phase alone, which cannot know. While the
+   * form is open that outranks whatever the phase would have said: sending in
+   * a name is the thing with a deadline.
+   */
+  const open = accepting
+    ? {
+        eyebrow: 'ງານປີນີ້',
+        title: 'ເປີດຮັບເສີນຊື່ແລ້ວ',
+        body: 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
+      }
+    : null;
+  const shown = open ?? copy;
+
   return (
     <div className="flex flex-col justify-between rounded-[var(--radius-box)] border border-brand-edge bg-panel p-6">
       <div>
         <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-brand-deep">
-          {copy.eyebrow} · {edition.year}
+          {shown.eyebrow} · {edition.year}
         </p>
-        <p className="mt-2 font-serif text-2xl text-ink">{copy.title}</p>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{copy.body}</p>
+        <p className="mt-2 font-serif text-2xl text-ink">{shown.title}</p>
+        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{shown.body}</p>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <ActionLink href={`/awards/${edition.slug}`} className="px-4 py-2.5 text-[13px]">
-          ເບິ່ງງານປີ {edition.year}
-        </ActionLink>
+        {accepting ? (
+          <>
+            <ActionLink href="/submit" className="px-4 py-2.5 text-[13px]">
+              ສົ່ງລາຍຊື່
+            </ActionLink>
+            <ActionLink href={`/awards/${edition.slug}`} tone="quiet" className="px-4 py-2.5 text-[13px]">
+              ເບິ່ງງານປີ {edition.year}
+            </ActionLink>
+          </>
+        ) : (
+          <ActionLink href={`/awards/${edition.slug}`} className="px-4 py-2.5 text-[13px]">
+            ເບິ່ງງານປີ {edition.year}
+          </ActionLink>
+        )}
         {/* Ticketing and voting are run elsewhere, so these are secondary and
             marked as leaving the site (PRD §7.4). */}
-        {edition.ticketUrl && (
-          <ActionLink href={edition.ticketUrl} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+        {safeHttpUrl(edition.ticketUrl) && (
+          <ActionLink
+            href={safeHttpUrl(edition.ticketUrl) as string}
+            tone="quiet"
+            external
+            className="px-4 py-2.5 text-[13px]"
+          >
             ຊື້ບັດ
           </ActionLink>
         )}
-        {edition.voteUrl && (
-          <ActionLink href={edition.voteUrl} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+        {safeHttpUrl(edition.voteUrl) && (
+          <ActionLink
+            href={safeHttpUrl(edition.voteUrl) as string}
+            tone="quiet"
+            external
+            className="px-4 py-2.5 text-[13px]"
+          >
             ໂຫວດ
           </ActionLink>
         )}

@@ -1,4 +1,24 @@
-import { expect, test } from '@playwright/test';
+import { expect, request, test } from '@playwright/test';
+
+import { ADMIN, API } from './seed';
+
+/**
+ * Opens or closes entries on a year through the API, the way the back office
+ * does. Saving triggers the site's cache purge, so the public pages follow.
+ */
+async function setEntries(year: number, open: boolean) {
+  const api = await request.newContext({ baseURL: `${API}/` });
+  const login = await api.post('auth/login', { data: ADMIN });
+  const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+  const editions = await (await api.get('admin/editions', { headers: auth })).json();
+  const edition = editions.data.find((row: { year: number }) => row.year === year);
+  const response = await api.patch(`admin/editions/${edition.id}/submissions`, {
+    headers: auth,
+    data: { submissionsOpen: open },
+  });
+  expect(response.ok()).toBe(true);
+  await api.dispose();
+}
 
 /** No Lao string may fall back to a face that does not carry Lao glyphs. */
 async function laoFallbacks(page: import('@playwright/test').Page) {
@@ -111,6 +131,50 @@ test.describe('a year page follows its phase', () => {
     await expect(results.getByText('ສາຂາເພີ່ມເຕີມ 10')).toBeHidden();
     await fold.click();
     await expect(results.getByText('ສາຂາເພີ່ມເຕີມ 10')).toBeVisible();
+  });
+
+  /**
+   * The two switches of PRD §4 are independent, and the public side used to
+   * read one off the other: the invitation to send a name appeared because the
+   * year was PUBLISHED, not because the form was open. So it showed on a year
+   * whose form had never opened, and would have vanished the moment nominees
+   * were announced while entries were still being taken.
+   *
+   * 2026 is published with entries open; 2025 has finished and never took any.
+   */
+  test('the invitation follows the form, not the phase', async ({ page }) => {
+    await page.goto('/awards/2026');
+    const main = page.getByRole('main');
+    await expect(main.getByRole('link', { name: 'ສົ່ງລາຍຊື່' })).toBeVisible();
+    await expect(main.getByText('ປິດຮັບລາຍຊື່ແລ້ວ')).toBeHidden();
+
+    // Close entries and leave the phase exactly where it is. Reading the phase
+    // for this — which is what the page used to do — would still show the
+    // invitation, because PUBLISHED has not changed.
+    try {
+      await setEntries(2026, false);
+      await expect(async () => {
+        await page.reload();
+        await expect(main.getByRole('link', { name: 'ສົ່ງລາຍຊື່' })).toBeHidden();
+        await expect(main.getByText('ປິດຮັບລາຍຊື່ແລ້ວ')).toBeVisible();
+      }).toPass({ timeout: 15_000 });
+    } finally {
+      await setEntries(2026, true);
+    }
+
+    // A backfilled year says nothing about entries at all — neither an
+    // invitation nor a notice that they closed.
+    await page.goto('/awards/2025');
+    const finished = page.getByRole('main');
+    await expect(finished.getByRole('link', { name: 'ສົ່ງລາຍຊື່' })).toBeHidden();
+    await expect(finished.getByText('ປິດຮັບລາຍຊື່ແລ້ວ')).toBeHidden();
+  });
+
+  test('the homepage card offers the form while it is open', async ({ page }) => {
+    await page.goto('/');
+    const card = page.locator('div').filter({ hasText: /^ງານປີນີ້ · 2026/ }).first();
+    await expect(card.getByText('ເປີດຮັບເສີນຊື່ແລ້ວ')).toBeVisible();
+    await expect(card.getByRole('link', { name: 'ສົ່ງລາຍຊື່' })).toBeVisible();
   });
 
   test('an unknown year is a 404, not an error', async ({ page }) => {

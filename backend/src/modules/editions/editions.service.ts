@@ -227,7 +227,16 @@ export class EditionsService {
       }
       const updated = await tx.edition.update({
         where: { id },
-        data: { submissionsOpen: dto.submissionsOpen, submissionsCloseAt: closeAt },
+        data: {
+          submissionsOpen: dto.submissionsOpen,
+          submissionsCloseAt: closeAt,
+          // Stamped the first time only. Re-opening to extend a deadline is
+          // the same window continuing, and closing must not erase the fact
+          // that it happened — that is the whole reason the column exists.
+          ...(dto.submissionsOpen && !edition.submissionsOpenedAt
+            ? { submissionsOpenedAt: new Date() }
+            : {}),
+        },
       });
       return { after: updated, closedByThis: closed };
     });

@@ -347,6 +347,9 @@ export class PublicSiteService {
     galleryImageKeys: unknown;
     ticketUrl: string | null;
     voteUrl: string | null;
+    submissionsOpen: boolean;
+    submissionsCloseAt: Date | null;
+    submissionsOpenedAt: Date | null;
   }) {
     return {
       id: edition.id,
@@ -363,6 +366,18 @@ export class PublicSiteService {
       galleryImageKeys: edition.galleryImageKeys,
       ticketUrl: edition.ticketUrl,
       voteUrl: edition.voteUrl,
+      // The second switch of PRD §4, which the year page never received and so
+      // guessed at from the phase — showing "send us a name" on a published
+      // year with no form open, and hiding it the moment nominees were
+      // announced while the form was still taking entries.
+      //
+      // Sent already decided rather than as the raw column: whether the form is
+      // open is `submissionsOpen` *and* the closing time, and that is one rule
+      // that belongs in one place.
+      acceptingSubmissions: this.editions.isAcceptingSubmissions(edition),
+      submissionsCloseAt: edition.submissionsCloseAt,
+      /** Tells "closed" apart from "never opened" — the third row of §4.2. */
+      submissionsHaveOpened: edition.submissionsOpenedAt !== null,
     };
   }
 

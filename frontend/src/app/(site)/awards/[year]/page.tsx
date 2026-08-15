@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { CalendarDays, Eye, MapPin } from 'lucide-react';
+import { CalendarDays, Clock, Eye, MapPin } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
 import { cn, safeHttpUrl } from '@/lib/utils';
@@ -10,7 +10,7 @@ import { JsonLd, editionJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
-import { formatDate } from '@/lib/dates';
+import { formatDate, formatDateTime } from '@/lib/dates';
 
 interface PageProps {
   params: Promise<{ year: string }>;
@@ -163,10 +163,32 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   {edition.venueLo}
                 </span>
               )}
+              {/* The closing date belongs next to the invitation, not buried
+                  on the form itself (PRD §4.2). */}
+              {edition.acceptingSubmissions && edition.submissionsCloseAt && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock className="size-4" />
+                  ປິດຮັບ {formatDateTime(edition.submissionsCloseAt)}
+                </span>
+              )}
             </div>
 
+            {/* A year that has closed its entries says so; a year that never
+                took any — every backfilled one — says nothing at all. */}
+            {!edition.acceptingSubmissions && edition.submissionsHaveOpened && (
+              <p className="mt-4 inline-flex items-center gap-2 rounded-[var(--radius-ui-sm)] bg-black/35 px-3 py-2 text-[13px] text-white/90 backdrop-blur-sm">
+                <Clock className="size-4 shrink-0" />
+                ປິດຮັບລາຍຊື່ແລ້ວ — ຢູ່ລະຫວ່າງການຄັດກອງ ແລະ ຕັດສິນ
+              </p>
+            )}
+
             <div className="mt-5 flex flex-wrap gap-2">
-              {edition.phase === 'PUBLISHED' && (
+              {/* Driven by the form's own switch, not by the phase. The two are
+                  independent (PRD §4) and reading one off the other put the
+                  button on a published year with no form open, then took it
+                  away the moment nominees were announced while entries were
+                  still being taken. */}
+              {edition.acceptingSubmissions && (
                 <ActionLink href="/submit" className="px-4 py-2.5 text-[13px]">
                   ສົ່ງລາຍຊື່
                 </ActionLink>

@@ -78,6 +78,14 @@ model Edition {
   /// Evaluated per request, so no scheduler is required.
   submissionsCloseAt DateTime?
 
+  /// The first time entries were ever opened on this year, and never cleared.
+  /// PRD §4.2 asks the year page to say three different things, and the two
+  /// columns above can only tell it two: a year that closed its form and a
+  /// year that never had one both read as submissionsOpen = false. A backfilled
+  /// 2023 must stay silent about entries; a year that has just closed has to
+  /// say so. This is what separates them.
+  submissionsOpenedAt DateTime?
+
   eventDate DateTime?
   venueLo   String?
   venueEn   String?
