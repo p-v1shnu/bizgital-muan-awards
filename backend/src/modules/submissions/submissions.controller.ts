@@ -15,11 +15,17 @@ export class SubmissionsController {
   constructor(private readonly submissions: SubmissionsService) {}
 
   @Public()
-  // 10 an hour per address (PRD §7.1). Somebody nominating several creators in
-  // one sitting stays well inside it; a script does not. Repeats of the same
-  // name from the same address are folded together separately, in the service,
-  // so an enthusiastic fan cannot inflate the count either.
-  @Throttle({ default: { limit: 10, ttl: 60 * 60_000 } })
+  // Per address, per hour (PRD §7.1). Repeats of the same name from the same
+  // address are folded together separately, in the service, so this is not what
+  // stops one fan inflating a count — it is only what stops a script.
+  //
+  // Raised from 10 after threat-modelling who actually shares an address here.
+  // Mobile networks in Laos put many subscribers behind one, and the form is
+  // open for a few weeks a year: measured, the eleventh entry from an address
+  // was refused for an hour, and on a carrier that address is a whole city.
+  // 30 still stops a script — and nothing sent here is published without the
+  // team reading it first, which is the real control.
+  @Throttle({ default: { limit: 30, ttl: 60 * 60_000 } })
   @Post()
   @HttpCode(201)
   @ApiOperation({ summary: 'Send in a name from the public form' })

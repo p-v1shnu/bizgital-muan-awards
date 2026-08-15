@@ -12,6 +12,11 @@
 # Left unset, the script behaves exactly as it did before.
 set -euo pipefail
 
+# These files hold every name, e-mail and phone number the public sent in. The
+# default umask would have written them 644 and the directory 755 — readable by
+# any account on the machine, including anything running as nobody.
+umask 077
+
 DEST="${BACKUP_DIR:-/srv/backups/muan}"
 KEEP_DAYS="${BACKUP_KEEP_DAYS:-30}"
 STAMP="$(date +%F-%H%M)"

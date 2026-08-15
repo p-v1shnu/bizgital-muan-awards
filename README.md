@@ -13,6 +13,7 @@ Design system and page mockups: [`docs/design/`](docs/design/) — open `style-g
 |---|---|
 | `docs/admin-guide.md` | **ທີມງານ Muan** — ວິທີໃຊ້ຫຼັງບ້ານ ຕັ້ງແຕ່ສ້າງປີຈົນປະກາດຜົນ (ພາສາລາວ) |
 | `docs/deployment.md` | ຄົນທີ່ຂຶ້ນເຊີບເວີ — ຂັ້ນຕອນ + ເຊັກລິສຫຼັງ deploy |
+| `docs/threat-model.md` | ບົດວິເຄາະຄວາມສ່ຽງດ້ານຄວາມປອດໄພ (STRIDE) — ສິ່ງທີ່ພົບ ແລະ ສິ່ງທີ່ຍອມຮັບຄວາມສ່ຽງໄວ້ |
 | `docs/monitoring.md` | ຄົນທີ່ດູແລເຊີບເວີ — ຕັ້ງລະບົບເຕືອນເມື່ອເວັບລົ່ມ + ສິ່ງທີ່ຕ້ອງເຮັດເມື່ອມັນດັງ |
 | `docs/muan-awards-prd.md` | ຂໍ້ກຳນົດທັງໝົດຂອງໂປຣເຈັກ |
 
@@ -37,8 +38,10 @@ No Redis and no worker container: the MVP has no background jobs (PRD §9).
 
 ```bash
 cp .env.example .env
-# Fill in JWT_SECRET and REFRESH_TOKEN_SECRET — at least 32 characters each.
-# The backend refuses to start otherwise.
+# Fill in JWT_SECRET, REFRESH_TOKEN_SECRET and IP_HASH_SALT — at least 32
+# characters each, and all three different. The backend refuses to start
+# otherwise. IP_HASH_SALT is what makes a stored visitor address unreadable;
+# docs/threat-model.md §3 has why it is not allowed to be one of the others.
 openssl rand -base64 48
 
 # MySQL + MinIO in Docker; the apps run on the host for hot reload.

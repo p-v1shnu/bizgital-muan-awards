@@ -9,5 +9,6 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? process.env.DATABASE_URL;
 process.env.JWT_SECRET ??= 'test-jwt-secret-that-is-long-enough-0123456789';
 process.env.REFRESH_TOKEN_SECRET ??= 'test-refresh-secret-that-is-long-enough-0123456789';
+process.env.IP_HASH_SALT ??= 'test-ip-hash-salt-that-is-long-enough-0123456789';
 process.env.SETUP_ENABLED = 'true';
 process.env.CORS_ORIGINS ??= 'http://localhost:3000';

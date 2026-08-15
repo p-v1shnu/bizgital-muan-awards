@@ -20,4 +20,15 @@ export class PublicThrottlerGuard extends ThrottlerGuard {
     const request = context.switchToHttp().getRequest<Request>();
     return request.path.startsWith('/api/v1/admin/');
   }
+
+  /**
+   * The person who runs into this is usually not the person it was built for.
+   * Mobile networks in Laos put a great many subscribers behind one public
+   * address, so the limit is shared by strangers: measured against a single
+   * address, the eleventh entry was refused and the sender was shown
+   * "ThrottlerException: Too Many Requests" — in English, naming a class.
+   */
+  protected async getErrorMessage(): Promise<string> {
+    return 'ສົ່ງເລື້ອຍເກີນໄປ — ອິນເຕີເນັດມືຖືມັກໃຊ້ທີ່ຢູ່ຮ່ວມກັນຫຼາຍຄົນ ກະລຸນາລໍຖ້າແລ້ວລອງໃໝ່ ຫຼື ປ່ຽນເປັນ Wi-Fi';
+  }
 }

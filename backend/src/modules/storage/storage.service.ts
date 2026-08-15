@@ -50,7 +50,17 @@ export class StorageService {
     const key = `${folder}/${randomUUID()}.${extension}`;
     const uploadUrl = await getSignedUrl(
       this.client,
-      new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: contentType }),
+      // ContentLength is part of what gets signed, so storage refuses a body of
+      // any other size. Without it the check above was a promise the browser
+      // made and nothing kept: a ticket asked for on behalf of a 100-byte file
+      // uploaded 6 MB and storage took it. The eight-megabyte ceiling is only
+      // real once the bucket is the one enforcing it.
+      new PutObjectCommand({
+        Bucket: this.bucket,
+        Key: key,
+        ContentType: contentType,
+        ContentLength: sizeBytes,
+      }),
       { expiresIn: 300 },
     );
 

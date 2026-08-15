@@ -74,6 +74,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const body = exception.getResponse();
       if (typeof body === 'string') {
         message = body;
+        // Nest's own exceptions answer with an object carrying its own `error`;
+        // ones built from a bare string do not, and every one of those was going
+        // out labelled InternalServerError. A rate-limited visitor was told 429
+        // and "InternalServerError" in the same breath, which sends whoever
+        // reads it looking for a fault in the server.
+        error = HttpStatus[status] ?? 'Error';
       } else {
         const asRecord = body as Record<string, unknown>;
         // class-validator returns message as string[]; keep it under details

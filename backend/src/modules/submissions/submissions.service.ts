@@ -365,9 +365,16 @@ function startOfDayInVientiane() {
 }
 
 /**
- * Stored hashed, never raw (PRD §10). Salted with the JWT secret so the table
- * alone cannot be brute-forced back to addresses — the space of IPv4 is small
- * enough that an unsalted hash is barely a hash at all.
+ * Stored hashed, never raw (PRD §10), and salted, because the whole of IPv4 is
+ * four billion values — an unsalted hash of an address is a lookup table away
+ * from the address itself.
+ *
+ * The salt is its own secret rather than the JWT one it used to borrow. They
+ * are rotated for opposite reasons: a leaked token secret has to be replaced
+ * that hour, and doing so silently changed every ipHash ever written, which
+ * would quietly reset the daily de-duplication and the per-address limit in the
+ * middle of whatever incident prompted the rotation. This one is meant never to
+ * change, and if it ever does, the old hashes are deliberately unrecoverable.
  */
 /**
  * One value standing for "this name, in this category, from this address,
@@ -382,6 +389,6 @@ function dedupeKey(categoryId: string, creatorNameRaw: string, ipHash: string) {
 
 function hashIp(ip: string | undefined) {
   return createHash('sha256')
-    .update(`${process.env.JWT_SECRET ?? ''}:${ip ?? 'unknown'}`)
+    .update(`${process.env.IP_HASH_SALT ?? ''}:${ip ?? 'unknown'}`)
     .digest('hex');
 }
