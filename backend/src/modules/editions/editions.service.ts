@@ -336,6 +336,12 @@ export class EditionsService {
    * year copied from the one before arrives with every heading of a bigger
    * year, and the ones that drew no entries are meant to be deleted before the
    * shortlist goes out.
+   *
+   * Written in English on purpose. Only the team ever reads it, only when
+   * something is refused, and nobody on the project can check whether a Lao
+   * sentence written here is right — the one place it would be seen is the one
+   * place it would never be reviewed. The category names inside it are the
+   * team's own words and stay as they are.
    */
   private async assertAnnouncable(editionId: string, target: EditionPhase) {
     if (target !== EditionPhase.NOMINEES_ANNOUNCED && target !== EditionPhase.WINNERS_ANNOUNCED) {
@@ -349,8 +355,8 @@ export class EditionsService {
     });
     if (empty.length > 0) {
       throw new BadRequestException(
-        `ຍັງມີ ${empty.length} ສາຂາທີ່ບໍ່ມີນອມິນີ: ${empty.map((c) => c.nameLo).join(', ')} — ` +
-          'ໃສ່ນອມິນີ ຫຼື ລຶບສາຂານັ້ນອອກກ່ອນ',
+        `${empty.length} category(ies) have no nominees: ${empty.map((c) => c.nameLo).join(', ')}. ` +
+          'Add a nominee, or delete the category.',
       );
     }
 
@@ -362,8 +368,8 @@ export class EditionsService {
       });
       if (withoutWinner.length > 0) {
         throw new BadRequestException(
-          `ຍັງມີ ${withoutWinner.length} ສາຂາທີ່ຍັງບໍ່ໄດ້ຕິດຜູ້ຊະນະ: ` +
-            `${withoutWinner.map((c) => c.nameLo).join(', ')} — ຕິດຜູ້ຊະນະ ຫຼື ລຶບສາຂານັ້ນອອກກ່ອນ`,
+          `${withoutWinner.length} category(ies) have no winner: ` +
+            `${withoutWinner.map((c) => c.nameLo).join(', ')}. Pick a winner, or delete the category.`,
         );
       }
     }

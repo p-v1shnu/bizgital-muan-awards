@@ -44,9 +44,14 @@ export async function uploadImage(file: File, folder: Folder) {
       headers: { 'Content-Type': file.type },
     });
   } catch {
-    throw new Error('ຕິດຕໍ່ບ່ອນເກັບຮູບບໍ່ໄດ້ — ຮູບອື່ນໆໃນເວັບກໍ່ອາດຈະບໍ່ຂຶ້ນຄືກັນ ກະລຸນາແຈ້ງຜູ້ດູແລລະບົບ');
+    // English, like the other back-office failures: the team reads it, it
+    // appears only when something is broken, and an unreviewable Lao sentence
+    // helps nobody. What a visitor sees stays in Lao.
+    throw new Error(
+      'Could not reach image storage. Pictures elsewhere on the site may be missing too — tell whoever runs the server.',
+    );
   }
-  if (!response.ok) throw new Error(`ອັບໂຫລດຮູບບໍ່ສຳເລັດ (${response.status})`);
+  if (!response.ok) throw new Error(`Upload was refused (HTTP ${response.status}).`);
   return ticket.key;
 }
 

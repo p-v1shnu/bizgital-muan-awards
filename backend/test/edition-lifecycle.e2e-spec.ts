@@ -67,8 +67,10 @@ describe('edition lifecycle', () => {
         .send({ phase: 'NOMINEES_ANNOUNCED' })
         .expect(400);
 
-      expect(response.body.message).toContain('ບໍ່ມີນອມິນີ');
-      expect(response.body.message).toContain('ລຶບສາຂານັ້ນອອກກ່ອນ');
+      expect(response.body.message).toContain('have no nominees');
+      // Naming them matters: "two categories" leaves the team hunting through
+      // twenty headings for which two.
+      expect(response.body.message).toContain('delete the category');
     });
 
     it('lets the announcement through once the empty category is removed', async () => {
