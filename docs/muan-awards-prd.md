@@ -937,6 +937,28 @@ erDiagram
 
 **ตรวจแล้ว:** e2e หลังบ้าน **67 ข้อ** · ขับเบราว์เซอร์ **39 ข้อ** (เพิ่ม axe + การใช้คีย์บอร์ด) — ผ่านหมด
 
+### รอบที่เก้า — ไล่ตาม 12-Factor App (14 ส.ค. 2026)
+
+12-Factor เขียนขึ้นสำหรับ SaaS ที่ scale หลาย instance บน PaaS ส่วนนี่คือ VPS เครื่องเดียว + Compose
+บางข้อจึงเป็น **“ตัดสินใจแล้วบันทึกเหตุผล”** ไม่ใช่ทำตามทุกข้อ · เจอของที่ต้องแก้จริง **3 จุด**
+
+| Factor | ผลตรวจ |
+|---|---|
+| I Codebase | ✅ repo เดียว หลาย deploy |
+| II Dependencies | ✅ lockfile + `npm ci` ทั้ง build และ runtime |
+| III Config | ✅ อยู่ใน env ทั้งหมด + **ตรวจตอนบูต** (secret สั้นไปไม่ยอมสตาร์ท) · ข้อยกเว้นที่เลี่ยงไม่ได้: `NEXT_PUBLIC_*` ถูกฝังตอน build ตามธรรมชาติของ Next — บันทึกไว้ใน deployment.md แล้ว |
+| IV Backing services | ✅ MySQL / object storage ต่อผ่าน URL ใน env สลับ MinIO↔Spaces ได้โดยไม่แก้โค้ด |
+| V Build / release / run | ⚠️ migration รันตอน container สตาร์ท — ปลอดภัยเมื่อมี container เดียว **บันทึกเป็นเงื่อนไขไว้แล้ว** |
+| VI Processes stateless | ⚠️ มีสามอย่างอยู่ใน memory (ตัวนับล็อกอินผิด, rate limit, แคส ISR) — **ทำตารางไว้ใน deployment.md ว่าต้องย้ายอะไรก่อนขยายเป็นสอง container** |
+| VII Port binding | ✅ ฟังพอร์ตเอง Caddy เป็นแค่ reverse proxy |
+| VIII Concurrency | ⚠️ ตั้งใจรัน process เดียว (PRD ข้อ 9 ตัด worker/Redis) — เขียนไว้พร้อมทางแก้เมื่อถึงวันต้องขยาย |
+| IX Disposability | ❌ **เจอ 2 จุด** → (1) `CMD` เป็น `sh -c "… && node"` ทำให้ **shell เป็น PID 1 และ SIGTERM ไปไม่ถึง node** — ทุก deploy จึงฆ่า API กลางคำขอเมื่อครบ 10 วินาที · แก้ด้วย `exec` (2) มีเมธอด shutdown hook อยู่แต่ **ไม่มีใครเรียก** และดักผิด event (`beforeExit` ซึ่ง container ที่ถูกสั่งหยุดไม่มีวันไปถึง) · แก้เป็น `enableShutdownHooks()` + `onModuleDestroy` — **ทดสอบด้วย SIGTERM จริงแล้วเห็น `Database disconnected` ในล็อก** |
+| X Dev/prod parity | ✅ compose ตัว local ใช้ MySQL + MinIO เหมือน production |
+| XI Logs | ❌ แอปเขียน stdout ถูกต้องแล้ว แต่ **Docker เก็บ log ไว้ไม่จำกัด** → ดิสก์เต็มเงียบๆ หลังเปิดไปหลายเดือน · ใส่ `max-size: 10m, max-file: 3` ให้ทุก service ทั้งสองไฟล์ |
+| XII Admin processes | ✅ migration / seed เป็นคำสั่งแยก ใช้โค้ดชุดเดียวกับแอป |
+
+**ตรวจแล้ว:** e2e หลังบ้าน **67 ข้อ** · ขับเบราว์เซอร์ **39 ข้อ** · ทดสอบ SIGTERM กับ process จริง — ผ่านหมด
+
 ---
 
 ## 13. เอกสารออกแบบที่เกี่ยวข้อง

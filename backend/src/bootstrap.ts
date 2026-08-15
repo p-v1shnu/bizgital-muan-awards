@@ -16,6 +16,11 @@ import { ResponseInterceptor } from './common/interceptors/response.interceptor'
  * dedupe are supposed to tell apart, and neither could be tested at all.
  */
 export function configureApp(app: NestExpressApplication) {
+  // A deploy stops the container with SIGTERM. Without this, Nest ignores it
+  // and the process is killed ten seconds later, in the middle of whatever it
+  // was doing; with it, requests in flight finish and the database pool closes.
+  app.enableShutdownHooks();
+
   // Caddy terminates TLS and proxies to this container, so without this every
   // request would read as coming from the proxy: one shared rate-limit bucket
   // for the whole country, and one identical ipHash on every submission.

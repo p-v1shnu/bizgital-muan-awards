@@ -209,3 +209,22 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 | อัปโหลดรูปไม่ผ่าน | CORS ของ bucket ไม่อนุญาต `PUT` จากโดเมนเว็บ |
 | หน้าเว็บไม่อัปเดตหลังกดบันทึก | `REVALIDATE_SECRET` สองฝั่งไม่ตรงกัน |
 | ฟอร์มส่งรายชื่อโดน 429 ทั้งที่คนละคน | `trust proxy` ไม่ทำงาน — Caddy ต้องส่ง `X-Forwarded-For` |
+
+---
+
+## 7. ข้อจำกัดที่ต้องรู้ก่อนขยายเป็นหลาย container
+
+ระบบนี้ตั้งใจออกแบบให้รัน **API หนึ่ง container** (ตาม PRD ข้อ 9 ที่ตัด Redis/worker ออก)
+มีสามอย่างที่เก็บสถานะไว้ในหน่วยความจำของ process — ถ้าเพิ่มเป็นสองตัวเมื่อไหร่ ต้องย้ายก่อน:
+
+| สิ่งที่อยู่ใน memory | ผลถ้ามีหลาย container | ทางแก้เมื่อถึงวันนั้น |
+|---|---|---|
+| ตัวนับล็อกอินผิด (ล็อก 8 ครั้ง/15 นาที) | คนเดารหัสได้ 8 ครั้ง **ต่อ container** | ย้ายไป Redis |
+| Rate limit (100/นาที, ฟอร์ม 10/ชม.) | เพดานคูณจำนวน container | `@nestjs/throttler` + Redis storage |
+| แคสหน้าเว็บของ Next (ISR) | แต่ละ container มีสำเนาของตัวเอง อาจไม่ตรงกันชั่วครู่ | shared cache handler หรือ CDN |
+
+**Migration รันตอน container สตาร์ท** (`prisma migrate deploy` อยู่ใน `CMD`) — ปลอดภัยเมื่อมี container เดียว
+ถ้าขยายเป็นหลายตัว ต้องแยก migration ออกมาเป็นขั้นตอนก่อน deploy ไม่งั้นสองตัวจะ migrate ชนกัน
+
+**การปิดตัว:** API รับ SIGTERM แล้วปิดงานที่ค้างอยู่ให้จบก่อน (ทดสอบแล้ว — เห็น `Database disconnected` ในล็อก)
+`docker compose down` / `restart` จึงไม่ตัดคำขอของผู้ใช้กลางคัน

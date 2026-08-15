@@ -7,6 +7,12 @@ services:
   mysql:
     image: mysql:8.4
     restart: unless-stopped
+    # Docker keeps container logs forever by default, which on a small server
+    # is a disk that fills quietly months after launch (12-factor XI: the app
+    # writes to stdout and the platform decides what happens next).
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -29,6 +35,12 @@ services:
     build:
       context: ./backend
     restart: unless-stopped
+    # Docker keeps container logs forever by default, which on a small server
+    # is a disk that fills quietly months after launch (12-factor XI: the app
+    # writes to stdout and the platform decides what happens next).
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
     depends_on:
       mysql:
         condition: service_healthy
@@ -65,6 +77,12 @@ services:
         # also decides which remote host next/image is allowed to fetch.
         NEXT_PUBLIC_IMAGE_BASE_URL: ${NEXT_PUBLIC_IMAGE_BASE_URL}
     restart: unless-stopped
+    # Docker keeps container logs forever by default, which on a small server
+    # is a disk that fills quietly months after launch (12-factor XI: the app
+    # writes to stdout and the platform decides what happens next).
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
     depends_on: [backend]
     environment:
       NODE_ENV: production

@@ -27,4 +27,7 @@ COPY --from=builder /app/dist ./dist
 USER node
 EXPOSE 3001
 # Migrations run at start so a deploy never needs a manual step.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+# `exec` so node replaces the shell and becomes PID 1: without it the shell
+# holds that slot, SIGTERM never reaches node, and every deploy kills the API
+# mid-request once the ten-second grace period runs out.
+CMD ["sh", "-c", "npx prisma migrate deploy && exec node dist/main"]
