@@ -6,6 +6,7 @@ import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/compone
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
+import { JsonLd, editionJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
@@ -24,6 +25,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: edition.titleLo,
     description: edition.descriptionLo ?? undefined,
+    // The slug, not the requested path: /awards/latest points here too.
+    alternates: { canonical: `/awards/${edition.slug}` },
     openGraph: {
       title: edition.titleLo,
       description: edition.descriptionLo ?? undefined,
@@ -116,6 +119,18 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
 
   return (
     <>
+      <JsonLd
+        data={editionJsonLd({
+          titleLo: edition.titleLo,
+          year: edition.year,
+          slug: edition.slug,
+          descriptionLo: edition.descriptionLo,
+          eventDate: edition.eventDate,
+          venueLo: edition.venueLo,
+          heroUrl: imageUrl(edition.heroImageKey),
+        })}
+      />
+
       {edition.preview && (
         <div className="bg-ink px-5 py-2.5 text-center text-[12.5px] text-[#f0e9df]">
           <Eye className="mr-2 inline size-4" />

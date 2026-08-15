@@ -7,6 +7,7 @@ import { getPublic } from '@/lib/api/server';
 import type { WinnersYear } from '@/types/public';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/winners' },
   title: 'ທຳນຽບຜູ້ຊະນະ',
   description: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ຂອງມ່ວນ ອະວອດ',
 };

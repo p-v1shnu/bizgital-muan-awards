@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `${page.nameLo} · ${page.edition.titleLo}`;
   return {
+    alternates: { canonical: `/awards/${page.edition.slug}/${page.slug}` },
     title,
     description: page.descriptionLo ?? undefined,
     openGraph: {

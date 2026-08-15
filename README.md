@@ -7,6 +7,14 @@ Design system and page mockups: [`docs/design/`](docs/design/) — open `style-g
 
 ---
 
+## ເອກະສານ (Documentation)
+
+| ໄຟລ໌ | ສຳລັບໃຜ |
+|---|---|
+| `docs/admin-guide.md` | **ທີມງານ Muan** — ວິທີໃຊ້ຫຼັງບ້ານ ຕັ້ງແຕ່ສ້າງປີຈົນປະກາດຜົນ (ພາສາລາວ) |
+| `docs/deployment.md` | ຄົນທີ່ຂຶ້ນເຊີບເວີ — ຂັ້ນຕອນ + ເຊັກລິສຫຼັງ deploy |
+| `docs/muan-awards-prd.md` | ຂໍ້ກຳນົດທັງໝົດຂອງໂປຣເຈັກ |
+
 ## Stack
 
 | Layer | Choice |

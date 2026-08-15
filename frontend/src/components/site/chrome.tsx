@@ -136,6 +136,7 @@ export async function SiteFooter() {
             title="ຕິດຕໍ່"
             links={[
               { href: '/about#contact', label: 'ຕິດຕໍ່ທີມງານ' },
+              { href: '/about#privacy', label: 'ຂໍ້ມູນສ່ວນຕົວ' },
               { href: '/about#sponsor', label: 'ຮ່ວມເປັນສະປອນເຊີ' },
             ]}
           />

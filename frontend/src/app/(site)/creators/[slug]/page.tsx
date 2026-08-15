@@ -5,6 +5,7 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { Avatar, Section } from '@/components/site/primitives';
 import { safeHttpUrl } from '@/lib/utils';
 import { getPublic, getPublicOrNotFound } from '@/lib/api/server';
+import { JsonLd, creatorJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicProfile } from '@/types/public';
 
@@ -20,6 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: profile.nameLo,
     description: profile.bioLo ?? undefined,
+    alternates: { canonical: `/creators/${profile.slug}` },
     openGraph: {
       title: profile.nameLo,
       images: imageUrl(profile.avatarKey) ? [imageUrl(profile.avatarKey) as string] : undefined,
@@ -52,6 +54,16 @@ export default async function CreatorPage({ params }: PageProps) {
 
   return (
     <Section>
+      <JsonLd
+        data={creatorJsonLd({
+          nameLo: profile.nameLo,
+          nameEn: profile.nameEn,
+          slug: profile.slug,
+          bioLo: profile.bioLo,
+          avatarUrl: imageUrl(profile.avatarKey),
+          appearances: profile.appearances,
+        })}
+      />
       <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
         <Avatar creator={profile} size="lg" />
         <div className="min-w-0">

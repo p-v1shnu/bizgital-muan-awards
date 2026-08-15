@@ -7,6 +7,7 @@ import type { SubmissionForm } from '@/types/public';
 import { formatDate } from '@/lib/dates';
 
 export const metadata: Metadata = {
+  alternates: { canonical: '/submit' },
   title: 'ສົ່ງລາຍຊື່',
   description: 'ເສີນຊື່ຜູ້ສ້າງສັນຄອນເທັນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
 };

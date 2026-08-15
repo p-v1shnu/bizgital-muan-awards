@@ -185,7 +185,11 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
       <fieldset className="mt-6 border-t border-hairline pt-5">
         <legend className="sr-only">ຂໍ້ມູນຜູ້ສົ່ງ</legend>
         <p className="mb-4 text-[12.5px] text-ink-3">
-          ສອງຊ່ອງລຸ່ມນີ້ <b className="text-ink-2">ບໍ່ບັງຄັບ</b> — ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ
+          ສອງຊ່ອງລຸ່ມນີ້ <b className="text-ink-2">ບໍ່ບັງຄັບ</b> — ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ ·
+          ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບ ແລະ ລຶບພາຍໃນ 12 ເດືອນ{' '}
+          <a href="/about#privacy" className="text-brand-deep underline">
+            ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ
+          </a>
         </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="ຊື່ຂອງທ່ານ">

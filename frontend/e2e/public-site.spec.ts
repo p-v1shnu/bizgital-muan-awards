@@ -242,6 +242,41 @@ test('the keyboard reaches the content without walking the nav', async ({ page }
   await expect(page.locator('#content')).toBeVisible();
 });
 
+test('each page names one address, and says what it is to a machine', async ({ page }) => {
+  // Without a canonical, /awards/latest and /awards/2025 read as two copies of
+  // the same page; without the JSON-LD, a creator's history is just text.
+  await page.goto('/awards/2025');
+  await expect(page.locator('link[rel=canonical]')).toHaveAttribute('href', /\/awards\/2025$/);
+
+  const event = JSON.parse(
+    (await page.locator('script[type="application/ld+json"]').first().innerText()).replace(
+      /\\u003c/g,
+      '<',
+    ),
+  );
+  expect(event['@type']).toBe('Event');
+
+  await page.goto('/creators/khamla');
+  const person = JSON.parse(
+    (await page.locator('script[type="application/ld+json"]').first().innerText()).replace(
+      /\\u003c/g,
+      '<',
+    ),
+  );
+  expect(person['@type']).toBe('Person');
+  expect(person.award?.length, 'a win belongs in the record a search engine reads').toBeGreaterThan(0);
+});
+
+test('the site says what it does with what people type in', async ({ page }) => {
+  await page.goto('/submit');
+  await expect(page.getByRole('link', { name: 'ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ' })).toBeVisible();
+
+  await page.goto('/about#privacy');
+  const privacy = page.locator('#privacy');
+  await expect(privacy.getByText('ເກັບໄວ້ດົນປານໃດ')).toBeVisible();
+  await expect(privacy.getByText('12 ເດືອນ')).toBeVisible();
+});
+
 test('every page has exactly one h1', async ({ page }) => {
   for (const route of [
     '/',

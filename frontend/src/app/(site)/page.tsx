@@ -1,11 +1,16 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ClipboardList, Gavel, Megaphone, Trophy } from 'lucide-react';
 
 import { ActionLink, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
+import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
 import { imageKeyList } from '@/lib/images';
 import type { Edition, SiteSettings } from '@/types/api';
+
+/** One address per page, so /awards/latest cannot read as a rival copy. */
+export const metadata: Metadata = { alternates: { canonical: '/' } };
 
 interface WinnersYear {
   id: string;
@@ -46,6 +51,8 @@ export default async function HomePage() {
 
   return (
     <>
+      <JsonLd data={organisationJsonLd()} />
+
       {/* 2 — hero, with the two entry cards overlapping its lower edge */}
       <section className="relative">
         <div className="relative h-[58vh] min-h-[380px] w-full overflow-hidden bg-panel-2">
