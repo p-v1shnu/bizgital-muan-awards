@@ -472,6 +472,99 @@ test('both kinds of wrong URL get the same page', async ({ page }) => {
   }
 });
 
+/** Reads every JSON-LD block a page emits, keyed by @type. */
+async function structuredData(page: import('@playwright/test').Page) {
+  const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+  const parsed = blocks.map((block) => JSON.parse(block) as Record<string, unknown>);
+  return (type: string) => parsed.find((block) => block['@type'] === type);
+}
+
+/**
+ * The site is written entirely in Lao script, so what it says about itself in
+ * a machine-readable form is doing more work here than it would on an English
+ * site: it is most of what a search engine or an assistant has to go on.
+ *
+ * `sameAs` is the load-bearing part. Without it nothing connects the winner
+ * named on this site to the account someone actually follows, and the two stay
+ * two different people as far as anything reading the page is concerned.
+ */
+test('the pages tell a machine who these people are', async ({ page }) => {
+  await page.goto('/creators/khamla');
+  let find = await structuredData(page);
+
+  const person = find('Person');
+  expect(person, 'a creator page describes a person').toBeTruthy();
+  expect(person?.sameAs, 'their own accounts are claimed as the same person').toContain(
+    'https://facebook.com/khamla',
+  );
+  expect(find('BreadcrumbList'), 'the trail above the page').toBeTruthy();
+
+  // The category page — the one asked "who was nominated for this" — carried
+  // no structured data at all before.
+  await page.goto('/awards/2025/creator-of-the-year');
+  find = await structuredData(page);
+  const list = find('ItemList') as { itemListElement: unknown[]; mainEntity?: { award?: string } };
+  expect(list, 'a category is a list of the people in it').toBeTruthy();
+  expect(list.itemListElement.length, 'every nominee is listed').toBeGreaterThan(1);
+  expect(list.mainEntity?.award, 'and the winner is named as the winner').toContain(
+    'ຜູ້ສ້າງສັນແຫ່ງປີ',
+  );
+
+  await page.goto('/awards/2025');
+  find = await structuredData(page);
+  expect(find('Event'), 'a year is an event').toBeTruthy();
+  const panel = find('ItemList') as { name: string; itemListElement: unknown[] };
+  expect(panel?.name, 'the panel that decided it is on the record too').toContain('ຄະນະກຳມະການ');
+  expect(panel.itemListElement.length).toBeGreaterThan(0);
+
+  await page.goto('/winners');
+  expect((await structuredData(page))('CollectionPage'), 'the archive').toBeTruthy();
+});
+
+/**
+ * A picture of a person is worth finding, and a picture nobody described is
+ * invisible to an image search. Empty alt is right where the picture sits
+ * inside a link that already names them — describing it there makes a screen
+ * reader say the name twice — so the rule is about the ones standing alone.
+ *
+ * The sweep is only as good as the pictures on the page: CI runs with no
+ * object storage, so avatars and key visuals are absent there and this passes
+ * without proving much. Run locally, where storage is up, it is real.
+ */
+test('every picture that stands alone says what it is', async ({ page }) => {
+  for (const route of ['/', '/awards/2025', '/awards/2025/creator-of-the-year', '/creators/khamla', '/winners']) {
+    await page.goto(route);
+    const undescribed = await page.locator('img').evaluateAll((images) =>
+      images
+        .filter((image) => !image.getAttribute('alt'))
+        .filter((image) => {
+          const link = image.closest('a');
+          return !link || !(link.textContent ?? '').trim();
+        })
+        .map((image) => image.getAttribute('src')?.slice(0, 80)),
+    );
+    expect(undescribed, route).toEqual([]);
+  }
+});
+
+/**
+ * The map an assistant reads before answering. Written in English on purpose —
+ * a question asked as "who won Muan Awards 2025" has nothing to match against
+ * a site in Lao script, and this is where the two are introduced.
+ */
+test('llms.txt says what the site is and where its answers live', async ({ page }) => {
+  const response = await page.goto('/llms.txt');
+  expect(response?.status()).toBe(200);
+  expect(response?.headers()['content-type']).toContain('text/plain');
+
+  const body = (await response?.text()) ?? '';
+  expect(body).toContain('Muan Awards');
+  expect(body, 'the URL shapes, so a page can be reached without guessing').toContain(
+    '/awards/<year>/<category-slug>',
+  );
+  expect(body, 'and which years exist').toMatch(/\/awards\/2025/);
+});
+
 test('old shared URLs keep working', async ({ page }) => {
   for (const [from, to] of [
     ['/muan/our-projects', '/winners'],

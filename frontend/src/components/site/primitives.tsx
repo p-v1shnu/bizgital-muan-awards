@@ -87,12 +87,25 @@ export function ActionLink({
   );
 }
 
+/**
+ * `alt` defaults to empty, and that default is right far more often than it
+ * looks. Most of these sit inside a link that already carries the person's
+ * name as text — the winners table, the nominee cards — and describing the
+ * picture there makes a screen reader read the same name twice.
+ *
+ * Pass a name where the picture is the subject rather than an ornament: the
+ * portrait at the top of a profile, a judge's card. Those are also the ones
+ * worth finding in an image search, and until this prop existed not one photo
+ * of a person on the site was described at all.
+ */
 export function Avatar({
   creator,
   size = 'md',
+  alt = '',
 }: {
   creator: Pick<Creator, 'nameLo' | 'avatarKey'>;
   size?: 'md' | 'lg';
+  alt?: string;
 }) {
   const src = imageUrl(creator.avatarKey);
   const box = size === 'lg' ? 'size-28' : 'size-16';
@@ -102,7 +115,7 @@ export function Avatar({
     return (
       <Image
         src={src}
-        alt=""
+        alt={alt}
         width={px}
         height={px}
         className={cn(box, 'shrink-0 rounded-full border border-rule object-cover')}

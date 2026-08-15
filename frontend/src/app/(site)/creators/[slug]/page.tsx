@@ -6,7 +6,7 @@ import { Avatar, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { safeHttpUrl } from '@/lib/utils';
 import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
-import { JsonLd, creatorJsonLd } from '@/lib/structured-data';
+import { JsonLd, breadcrumbJsonLd, creatorJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicProfile } from '@/types/public';
 
@@ -63,11 +63,22 @@ export default async function CreatorPage({ params }: PageProps) {
           slug: profile.slug,
           bioLo: profile.bioLo,
           avatarUrl: imageUrl(profile.avatarKey),
+          socialLinks: profile.socialLinks,
           appearances: profile.appearances,
         })}
       />
+      <JsonLd
+        // Two steps, not three: there is no /creators index to point at, and a
+        // breadcrumb whose middle link 404s is worse than a short one.
+        data={breadcrumbJsonLd([
+          { name: 'ໜ້າແຮກ', path: '/' },
+          { name: profile.nameLo, path: `/creators/${profile.slug}` },
+        ])}
+      />
       <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center">
-        <Avatar creator={profile} size="lg" />
+        {/* This picture is the subject of the page, not decoration beside a
+            link that already names them — so it gets described. */}
+        <Avatar creator={profile} size="lg" alt={profile.nameLo} />
         <div className="min-w-0">
           <h1 className="font-serif text-4xl leading-tight text-ink">{profile.nameLo}</h1>
           {profile.nameEn && <p className="mt-1 text-[14px] text-ink-3">{profile.nameEn}</p>}

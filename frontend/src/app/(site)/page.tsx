@@ -63,7 +63,12 @@ export default async function HomePage() {
         <div className="relative h-[58vh] min-h-[380px] w-full overflow-hidden bg-panel-2">
           {heroKey ? (
             // The one image above the fold, so it is what LCP measures.
-            <SiteImage imageKey={heroKey} sizes="100vw" priority />
+            <SiteImage
+              imageKey={heroKey}
+              alt={site?.heroCaptionLo ?? 'ງານມອບລາງວັນ ມ່ວນ ອະວອດ'}
+              sizes="100vw"
+              priority
+            />
           ) : (
             <div className="grid size-full place-items-center bg-[linear-gradient(160deg,#f4efe5,#e9e0d0)]">
               <p className="px-6 text-center text-[13px] text-ink-3">
@@ -147,7 +152,11 @@ export default async function HomePage() {
                   }`}
                 >
                   {typeof item === 'string' ? (
-                    <SiteImage imageKey={item} sizes="(max-width: 768px) 33vw, 200px" />
+                    <SiteImage
+                      imageKey={item}
+                      alt="ບັນຍາກາດງານ ມ່ວນ ອະວອດ"
+                      sizes="(max-width: 768px) 33vw, 200px"
+                    />
                   ) : (
                     <div className="size-full border border-dashed border-rule" />
                   )}
@@ -257,7 +266,11 @@ export default async function HomePage() {
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {gallery.slice(0, 6).map((key) => (
               <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2">
-                <SiteImage imageKey={key} sizes="(max-width: 768px) 50vw, 380px" />
+                <SiteImage
+                  imageKey={key}
+                  alt="ບັນຍາກາດງານ ມ່ວນ ອະວອດ"
+                  sizes="(max-width: 768px) 50vw, 380px"
+                />
               </div>
             ))}
           </div>

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { CreatorCard, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
+import { JsonLd, breadcrumbJsonLd, categoryJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';
 
@@ -25,13 +26,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!page) return { title: NOT_FOUND_TITLE };
 
   const title = `${page.nameLo} · ${page.edition.titleLo}`;
+  // Once there is a winner, say so in the description. It is the answer the
+  // page exists to give, and a search result that already contains it is the
+  // difference between being read and being scrolled past — the category's own
+  // blurb describes the award, not who took it.
+  const winner = page.nominees.find((nominee) => nominee.isWinner);
+  const description = winner
+    ? `${winner.creator.nameLo} ຊະນະສາຂາ ${page.nameLo} ໃນ ${page.edition.titleLo}`
+    : (page.descriptionLo ?? undefined);
+
   return {
     alternates: { canonical: `/awards/${page.edition.slug}/${page.slug}` },
     title,
-    description: page.descriptionLo ?? undefined,
+    description,
     openGraph: {
       title,
-      description: page.descriptionLo ?? undefined,
+      description,
       images: imageUrl(page.edition.heroImageKey)
         ? [imageUrl(page.edition.heroImageKey) as string]
         : undefined,
@@ -53,6 +63,23 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   return (
     <Section>
+      <JsonLd
+        data={categoryJsonLd({
+          nameLo: page.nameLo,
+          nameEn: page.nameEn,
+          descriptionLo: page.descriptionLo,
+          slug: page.slug,
+          edition: page.edition,
+          nominees,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'ໜ້າແຮກ', path: '/' },
+          { name: page.edition.titleLo, path: `/awards/${page.edition.slug}` },
+          { name: page.nameLo, path: `/awards/${page.edition.slug}/${page.slug}` },
+        ])}
+      />
       <nav className="mb-6 text-[13px] text-ink-3">
         <Link href={`/awards/${page.edition.slug}`} className="hover:text-ink hover:underline">
           {page.edition.titleLo}

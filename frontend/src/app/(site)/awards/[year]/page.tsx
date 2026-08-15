@@ -8,7 +8,7 @@ import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrDraft, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
-import { JsonLd, editionJsonLd } from '@/lib/structured-data';
+import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
@@ -130,14 +130,35 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       <JsonLd
         data={editionJsonLd({
           titleLo: edition.titleLo,
+          titleEn: edition.titleEn,
           year: edition.year,
           slug: edition.slug,
           descriptionLo: edition.descriptionLo,
           eventDate: edition.eventDate,
           venueLo: edition.venueLo,
           heroUrl: imageUrl(edition.heroImageKey),
+          sponsors: edition.sponsors,
         })}
       />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: 'ໜ້າແຮກ', path: '/' },
+          { name: edition.titleLo, path: `/awards/${edition.slug}` },
+        ])}
+      />
+      {/* Only once there is a panel to describe — an empty list says nothing
+          and would claim the year has no judges rather than none yet. */}
+      {edition.judges.length > 0 && (
+        <JsonLd
+          data={judgePanelJsonLd(edition, edition.judges.map((judge) => ({
+            nameLo: judge.nameLo,
+            nameEn: judge.nameEn,
+            avatarUrl: imageUrl(judge.avatarKey),
+            positionLo: judge.positionLo,
+            role: judge.role,
+          })))}
+        />
+      )}
 
       {edition.preview && (
         <div className="bg-ink px-5 py-2.5 text-center text-[12.5px] text-[#f0e9df]">
@@ -149,7 +170,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 1 — hero: the only place a year is allowed its own look */}
       <section className="relative overflow-hidden bg-panel-2">
         <div className="relative h-[46vh] min-h-[320px]">
-          <SiteImage imageKey={edition.heroImageKey} sizes="100vw" priority />
+          <SiteImage imageKey={edition.heroImageKey} alt={edition.titleLo} sizes="100vw" priority />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent" />
 
           <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-5 pb-8">
@@ -389,7 +410,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 className="rounded-[var(--radius-box)] border border-rule bg-panel p-5 text-center"
               >
                 <div className="flex justify-center">
-                  <Avatar creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }} />
+                  <Avatar creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }} alt={judge.nameLo} />
                 </div>
                 {judge.role === 'CHAIR' && (
                   <span className="mt-3 inline-block rounded-full border border-brand-edge bg-brand-soft px-2.5 py-0.5 text-[10.5px] font-bold text-brand-deep">
@@ -457,7 +478,11 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {gallery.map((key) => (
               <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2">
-                <SiteImage imageKey={key} sizes="(max-width: 768px) 50vw, 380px" />
+                <SiteImage
+                  imageKey={key}
+                  alt={`ບັນຍາກາດ ${edition.titleLo}`}
+                  sizes="(max-width: 768px) 50vw, 380px"
+                />
               </div>
             ))}
           </div>
