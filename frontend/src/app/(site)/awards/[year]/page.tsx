@@ -1,11 +1,12 @@
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { CalendarDays, Clock, Eye, MapPin } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
-import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
+import { getPublic, getPublicOrDraft, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, editionJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorTier } from '@/types/api';
@@ -86,9 +87,10 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
   const { preview } = await searchParams;
 
   const [edition, allEditions] = await Promise.all([
-    getPublicOrNotFound<PublicEdition>(`/editions/${year}`, { preview }),
+    getPublicOrDraft<PublicEdition>(`/editions/${year}`, { preview }),
     getPublic<Edition[]>('/editions'),
   ]);
+  if (!edition) notFound();
 
   const gallery = imageKeyList(edition.galleryImageKeys);
   // One activity per line, typed free-hand in the back office — blank lines and

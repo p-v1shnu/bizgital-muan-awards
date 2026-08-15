@@ -72,6 +72,31 @@ describe('public site', () => {
       expect(response.body.data.preview).toEqual({ phase: 'DRAFT' });
     });
 
+    /**
+     * PRD §4.3.2 promises a signed-in admin can simply open the year. The page
+     * is rendered on the server, which cannot reach the access token the back
+     * office keeps in memory — the refresh cookie is the only credential a
+     * server render can see, so it has to be enough on its own.
+     */
+    it('opens for the cookie alone, which is all a server-rendered page has', async () => {
+      const login = await api(h)
+        .post(path('/auth/login'))
+        .set('X-Forwarded-For', '198.51.100.60')
+        .send({ email: h.admin.email, password: h.admin.password })
+        .expect(200);
+      const cookie = login.headers['set-cookie'];
+
+      const response = await api(h).get(path('/editions/2027')).set('Cookie', cookie).expect(200);
+      expect(response.body.data.preview).toEqual({ phase: 'DRAFT' });
+
+      // And it stops working the moment that session is signed out.
+      await api(h)
+        .post(path('/auth/logout'))
+        .set({ Authorization: `Bearer ${login.body.data.accessToken}` })
+        .expect(204);
+      await api(h).get(path('/editions/2027')).set('Cookie', cookie).expect(404);
+    });
+
     it('opens for a preview link, and that link unlocks only its own year', async () => {
       const minted = await api(h)
         .post(path(`/admin/editions/${editionId}/preview-token`))

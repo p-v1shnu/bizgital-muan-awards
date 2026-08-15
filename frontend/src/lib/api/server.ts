@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 /**
@@ -18,6 +19,12 @@ interface Options {
   revalidate?: number;
   /** Pass a preview token straight through to the API. */
   preview?: string;
+  /**
+   * Send the visitor's own cookies with the read, so the API can tell whether
+   * this is a signed-in admin (PRD §4.3.2). Only for pages that can show a
+   * draft — it makes the response personal, so the page must not be cached.
+   */
+  asViewer?: boolean;
 }
 
 /**
@@ -44,11 +51,16 @@ export async function getPublic<T>(path: string, options: Options = {}): Promise
   const url = new URL(`${BASE_URL}${path}`);
   if (options.preview) url.searchParams.set('preview', options.preview);
 
+  // A read that carries someone's cookie is about them, and caching it would
+  // serve one person's draft to the next visitor.
+  const headers = options.asViewer ? { cookie: (await cookies()).toString() } : undefined;
+  const caching = options.asViewer
+    ? ({ cache: 'no-store' } as const)
+    : ({ next: { revalidate: options.revalidate ?? DEFAULT_REVALIDATE } } as const);
+
   let response: Response;
   try {
-    response = await fetch(url, {
-      next: { revalidate: options.revalidate ?? DEFAULT_REVALIDATE },
-    });
+    response = await fetch(url, { ...caching, headers });
   } catch (caught) {
     if (BUILDING) return null;
     throw new ApiUnavailableError(`${path} could not be reached: ${String(caught)}`);
@@ -85,6 +97,25 @@ export async function tryGetPublic<T>(path: string, options: Options = {}): Prom
     if (caught instanceof ApiUnavailableError) return null;
     throw caught;
   }
+}
+
+/**
+ * A public read first, and only if that finds nothing, a personal one.
+ *
+ * The order matters for more than tidiness. Asking as the visitor means
+ * sending their cookie, which makes the answer theirs and the page
+ * uncacheable — doing that on every request would trade the whole site's
+ * caching for a case that applies to a handful of people preparing next year.
+ * A published year is found on the first read and never reaches the second.
+ *
+ * The second read only happens for a page the public genuinely cannot see,
+ * which is exactly when PRD §4.3.2's promise applies: the team opens
+ * /awards/2027 while it is still a draft and sees it.
+ */
+export async function getPublicOrDraft<T>(path: string, options: Options = {}): Promise<T | null> {
+  const published = await getPublic<T>(path, options);
+  if (published) return published;
+  return getPublic<T>(path, { ...options, asViewer: true });
 }
 
 /** Same, but a missing record renders the 404 page. */

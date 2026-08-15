@@ -6,6 +6,7 @@ import type { Request } from 'express';
 import { EditionsService } from '../editions/editions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { loadActiveSession, type SessionClaims } from '../identity-access/active-session';
+import { REFRESH_COOKIE } from '../identity-access/auth.controller';
 import { Public } from '../../common/decorators/public.decorator';
 import { PublicSiteService, type ViewerContext } from './public-site.service';
 
@@ -134,18 +135,52 @@ export class PublicSiteController {
    * the signed-in routes use decides it now.
    */
   private async viewer(req: Request, previewToken?: string): Promise<ViewerContext> {
+    const session = await this.signedInAdmin(req);
+    return { isAdmin: session !== null, previewToken };
+  }
+
+  /**
+   * Recognises the team two ways, because the two callers hold different
+   * things.
+   *
+   * A bearer token is what the back office sends: it keeps the access token in
+   * memory, never in storage a script could read.
+   *
+   * That is also why the *pages* could not do it. PRD §4.3.2 says an admin who
+   * is signed in opens `/awards/2027` and sees the draft — but those pages are
+   * rendered on the server, where there is no memory to read from, so every
+   * such visit was anonymous and answered 404. Only the emailable preview link
+   * worked, which was the path built for people who cannot sign in at all.
+   *
+   * The refresh cookie is the one credential a server render can see. It is
+   * checked as strictly as the access token — right secret, and the session
+   * behind it still alive — and it buys exactly one thing here: being allowed
+   * to read a year that is not published yet. Anyone holding it can already
+   * mint an access token from it, so this grants nothing new; it only stops
+   * requiring the browser to do that first.
+   */
+  private async signedInAdmin(req: Request) {
     const header = req.headers.authorization;
     const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
-    if (!bearer) return { isAdmin: false, previewToken };
 
-    let claims: SessionClaims;
-    try {
-      claims = this.jwt.verify<SessionClaims>(bearer, { secret: process.env.JWT_SECRET });
-    } catch {
-      return { isAdmin: false, previewToken };
+    if (bearer) {
+      try {
+        const claims = this.jwt.verify<SessionClaims>(bearer, { secret: process.env.JWT_SECRET });
+        return await loadActiveSession(this.prisma, claims);
+      } catch {
+        return null;
+      }
     }
 
-    const session = await loadActiveSession(this.prisma, claims);
-    return { isAdmin: session !== null, previewToken };
+    const cookie = (req.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE];
+    if (!cookie) return null;
+    try {
+      const claims = this.jwt.verify<SessionClaims>(cookie, {
+        secret: process.env.REFRESH_TOKEN_SECRET,
+      });
+      return await loadActiveSession(this.prisma, claims);
+    } catch {
+      return null;
+    }
   }
 }

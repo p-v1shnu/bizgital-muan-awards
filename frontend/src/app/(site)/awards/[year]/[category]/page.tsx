@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
 
 import { CreatorCard, Section } from '@/components/site/primitives';
-import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
+import { getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';
 
@@ -40,10 +41,11 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const { year, category } = await params;
   const { preview } = await searchParams;
 
-  const page = await getPublicOrNotFound<PublicCategoryPage>(
+  const page = await getPublicOrDraft<PublicCategoryPage>(
     `/editions/${year}/categories/${category}`,
     { preview },
   );
+  if (!page) notFound();
 
   const nominees = [...page.nominees].sort((a, b) => Number(b.isWinner) - Number(a.isWinner));
 

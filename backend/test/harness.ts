@@ -14,6 +14,8 @@ export interface Harness {
   server: Server;
   /** Bearer header for the seeded super admin. */
   auth: { Authorization: string };
+  /** The same account's credentials, for tests that need to sign in again. */
+  admin: { email: string; password: string };
   close: () => Promise<void>;
 }
 
@@ -43,6 +45,7 @@ export async function createHarness(): Promise<Harness> {
     prisma,
     server,
     auth: { Authorization: `Bearer ${setup.body.data.accessToken}` },
+    admin: { email: 'admin@test.local', password: 'a-very-long-password' },
     close: async () => {
       await reset(prisma);
       await app.close();
