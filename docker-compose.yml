@@ -64,8 +64,16 @@ services:
       # saved, instead of the visitor waiting for the next revalidation.
       REVALIDATE_URL: ${REVALIDATE_URL:-http://frontend:3000/api/revalidate}
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+    # Loopback only: Caddy is the one thing that faces the internet. The host
+    # side is a variable because this is unlikely to be the only stack on the
+    # server — 3001 in particular is a popular choice, and a second application
+    # already holding it makes `docker compose up` fail outright.
+    #
+    # BACKEND_HOST_PORT, not BACKEND_PORT: the latter is the port the API binds
+    # to inside the container, which the healthcheck below and the frontend
+    # both address, and which must stay 3001 whatever the host does.
     ports:
-      - '127.0.0.1:3001:3001'
+      - '127.0.0.1:${BACKEND_HOST_PORT:-3001}:3001'
     # A crashed process is restarted by `restart: unless-stopped`; a process
     # that is still running but no longer answering is not, because it never
     # exits. This makes that state visible in `docker compose ps` instead of
@@ -112,7 +120,7 @@ services:
       # Must match the API's, or the refresh endpoint rejects its calls.
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
     ports:
-      - '127.0.0.1:3000:3000'
+      - '127.0.0.1:${FRONTEND_HOST_PORT:-3000}:3000'
     healthcheck:
       test:
         - CMD

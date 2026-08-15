@@ -1,6 +1,11 @@
 # Caddy is already installed on the server; copy this into /etc/caddy/Caddyfile
 # and reload with `caddy reload --config /etc/caddy/Caddyfile`.
 # TLS certificates are issued automatically.
+#
+# The two port numbers below must match FRONTEND_HOST_PORT and BACKEND_HOST_PORT
+# in .env. They default to 3000 and 3001, which is fine on a server running
+# nothing else — on a shared one they will already be taken, and moving them in
+# .env without changing them here gives a 502 on every request.
 
 muanawards.com, www.muanawards.com {
 	encode zstd gzip
@@ -11,11 +16,11 @@ muanawards.com, www.muanawards.com {
 	# uptime monitor, both of which expect JSON and read the status code. Turning
 	# a failure here into a web page would only confuse them.
 	handle /api/* {
-		reverse_proxy 127.0.0.1:3001
+		reverse_proxy 127.0.0.1:3001   # BACKEND_HOST_PORT
 	}
 
 	handle {
-		reverse_proxy 127.0.0.1:3000 {
+		reverse_proxy 127.0.0.1:3000 {  # FRONTEND_HOST_PORT
 			# Next has no usable page of its own for this. Both `error.tsx` and
 			# `global-error.tsx` were tried against a stopped database and neither
 			# renders for a Server Component that throws on first paint — the

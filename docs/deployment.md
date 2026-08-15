@@ -13,6 +13,38 @@
 | เซิร์ฟเวอร์ Linux + Docker + Docker Compose | Caddy ติดตั้งอยู่แล้วบนเครื่อง |
 | โดเมน `muanawards.com` ชี้มาที่ IP เซิร์ฟเวอร์ | ต้องชี้ก่อน Caddy จะขอใบรับรอง TLS ได้ |
 | DigitalOcean Spaces (หรือ S3 ที่เข้ากันได้) | สร้าง bucket + ตั้ง policy ตาม `docs/storage-policy.json` (**อ่านไฟล์ได้ แต่ list ไม่ได้** — ดูข้อ 4.1) |
+| GitHub PAT | fine-grained ให้สิทธิ์แค่ **Contents: Read** พอ — เครื่อง production ไม่เคย push |
+
+> **`docker-compose.yml` ตัวนี้ไม่มี MinIO** — production คาดว่าใช้ object storage ข้างนอก
+> ถ้ายังไม่มี bucket จริง จะขึ้นระบบไม่ได้ (`docker-compose.local.yml` ที่มี MinIO มีไว้สำหรับเครื่องพัฒนา)
+
+---
+
+## 0. ดึงโค้ดลงเครื่องด้วย PAT
+
+```bash
+sudo -i
+mkdir -p /srv && cd /srv          # หรือ path ที่ใช้จริงบนเครื่องนั้น
+
+umask 077
+printf 'https://<github-user>:<PAT>@github.com\n' > /root/.git-credentials
+chmod 600 /root/.git-credentials
+git config --global credential.helper store
+
+git clone https://github.com/p-v1shnu/bizgital-muan-awards.git muan
+cd muan
+git remote -v                     # ต้องเป็น URL เปล่า ไม่มี token โผล่
+```
+
+> **อย่า clone แบบ `https://<PAT>@github.com/...`** — token จะถูกเขียนค้างใน `.git/config`
+> แบบอ่านได้ตรงๆ แล้วโผล่ทุกที่ที่ URL โผล่: `git remote -v`, ข้อความ error, และ backup
+> ของโฟลเดอร์นี้ · แยกไว้ไฟล์เดียวแบบข้างบน เวลาจะเพิกถอนหรือหมุน token ก็แก้ที่เดียว
+
+**Deploy รอบถัดไป:**
+
+```bash
+cd /srv/muan && git pull origin main && docker compose up -d --build
+```
 
 ---
 
@@ -20,7 +52,31 @@
 
 ```bash
 cp .env.example .env
+chmod 600 .env      # ไฟล์นี้คือรหัสฐานข้อมูล + ความลับทั้งหมด
 ```
+
+### 1.0 พอร์ต — ตรวจก่อนว่าว่างจริง
+
+เครื่องที่รันหลายระบบมักมี 3000/3001 ไม่ว่างแล้ว **พอร์ตที่ชนทำให้ `docker compose up`
+ล้มทันที** ด้วยข้อความ `port is already allocated`
+
+```bash
+ss -lntp | grep -E ':(3000|3001)\b'    # ไม่มีผลลัพธ์ = ว่าง
+docker ps --format '{{.Ports}}\t{{.Names}}'   # ดูของ Docker เองด้วย
+```
+
+ถ้าไม่ว่าง ย้ายใน `.env`:
+
+```bash
+FRONTEND_HOST_PORT=3030
+BACKEND_HOST_PORT=3031
+```
+
+> **`BACKEND_HOST_PORT` ไม่ใช่ `BACKEND_PORT`** — ตัวหลังคือพอร์ตที่ API ฟังอยู่
+> *ข้างในคอนเทนเนอร์* ซึ่ง healthcheck และ frontend เรียกอยู่ ต้องเป็น 3001 เสมอ
+> สองตัว `..._HOST_PORT` ย้ายแค่ประตูฝั่งโฮสต์เท่านั้น
+>
+> **ย้ายแล้วต้องแก้ `Caddyfile` ให้ตรงด้วย** ไม่งั้นได้ 502 ทุก request
 
 สร้างความลับสี่ตัว **คนละค่ากันทั้งหมด** — ระบบจะไม่ยอมสตาร์ทถ้าสั้นกว่า 32 ตัวอักษร หรือถ้าซ้ำกัน:
 
@@ -108,6 +164,8 @@ sudo nano /etc/caddy/Caddyfile        # แก้โดเมนให้ตร�
 # หน้าที่ผู้ใช้จะเห็นตอนเว็บมีปัญหา — Caddyfile ชี้มาที่ path นี้
 sudo mkdir -p /srv/muan/error-pages
 sudo cp error-pages/outage.html /srv/muan/error-pages/
+sudo chmod 755 /srv/muan /srv/muan/error-pages
+sudo chmod 644 /srv/muan/error-pages/outage.html
 
 sudo caddy validate --config /etc/caddy/Caddyfile   # ตรวจก่อนโหลด
 sudo caddy reload --config /etc/caddy/Caddyfile
@@ -117,6 +175,11 @@ Caddy ขอใบรับรอง TLS เองอัตโนมัติ
 
 > **ถ้าลืมคัดลอก `outage.html`** เวลาเว็บพังผู้ใช้จะเห็นหน้าขาวเปล่า ๆ แทนข้อความภาษาລาว
 > — Caddy ไม่ได้ error ตอน reload เพราะไฟล์หายไป มันจะรู้ตอนมีคนเข้าเว็บตอนระบบพังแล้วเท่านั้น
+>
+> **ถ้า clone repo ไว้ใต้ `/home/<user>/` อย่าชี้ Caddyfile เข้าไปที่นั่นตรงๆ** — Caddy รันเป็น
+> user `caddy` ไม่ใช่ root และโฟลเดอร์ home มักเป็น `700` ผลคืออ่านไฟล์ไม่ได้ ซึ่งอาการ
+> เหมือนกับลืมคัดลอกทุกประการ: reload ผ่าน แล้วไปรู้ตอนเว็บล่มจริง · คัดลอกมาไว้ที่
+> `/srv/muan/error-pages` แบบข้างบนปลอดภัยกว่า และไม่ผูกกับที่อยู่ของ repo
 
 ---
 
