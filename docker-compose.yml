@@ -65,6 +65,24 @@ services:
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
     ports:
       - '127.0.0.1:3001:3001'
+    # A crashed process is restarted by `restart: unless-stopped`; a process
+    # that is still running but no longer answering is not, because it never
+    # exits. This makes that state visible in `docker compose ps` instead of
+    # leaving someone to guess which of the three containers is the sick one.
+    # It does not restart anything by itself — Compose has no such setting.
+    # `node -e` rather than curl: neither image ships curl, and Node 22 has
+    # fetch built in.
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - '-e'
+        - "fetch('http://127.0.0.1:3001/api/v1/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # Migrations run before the server binds, so the first check has to wait.
+      start_period: 90s
     networks: [muan]
 
   frontend:
@@ -94,6 +112,16 @@ services:
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
     ports:
       - '127.0.0.1:3000:3000'
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - '-e'
+        - "fetch('http://127.0.0.1:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks: [muan]
 
 volumes:

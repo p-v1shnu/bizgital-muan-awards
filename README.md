@@ -13,6 +13,7 @@ Design system and page mockups: [`docs/design/`](docs/design/) — open `style-g
 |---|---|
 | `docs/admin-guide.md` | **ທີມງານ Muan** — ວິທີໃຊ້ຫຼັງບ້ານ ຕັ້ງແຕ່ສ້າງປີຈົນປະກາດຜົນ (ພາສາລາວ) |
 | `docs/deployment.md` | ຄົນທີ່ຂຶ້ນເຊີບເວີ — ຂັ້ນຕອນ + ເຊັກລິສຫຼັງ deploy |
+| `docs/monitoring.md` | ຄົນທີ່ດູແລເຊີບເວີ — ຕັ້ງລະບົບເຕືອນເມື່ອເວັບລົ່ມ + ສິ່ງທີ່ຕ້ອງເຮັດເມື່ອມັນດັງ |
 | `docs/muan-awards-prd.md` | ຂໍ້ກຳນົດທັງໝົດຂອງໂປຣເຈັກ |
 
 ## Stack

@@ -242,3 +242,12 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 
 **การปิดตัว:** API รับ SIGTERM แล้วปิดงานที่ค้างอยู่ให้จบก่อน (ทดสอบแล้ว — เห็น `Database disconnected` ในล็อก)
 `docker compose down` / `restart` จึงไม่ตัดคำขอของผู้ใช้กลางคัน
+
+---
+
+## 8. หลัง deploy เสร็จ — ตั้งระบบแจ้งเตือน
+
+`docker compose up -d` แล้วเว็บขึ้น ยังไม่ถือว่าจบ ตราบใดที่**ยังไม่มีอะไรบอกเราตอนมันล่ม**
+
+ดู [`docs/monitoring.md`](monitoring.md) — ตั้งตัวเฝ้าภายนอกยิงเข้า `/api/v1/health`
+แจ้งเตือนเข้า Microsoft Teams พร้อมขั้นตอนที่ต้องทำเมื่อเสียงเตือนดัง
