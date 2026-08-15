@@ -423,6 +423,24 @@ test('every page has exactly one h1', async ({ page }) => {
 });
 
 /**
+ * The order of these two is a decision, not an accident, so it is worth a test
+ * (PRD §6.1.2, changed in v1.4). A year that has announced its winners is read
+ * on the one day everyone arrives at once, and they arrive asking who won —
+ * putting the accordions first buries the answer under as many shut rows as
+ * the year has categories.
+ */
+test('a finished year leads with who won, not with the accordions', async ({ page }) => {
+  await page.goto('/awards/2025');
+  const headings = await page.getByRole('main').locator('h2').allTextContents();
+  const table = headings.findIndex((h) => h.includes('ຜູ້ຊະນະທຸກສາຂາ'));
+  const categories = headings.findIndex((h) => h.includes('ສາຂາ ແລະ ນອມິນີ'));
+
+  expect(table, 'the winners table is on the page').toBeGreaterThan(-1);
+  expect(categories, 'the categories are on the page').toBeGreaterThan(-1);
+  expect(table, 'the winners table comes first').toBeLessThan(categories);
+});
+
+/**
  * There are two ways to reach a 404 and Next answers them at different levels:
  * a URL that matched a route and then called notFound() stops at the site
  * group, and a URL that matched nothing at all goes all the way to the root.

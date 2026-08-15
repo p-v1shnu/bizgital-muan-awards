@@ -245,7 +245,10 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
         </Section>
       )}
 
-      {/* 4 — the results table, once there are results */}
+      {/* 3 — the results table, once there are results. Ahead of the
+          categories on purpose: on the one day of the year everyone arrives at
+          once, they arrive asking who won, and a column of shut accordions is
+          what stands between them and the answer (PRD §6.1.2). */}
       {winners.length > 0 && (
         <Section eyebrow="ຜົນລາງວັນ" title="ຜູ້ຊະນະທຸກສາຂາ">
           <div className="overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
@@ -273,7 +276,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
         </Section>
       )}
 
-      {/* 3 — categories, with nominees once the phase allows */}
+      {/* 4 — categories, with nominees once the phase allows */}
       <Section
         eyebrow="ສາຂາ"
         title={showNominees ? 'ສາຂາ ແລະ ນອມິນີ' : 'ສາຂາລາງວັນປີນີ້'}
