@@ -217,10 +217,16 @@ describe('public site', () => {
     });
   });
 
-  describe('name suggestions for the public form', () => {
+  /**
+   * The dangerous year is not the draft — it is the one that is *published*
+   * while its shortlist is still being decided. Its page is live, its
+   * categories are readable, and the nominations already sit in the database.
+   * Everything counted or listed from a nomination has to stay quiet until the
+   * announcement, and this year is the one that proves it: the test used to
+   * run against a draft, which any check would have passed.
+   */
+  describe('a published year whose nominees are not announced yet', () => {
     beforeAll(async () => {
-      // A creator who exists only inside an unannounced year. Suggesting this
-      // name would tell the world who is being lined up for next year.
       const hidden = (
         await api(h)
           .post(path('/admin/editions'))
@@ -247,18 +253,44 @@ describe('public site', () => {
         .set(h.auth)
         .send({ creatorId: secret })
         .expect(201);
+
+      // Live to the public — categories and panel readable, shortlist not.
+      await api(h)
+        .patch(path(`/admin/editions/${hidden}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
     });
 
-    it('needs at least two characters before it answers', async () => {
+    it('is readable as a year, so this is not passing by being hidden', async () => {
+      const response = await api(h).get(path('/editions/2030')).expect(200);
+      expect(response.body.data.categories).toHaveLength(1);
+      // The category is there; the people in it are not.
+      expect(response.body.data.categories[0].nominees).toEqual([]);
+    });
+
+    it('needs at least two characters before the form suggests anything', async () => {
       const response = await api(h).get(path('/creator-suggestions?q=ຄ')).expect(200);
       expect(response.body.data).toEqual([]);
     });
 
-    it('offers names already on record, and no one from an unannounced year', async () => {
+    it('does not suggest a name that is only on the unannounced shortlist', async () => {
       const response = await api(h).get(path('/creator-suggestions?q=ຄົນ')).expect(200);
       const names = response.body.data.map((row: { nameLo: string }) => row.nameLo);
       expect(names).toContain('ຄົນ ກ');
       expect(names).not.toContain('ຄົນ ລັບ');
+    });
+
+    it('does not put their page in the sitemap, which is where it read first', async () => {
+      const response = await api(h).get(path('/sitemap-entries')).expect(200);
+      const slugs = response.body.data.creators.map((c: { slug: string }) => c.slug);
+      expect(slugs).not.toContain('ccc');
+    });
+
+    it('does not move the running total on the homepage', async () => {
+      const response = await api(h).get(path('/stats')).expect(200);
+      // ຄົນ ກ and ຄົນ ຂ are announced; ຄົນ ລັບ is not.
+      expect(response.body.data.creators).toBe(2);
     });
   });
 

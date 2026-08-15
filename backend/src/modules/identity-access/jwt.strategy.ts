@@ -4,6 +4,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { PrismaService } from '../../prisma/prisma.service';
+import { loadActiveSession } from './active-session';
 
 export interface JwtPayload {
   sub: string;
@@ -28,27 +29,15 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   /**
    * The token is re-checked against the database on every request so that a
    * disabled or deleted admin loses access immediately instead of at expiry.
+   * `loadActiveSession` is that check, shared with the public routes so the two
+   * cannot drift apart again.
    */
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    // `name` is included because the admin shell reads the session from
-    // /auth/me after a reload, and the sidebar shows who is signed in.
-    const [user, revoked] = await Promise.all([
-      this.prisma.adminUser.findFirst({
-        where: { id: payload.sub, deletedAt: null },
-        select: { id: true, email: true, name: true, role: true, tokenVersion: true },
-      }),
-      payload.sid
-        ? this.prisma.revokedSession.findUnique({ where: { id: payload.sid }, select: { id: true } })
-        : Promise.resolve(null),
-    ]);
-    if (!user) throw new UnauthorizedException('Account is no longer active');
-    // Either this session was signed out, or the password changed and took
-    // every session with it.
-    if (revoked || (payload.tv ?? 0) !== user.tokenVersion) {
-      throw new UnauthorizedException('This session has been signed out');
-    }
-
-    const { tokenVersion, ...profile } = user;
-    return { ...profile, sessionId: payload.sid };
+    const session = await loadActiveSession(this.prisma, payload);
+    if (!session) throw new UnauthorizedException('This session is no longer active');
+    // The version stays out of what the rest of the request sees: it is a fact
+    // about the token, not about the person.
+    const { tokenVersion, ...user } = session;
+    return user;
   }
 }

@@ -156,6 +156,31 @@ describe('access control', () => {
       await api(h).post(path('/auth/refresh')).set('Cookie', cookie).expect(401);
     });
 
+    /**
+     * The public routes recognise an admin by their token so a draft year can
+     * be previewed by browsing to it. That check used to stop at the signature,
+     * which signing out does not change — so the door to an unannounced year
+     * stayed open for the fifteen minutes until the token expired.
+     */
+    it('closes the draft year to a token that has been signed out', async () => {
+      const login = await signIn('198.51.100.34');
+      const token = { Authorization: `Bearer ${login.body.data.accessToken}` };
+
+      const draft = await api(h)
+        .post(path('/admin/editions'))
+        .set(h.auth)
+        .send({ year: 2044, slug: '2044', titleLo: 'ປີຮ່າງ', phase: 'DRAFT' })
+        .expect(201);
+
+      await api(h).get(path('/editions/2044')).set(token).expect(200);
+      await api(h).get(path('/editions/2044')).expect(404);
+
+      await api(h).post(path('/auth/logout')).set(token).expect(204);
+
+      await api(h).get(path('/editions/2044')).set(token).expect(404);
+      expect(draft.body.data.phase).toBe('DRAFT');
+    });
+
     it('leaves the other browser signed in', async () => {
       const phone = await signIn('198.51.100.32');
       const laptop = await signIn('198.51.100.33');

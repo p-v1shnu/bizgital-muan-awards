@@ -14,6 +14,7 @@ import { randomUUID } from 'node:crypto';
 
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { loadActiveSession } from './active-session';
 import type { JwtPayload } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { SetupDto } from './dto/setup.dto';
@@ -170,24 +171,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const [user, revoked] = await Promise.all([
-      this.prisma.adminUser.findFirst({
-        where: { id: payload.sub, deletedAt: null },
-        select: { id: true, email: true, name: true, role: true, tokenVersion: true },
-      }),
-      payload.sid
-        ? this.prisma.revokedSession.findUnique({ where: { id: payload.sid } })
-        : Promise.resolve(null),
-    ]);
-    if (!user) throw new UnauthorizedException('Account is no longer active');
-    // Two different endings: this session was signed out, or every session was
-    // (a password change).
-    if (revoked || (payload.tv ?? 0) !== user.tokenVersion) {
-      throw new UnauthorizedException('This session has been signed out');
-    }
+    const session = await loadActiveSession(this.prisma, payload);
+    if (!session) throw new UnauthorizedException('This session is no longer active');
 
-    const { tokenVersion, ...profile } = user;
-    return { user: profile, tokens: await this.issueTokens(user, payload.sid ?? randomUUID()) };
+    const { sessionId, tokenVersion, ...profile } = session;
+    return {
+      user: profile,
+      tokens: await this.issueTokens({ ...profile, tokenVersion }, sessionId ?? randomUUID()),
+    };
   }
 
   /**

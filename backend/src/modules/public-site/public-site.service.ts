@@ -13,6 +13,23 @@ const VISIBLE: EditionPhase[] = [
 ];
 
 /**
+ * Years whose *shortlist* is public — which is not the same set, and the
+ * difference is the whole point of PUBLISHED existing.
+ *
+ * A published year shows its categories, its panel and its sponsors while the
+ * nominees are still being decided. The rows are in the database the whole
+ * time, so anything counted or listed from a nomination has to use this set,
+ * not the one above. It did not, and three things gave the shortlist away
+ * before the announcement: a creator's URL appeared in sitemap.xml the moment
+ * they were nominated, the running total on the homepage went up by one, and
+ * the entry form began suggesting their name.
+ */
+const ANNOUNCED: EditionPhase[] = [
+  EditionPhase.NOMINEES_ANNOUNCED,
+  EditionPhase.WINNERS_ANNOUNCED,
+];
+
+/**
  * What a phase is allowed to reveal (PRD §4.1).
  *
  * This matters more than it looks: the team ticks winners into the database
@@ -213,7 +230,7 @@ export class PublicSiteService {
     return this.prisma.creator.findMany({
       where: {
         deletedAt: null,
-        nominations: { some: { category: { edition: { phase: { in: VISIBLE } } } } },
+        nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } },
         OR: [{ nameLo: { contains: query } }, { nameEn: { contains: query } }],
       },
       select: { slug: true, nameLo: true, nameEn: true },
@@ -229,7 +246,7 @@ export class PublicSiteService {
       where: { slug, deletedAt: null },
       include: {
         nominations: {
-          where: { category: { edition: { phase: { in: VISIBLE } } } },
+          where: { category: { edition: { phase: { in: ANNOUNCED } } } },
           include: { category: { include: { edition: true } } },
         },
       },
@@ -268,7 +285,7 @@ export class PublicSiteService {
       this.prisma.creator.count({
         where: {
           deletedAt: null,
-          nominations: { some: { category: { edition: { phase: { in: VISIBLE } } } } },
+          nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } },
         },
       }),
     ]);
@@ -283,7 +300,7 @@ export class PublicSiteService {
       include: { categories: { orderBy: { sortOrder: 'asc' }, select: { slug: true } } },
     });
     const creators = await this.prisma.creator.findMany({
-      where: { deletedAt: null, nominations: { some: { category: { edition: { phase: { in: VISIBLE } } } } } },
+      where: { deletedAt: null, nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } } },
       select: { slug: true, updatedAt: true },
     });
 

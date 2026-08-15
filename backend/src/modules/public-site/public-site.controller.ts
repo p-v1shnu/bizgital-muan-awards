@@ -4,6 +4,8 @@ import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
 
 import { EditionsService } from '../editions/editions.service';
+import { PrismaService } from '../../prisma/prisma.service';
+import { loadActiveSession, type SessionClaims } from '../identity-access/active-session';
 import { Public } from '../../common/decorators/public.decorator';
 import { PublicSiteService, type ViewerContext } from './public-site.service';
 
@@ -19,6 +21,7 @@ export class PublicSiteController {
     private readonly site: PublicSiteService,
     private readonly editions: EditionsService,
     private readonly jwt: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Public()
@@ -57,21 +60,21 @@ export class PublicSiteController {
   @Get('editions/:slug')
   @ApiQuery({ name: 'preview', required: false, description: 'Preview token for an unpublished year' })
   @ApiOperation({ summary: 'A whole year page: categories, nominees, panel and sponsors' })
-  edition(@Param('slug') slug: string, @Req() req: Request, @Query('preview') preview?: string) {
-    return this.site.edition(slug, this.viewer(req, preview));
+  async edition(@Param('slug') slug: string, @Req() req: Request, @Query('preview') preview?: string) {
+    return this.site.edition(slug, await this.viewer(req, preview));
   }
 
   @Public()
   @Get('editions/:slug/categories/:categorySlug')
   @ApiQuery({ name: 'preview', required: false })
   @ApiOperation({ summary: 'One category of one year' })
-  category(
+  async category(
     @Param('slug') slug: string,
     @Param('categorySlug') categorySlug: string,
     @Req() req: Request,
     @Query('preview') preview?: string,
   ) {
-    return this.site.category(slug, categorySlug, this.viewer(req, preview));
+    return this.site.category(slug, categorySlug, await this.viewer(req, preview));
   }
 
   @Public()
@@ -122,20 +125,27 @@ export class PublicSiteController {
    * is attached. An admin reading a draft still needs to be recognised, so the
    * bearer token is decoded here when one happens to be present — a bad or
    * missing token simply means "not an admin", never an error.
+   *
+   * It used to stop at the signature, which is the weakest thing a token can
+   * prove. Signing out, changing a password and deleting an account all end a
+   * session without touching the token, so an admin who had signed out could
+   * still open an unannounced year for the fifteen minutes until it expired —
+   * on the pages that hold the winners before anyone is told. The same check
+   * the signed-in routes use decides it now.
    */
-  private viewer(req: Request, previewToken?: string): ViewerContext {
+  private async viewer(req: Request, previewToken?: string): Promise<ViewerContext> {
     const header = req.headers.authorization;
     const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
+    if (!bearer) return { isAdmin: false, previewToken };
 
-    let isAdmin = false;
-    if (bearer) {
-      try {
-        this.jwt.verify(bearer, { secret: process.env.JWT_SECRET });
-        isAdmin = true;
-      } catch {
-        isAdmin = false;
-      }
+    let claims: SessionClaims;
+    try {
+      claims = this.jwt.verify<SessionClaims>(bearer, { secret: process.env.JWT_SECRET });
+    } catch {
+      return { isAdmin: false, previewToken };
     }
-    return { isAdmin, previewToken };
+
+    const session = await loadActiveSession(this.prisma, claims);
+    return { isAdmin: session !== null, previewToken };
   }
 }
