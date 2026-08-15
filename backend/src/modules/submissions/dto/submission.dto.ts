@@ -78,3 +78,15 @@ export class ListSubmissionsDto extends PaginationDto {
   @IsString()
   editionId?: string;
 }
+
+/**
+ * Fold one pending group into another, for the case the automatic grouping
+ * cannot see: the same person sent in under two spellings (PRD §7.2).
+ */
+export class MergeSubmissionDto {
+  @ApiProperty({
+    description: 'Any entry from the group this one should join. Must be pending, and in the same category.',
+  })
+  @IsString()
+  intoSubmissionId!: string;
+}

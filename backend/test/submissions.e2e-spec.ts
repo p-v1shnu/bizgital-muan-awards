@@ -192,4 +192,114 @@ describe('public submissions and the screening queue', () => {
       expect(codes).toEqual([201, 409]);
     });
   });
+
+  /**
+   * PRD §7.2's third button. Grouping is by exact name, so one creator sent in
+   * under two spellings arrives as two groups — which no automatic rule can
+   * join, because only a person knows they are the same person.
+   */
+  describe('folding one spelling into another', () => {
+    let categoryId: string;
+    let first: string;
+    let second: string;
+
+    const send = (name: string, from: string) =>
+      api(h)
+        .post(path('/submissions'))
+        .set('X-Forwarded-For', from)
+        .send({ categoryId, creatorNameRaw: name })
+        .expect(201);
+
+    const pendingGroups = async () => {
+      const response = await api(h).get(path('/admin/submissions')).set(h.auth).expect(200);
+      return response.body.data as {
+        creatorNameRaw: string;
+        count: number;
+        category: { id: string };
+        entries: { id: string; originalNameRaw: string | null }[];
+      }[];
+    };
+
+    beforeAll(async () => {
+      const categories = await api(h)
+        .get(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .expect(200);
+      categoryId = categories.body.data[0].id;
+
+      await send('ຄຳຫຼ້າ ສີສຸວັນ', '203.0.113.1');
+      await send('ຄຳຫຼ້າ ສີສຸວັນ', '203.0.113.2');
+      await send('คำหล้า สีสุวัน', '203.0.113.3');
+
+      const groups = await pendingGroups();
+      first = groups.find((g) => g.creatorNameRaw === 'ຄຳຫຼ້າ ສີສຸວັນ')!.entries[0].id;
+      second = groups.find((g) => g.creatorNameRaw === 'คำหล้า สีสุวัน')!.entries[0].id;
+    });
+
+    it('starts as two groups, which is the problem', async () => {
+      const groups = await pendingGroups();
+      const lao = groups.find((g) => g.creatorNameRaw === 'ຄຳຫຼ້າ ສີສຸວັນ');
+      const thai = groups.find((g) => g.creatorNameRaw === 'คำหล้า สีสุวัน');
+      expect(lao?.count).toBe(2);
+      expect(thai?.count).toBe(1);
+    });
+
+    it('refuses to merge across categories', async () => {
+      const other = await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ slug: 'elsewhere', nameLo: 'ສາຂາອື່ນ' })
+        .expect(201);
+      await api(h)
+        .post(path('/submissions'))
+        .set('X-Forwarded-For', '203.0.113.4')
+        .send({ categoryId: other.body.data.id, creatorNameRaw: 'ຄຳຫຼ້າ ສີສຸວັນ' })
+        .expect(201);
+
+      const groups = await pendingGroups();
+      const elsewhere = groups.find((g) => g.category.id === other.body.data.id)!;
+
+      await api(h)
+        .post(path(`/admin/submissions/${elsewhere.entries[0].id}/merge`))
+        .set(h.auth)
+        .send({ intoSubmissionId: first })
+        .expect(400);
+    });
+
+    it('makes them one group, and remembers what was typed', async () => {
+      const merged = await api(h)
+        .post(path(`/admin/submissions/${second}/merge`))
+        .set(h.auth)
+        .send({ intoSubmissionId: first })
+        .expect(201);
+      expect(merged.body.data.merged).toBe(1);
+
+      const groups = await pendingGroups();
+      expect(groups.find((g) => g.creatorNameRaw === 'คำหล้า สีสุวัน')).toBeUndefined();
+
+      const joined = groups.find((g) => g.creatorNameRaw === 'ຄຳຫຼ້າ ສີສຸວັນ');
+      expect(joined?.count).toBe(3);
+
+      const moved = joined!.entries.find((entry) => entry.id === second);
+      expect(moved?.originalNameRaw).toBe('คำหล้า สีสุวัน');
+    });
+
+    it('accepting the joined group takes all three entries with it', async () => {
+      const groups = await pendingGroups();
+      const joined = groups.find((g) => g.creatorNameRaw === 'ຄຳຫຼ້າ ສີສຸວັນ')!;
+
+      await api(h)
+        .post(path(`/admin/submissions/${joined.entries[0].id}/accept`))
+        .set(h.auth)
+        .send({ newCreatorSlug: 'khamla-merged' })
+        .expect(201);
+
+      // Scoped to this category: the cross-category test above deliberately
+      // left a group of the same name sitting in another one.
+      const after = await pendingGroups();
+      expect(
+        after.find((g) => g.category.id === categoryId && g.creatorNameRaw === 'ຄຳຫຼ້າ ສີສຸວັນ'),
+      ).toBeUndefined();
+    });
+  });
 });

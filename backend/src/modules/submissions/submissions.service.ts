@@ -3,7 +3,12 @@ import { Prisma, SubmissionStatus } from '@prisma/client';
 import { createHash } from 'node:crypto';
 
 import { AuditService } from '../audit/audit.service';
-import { CreateSubmissionDto, ListSubmissionsDto, ReviewSubmissionDto } from './dto/submission.dto';
+import {
+  CreateSubmissionDto,
+  ListSubmissionsDto,
+  MergeSubmissionDto,
+  ReviewSubmissionDto,
+} from './dto/submission.dto';
 import { EditionsService } from '../editions/editions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { paginate } from '../../common/dto/pagination.dto';
@@ -189,6 +194,69 @@ export class SubmissionsService {
     const out: Record<string, number> = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, MERGED: 0 };
     for (const row of grouped) out[row.status] = row._count._all;
     return out;
+  }
+
+  /**
+   * Fold one pending group into another — the button PRD §7.2 asks for.
+   *
+   * Grouping is automatic and can only see an exact match, so one person sent
+   * in as "ຄຳຫຼ້າ" and "คำหล้า" arrives as two groups with no way to say they
+   * are one. Accepting both worked, but it made the team read the same person
+   * twice and the counts never told the truth about how often they were put
+   * forward — which is the number the whole queue is sorted by.
+   *
+   * The merge rewrites the name the group is keyed on, so the two become one
+   * everywhere without a second grouping rule. What the sender actually typed
+   * moves to `originalNameRaw` and stays there: §7.2 says nothing sent in is
+   * thrown away, and the team may need to see why a spelling was folded in.
+   */
+  async merge(id: string, dto: MergeSubmissionDto, actorId: string, ipAddress?: string) {
+    if (id === dto.intoSubmissionId) {
+      throw new BadRequestException('That is the same entry');
+    }
+
+    const [source, target] = await Promise.all([
+      this.prisma.publicSubmission.findUnique({ where: { id } }),
+      this.prisma.publicSubmission.findUnique({ where: { id: dto.intoSubmissionId } }),
+    ]);
+    if (!source || !target) throw new NotFoundException('Submission not found');
+
+    if (source.status !== SubmissionStatus.PENDING || target.status !== SubmissionStatus.PENDING) {
+      throw new BadRequestException('Both groups have to be waiting to be screened');
+    }
+    if (source.categoryId !== target.categoryId) {
+      // Two categories are two different questions, even for one person.
+      throw new BadRequestException('Those groups are in different categories');
+    }
+    if (source.creatorNameRaw === target.creatorNameRaw) {
+      throw new BadRequestException('Those entries are already one group');
+    }
+
+    const moved = await this.prisma.publicSubmission.updateMany({
+      where: {
+        categoryId: source.categoryId,
+        creatorNameRaw: source.creatorNameRaw,
+        status: SubmissionStatus.PENDING,
+      },
+      data: {
+        creatorNameRaw: target.creatorNameRaw,
+        // Only the first merge records it; folding a group twice must not
+        // overwrite what the sender originally wrote.
+        originalNameRaw: source.originalNameRaw ?? source.creatorNameRaw,
+      },
+    });
+
+    await this.audit.log({
+      userId: actorId,
+      action: 'submission.merged',
+      targetType: 'PublicSubmission',
+      targetId: id,
+      before: { creatorNameRaw: source.creatorNameRaw },
+      after: { creatorNameRaw: target.creatorNameRaw, entriesMoved: moved.count },
+      ipAddress,
+    });
+
+    return { merged: moved.count, into: target.creatorNameRaw };
   }
 
   /**

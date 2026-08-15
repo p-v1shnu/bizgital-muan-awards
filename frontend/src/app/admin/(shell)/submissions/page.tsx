@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ChevronDown, ExternalLink, X } from 'lucide-react';
+import { Check, ChevronDown, ExternalLink, Merge, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -108,6 +108,7 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
   const [expanded, setExpanded] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [merging, setMerging] = useState(false);
 
   const leadEntry = group.entries[0];
   const pending = leadEntry?.status === 'PENDING';
@@ -144,6 +145,9 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
           <Badge tone={group.count > 1 ? 'brand' : 'neutral'}>ສົ່ງເຂົ້າມາ {group.count} ເທື່ອ</Badge>
           {pending && (
             <>
+              <Button size="sm" onClick={() => setMerging(true)}>
+                <Merge className="size-3.5" /> ລວມກັບກຸ່ມອື່ນ
+              </Button>
               <Button size="sm" variant="danger" onClick={() => setRejecting(true)}>
                 <X className="size-3.5" /> ປະຕິເສດ
               </Button>
@@ -170,6 +174,12 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-3">
                 <span>{formatDateTime(entry.createdAt)}</span>
                 {entry.submitterName && <span>ໂດຍ {entry.submitterName}</span>}
+                {/* What the sender actually typed, when the team folded this
+                    entry into another spelling — kept rather than overwritten,
+                    because §7.2 says nothing sent in is thrown away. */}
+                {entry.originalNameRaw && (
+                  <span className="text-ink-3">ສົ່ງມາເປັນ “{entry.originalNameRaw}”</span>
+                )}
                 {safeHttpUrl(entry.creatorLink) && (
                   <a
                     href={safeHttpUrl(entry.creatorLink) as string}
@@ -211,9 +221,98 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
             description={`ທັງ ${group.count} ລາຍການທີ່ສົ່ງຊື່ນີ້ເຂົ້າມາຈະຖືກປະຕິເສດພ້ອມກັນ`}
             confirmLabel="ປະຕິເສດ"
           />
+          <MergeDialog
+            open={merging}
+            group={group}
+            entryId={leadEntry.id}
+            onClose={() => setMerging(false)}
+          />
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * PRD §7.2's third button. Groups are keyed on the exact name typed, so one
+ * person sent in as "ຄຳຫຼ້າ" and "คำหล้า" arrives as two — and no rule can
+ * join them, because only a person knows they are the same person.
+ *
+ * Only groups in the same category are offered: two categories are two
+ * different questions even about one creator.
+ */
+function MergeDialog({
+  open,
+  group,
+  entryId,
+  onClose,
+}: {
+  open: boolean;
+  group: SubmissionGroup;
+  entryId: string;
+  onClose: () => void;
+}) {
+  const [target, setTarget] = useState('');
+
+  const { data } = useApi<{ data: SubmissionGroup[] }>(
+    open ? `/admin/submissions?status=PENDING&categoryId=${group.category.id}&perPage=100` : null,
+  );
+  const others = (data?.data ?? []).filter(
+    (candidate) => candidate.creatorNameRaw !== group.creatorNameRaw && candidate.entries.length > 0,
+  );
+
+  const merge = useApiMutation<{ intoSubmissionId: string }>(
+    `/admin/submissions/${entryId}/merge`,
+    'POST',
+    ['/admin/submissions', '/admin/dashboard'],
+  );
+
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title={`ລວມ “${group.creatorNameRaw}” ກັບກຸ່ມໃດ?`}
+      footer={
+        <>
+          <Button type="button" onClick={onClose} disabled={merge.isPending}>
+            ຍົກເລີກ
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            disabled={!target || merge.isPending}
+            onClick={() => merge.mutate({ intoSubmissionId: target }, { onSuccess: onClose })}
+          >
+            {merge.isPending ? 'ກຳລັງລວມ…' : 'ລວມ'}
+          </Button>
+        </>
+      }
+    >
+      {others.length === 0 ? (
+        <Note>ສາຂານີ້ຍັງບໍ່ມີກຸ່ມອື່ນທີ່ລໍຖ້າຄັດກອງ</Note>
+      ) : (
+        <>
+          <Field label="ກຸ່ມປາຍທາງ" help="ຊື່ຂອງກຸ່ມປາຍທາງຈະເປັນຊື່ທີ່ໃຊ້ຮ່ວມກັນ">
+            <Select value={target} onChange={(event) => setTarget(event.target.value)}>
+              <option value="">— ເລືອກກຸ່ມ —</option>
+              {others.map((candidate) => (
+                <option key={candidate.key} value={candidate.entries[0].id}>
+                  {candidate.creatorNameRaw} ({candidate.count})
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Note>
+            ທັງ {group.count} ລາຍການຈະຍ້າຍໄປຢູ່ກຸ່ມນັ້ນ · ຊື່ທີ່ຜູ້ສົ່ງພິມມາຈະຖືກເກັບໄວ້ຢູ່ ບໍ່ໄດ້ຫາຍໄປ
+          </Note>
+        </>
+      )}
+      {merge.error && (
+        <div className="mt-2">
+          <ErrorNote error={merge.error} />
+        </div>
+      )}
+    </Dialog>
   );
 }
 

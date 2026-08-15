@@ -101,6 +101,8 @@ export interface SubmissionEntry {
   id: string;
   categoryId: string;
   creatorNameRaw: string;
+  /** Set when the team folded this entry into another spelling (PRD §7.2). */
+  originalNameRaw: string | null;
   creatorLink: string | null;
   reason: string | null;
   submitterName: string | null;

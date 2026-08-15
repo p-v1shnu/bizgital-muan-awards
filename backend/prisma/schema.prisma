@@ -267,6 +267,14 @@ model PublicSubmission {
 
   /// Exactly as the visitor typed it — kept verbatim as evidence.
   creatorNameRaw String
+
+  /// The spelling this entry arrived with, kept when the team folds it into
+  /// another group (PRD §7.2). Two people can send the same creator as
+  /// "ຄຳຫຼ້າ" and "คำหล้า", which the automatic grouping cannot know are one
+  /// person — merging rewrites creatorNameRaw so the two become one group, and
+  /// this holds what was actually typed, because §7.2 also says nothing sent
+  /// in is ever thrown away.
+  originalNameRaw String?
   creatorLink    String?
   reason         String? @db.Text
 

@@ -3,7 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 
-import { CreateSubmissionDto, ListSubmissionsDto, ReviewSubmissionDto } from './dto/submission.dto';
+import { CreateSubmissionDto, ListSubmissionsDto, MergeSubmissionDto, ReviewSubmissionDto } from './dto/submission.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -66,5 +66,16 @@ export class SubmissionsAdminController {
   @ApiOperation({ summary: 'Reject this name across the whole cluster' })
   reject(@Param('id') id: string, @CurrentUser() actor: AuthenticatedUser, @Req() req: Request) {
     return this.submissions.reject(id, actor.id, req.ip);
+  }
+
+  @Post(':id/merge')
+  @ApiOperation({ summary: 'Fold this group into another spelling of the same person (PRD §7.2)' })
+  merge(
+    @Param('id') id: string,
+    @Body() dto: MergeSubmissionDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    return this.submissions.merge(id, dto, actor.id, req.ip);
   }
 }
