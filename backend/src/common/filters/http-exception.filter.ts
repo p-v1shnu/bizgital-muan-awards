@@ -6,7 +6,39 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
+
+/**
+ * Every "is this slug free?" in the codebase is a read followed by a write, and
+ * two people saving the same new name in the same second both pass the read.
+ * The database still refuses the second — that is what the unique index is for
+ * — but it arrived here as an unhandled error and went out as a 500 with a
+ * stack trace, for something the person could have fixed by picking another
+ * name. Translating the database's own answers once, here, covers every one of
+ * those places at the same time.
+ */
+function fromPrisma(exception: unknown) {
+  if (!(exception instanceof Prisma.PrismaClientKnownRequestError)) return undefined;
+
+  const target = exception.meta?.target;
+  const field = Array.isArray(target) ? target.join(', ') : String(target ?? 'value');
+
+  switch (exception.code) {
+    case 'P2002':
+      return { status: HttpStatus.CONFLICT, message: `That ${field} is already taken`, error: 'Conflict' };
+    case 'P2025':
+      return { status: HttpStatus.NOT_FOUND, message: 'Record not found', error: 'Not Found' };
+    case 'P2003':
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        message: 'That record is still referenced by something else',
+        error: 'Bad Request',
+      };
+    default:
+      return undefined;
+  }
+}
 
 /** Every error leaves the API in one shape: { statusCode, message, error, details? } */
 @Catch()
@@ -27,10 +59,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
         ? ((exception as { status: number }).status)
         : undefined;
 
+    const prisma = fromPrisma(exception);
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
-        : (middlewareStatus ?? HttpStatus.INTERNAL_SERVER_ERROR);
+        : (prisma?.status ?? middlewareStatus ?? HttpStatus.INTERNAL_SERVER_ERROR);
 
     let message = 'Internal server error';
     let error = 'InternalServerError';
@@ -52,6 +86,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
         }
         error = String(asRecord.error ?? exception.name);
       }
+    } else if (prisma) {
+      message = prisma.message;
+      error = prisma.error;
     } else if (middlewareStatus !== undefined) {
       message =
         middlewareStatus === HttpStatus.PAYLOAD_TOO_LARGE

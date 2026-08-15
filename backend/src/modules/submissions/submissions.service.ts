@@ -58,17 +58,31 @@ export class SubmissionsService {
     // has no reason to be told their second try was ignored.
     if (alreadyToday) return { accepted: true };
 
-    await this.prisma.publicSubmission.create({
-      data: {
-        categoryId: dto.categoryId,
-        creatorNameRaw,
-        creatorLink: dto.creatorLink,
-        reason: dto.reason,
-        submitterName: dto.submitterName,
-        submitterEmail: dto.submitterEmail,
-        ipHash,
-      },
-    });
+    try {
+      await this.prisma.publicSubmission.create({
+        data: {
+          categoryId: dto.categoryId,
+          creatorNameRaw,
+          creatorLink: dto.creatorLink,
+          reason: dto.reason,
+          submitterName: dto.submitterName,
+          submitterEmail: dto.submitterEmail,
+          ipHash,
+          dedupeKey: dedupeKey(dto.categoryId, creatorNameRaw, ipHash),
+        },
+      });
+    } catch (caught) {
+      // The check above loses to a double submission that arrives in the same
+      // instant — twice from one impatient tap, or a retry on a flaky phone
+      // connection. The unique key catches what the read could not see yet.
+      if (
+        caught instanceof Prisma.PrismaClientKnownRequestError &&
+        caught.code === 'P2002'
+      ) {
+        return { accepted: true };
+      }
+      throw caught;
+    }
 
     // No audit entry: this is a visitor action, and the queue itself is the
     // record. AuditLog rows all belong to a signed-in admin.
@@ -153,6 +167,17 @@ export class SubmissionsService {
     const creatorId = await this.resolveCreator(submission.creatorNameRaw, dto);
 
     const result = await this.prisma.$transaction(async (tx) => {
+      // Two clicks half a second apart used to reach this together: both read
+      // PENDING, both went on, and the second died on the unique nomination —
+      // a 500 in the reviewer's face for pressing a button twice. Locking the
+      // row makes the second one wait and then see what the first did.
+      const [locked] = await tx.$queryRaw<{ status: SubmissionStatus }[]>`
+        SELECT status FROM public_submissions WHERE id = ${id} FOR UPDATE
+      `;
+      if (locked?.status !== SubmissionStatus.PENDING) {
+        throw new BadRequestException('That entry has already been reviewed');
+      }
+
       const existingNomination = await tx.nomination.findUnique({
         where: { categoryId_creatorId: { categoryId: submission.categoryId, creatorId } },
       });
@@ -295,6 +320,17 @@ function startOfDayInVientiane() {
  * alone cannot be brute-forced back to addresses — the space of IPv4 is small
  * enough that an unsalted hash is barely a hash at all.
  */
+/**
+ * One value standing for "this name, in this category, from this address,
+ * today in Vientiane" — the exact thing PRD §7.1 says counts once.
+ */
+function dedupeKey(categoryId: string, creatorNameRaw: string, ipHash: string) {
+  const day = startOfDayInVientiane().toISOString().slice(0, 10);
+  return createHash('sha256')
+    .update([categoryId, creatorNameRaw, ipHash, day].join('|'))
+    .digest('hex');
+}
+
 function hashIp(ip: string | undefined) {
   return createHash('sha256')
     .update(`${process.env.JWT_SECRET ?? ''}:${ip ?? 'unknown'}`)

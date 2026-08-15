@@ -268,6 +268,12 @@ model PublicSubmission {
   /// Hashed, never the raw address (PRD §10 privacy).
   ipHash String
 
+  /// Category + name + address + the Lao calendar day, hashed into one value.
+  /// The once-a-day rule (PRD §7.1) used to be a read followed by a write,
+  /// which two requests arriving together both passed — this lets the database
+  /// settle it instead. Nullable so rows written before it exists stay valid.
+  dedupeKey String? @unique @db.VarChar(64)
+
   status SubmissionStatus @default(PENDING)
 
   /// Set once an admin matches this entry to a creator in the library.

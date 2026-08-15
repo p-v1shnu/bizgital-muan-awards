@@ -129,4 +129,67 @@ describe('public submissions and the screening queue', () => {
     await send(one, '198.51.100.8').expect(201);
     expect(await h.prisma.publicSubmission.count({ where: { creatorNameRaw: 'ສົ່ງຊ້ຳ' } })).toBe(2);
   });
+
+  /**
+   * The rules held when requests arrived one at a time; the night of the
+   * awards is not that. These fire together on purpose.
+   */
+  describe('when two things happen at the same instant', () => {
+    it('stores one entry when the same name is sent three times at once', async () => {
+      const body = { categoryId, creatorNameRaw: 'ພ້ອມກັນ' };
+      const sent = await Promise.all(
+        [0, 1, 2].map(() =>
+          api(h).post(path('/submissions')).set('X-Forwarded-For', '198.51.100.60').send(body),
+        ),
+      );
+
+      // Every sender is told it worked — none of them did anything wrong.
+      expect(sent.map((r) => r.status)).toEqual([201, 201, 201]);
+      expect(await h.prisma.publicSubmission.count({ where: { creatorNameRaw: 'ພ້ອມກັນ' } })).toBe(1);
+    });
+
+    it('answers the second click on "accept" with a conflict, not a crash', async () => {
+      await api(h)
+        .post(path('/submissions'))
+        .set('X-Forwarded-For', '198.51.100.61')
+        .send({ categoryId, creatorNameRaw: 'ກົດສອງເທື່ອ' })
+        .expect(201);
+
+      const entry = await h.prisma.publicSubmission.findFirst({
+        where: { creatorNameRaw: 'ກົດສອງເທື່ອ' },
+        select: { id: true },
+      });
+
+      const both = await Promise.all(
+        [0, 1].map(() =>
+          api(h)
+            .post(path(`/admin/submissions/${entry!.id}/accept`))
+            .set(h.auth)
+            .send({ newCreatorSlug: 'double-click-probe' }),
+        ),
+      );
+
+      const codes = both.map((r) => r.status).sort();
+      expect(codes[0]).toBe(201);
+      // The loser explains itself instead of throwing: a 4xx, never a 500.
+      expect(codes[1]).toBeGreaterThanOrEqual(400);
+      expect(codes[1]).toBeLessThan(500);
+      expect(
+        await h.prisma.nomination.count({ where: { categoryId, creator: { slug: 'double-click-probe' } } }),
+      ).toBe(1);
+    });
+
+    it('turns a duplicate slug into a conflict rather than an unhandled error', async () => {
+      const created = await Promise.all(
+        [0, 1].map(() =>
+          api(h)
+            .post(path('/admin/creators'))
+            .set(h.auth)
+            .send({ slug: 'same-slug-twice', nameLo: 'ຊື່ຄືກັນ' }),
+        ),
+      );
+      const codes = created.map((r) => r.status).sort();
+      expect(codes).toEqual([201, 409]);
+    });
+  });
 });
