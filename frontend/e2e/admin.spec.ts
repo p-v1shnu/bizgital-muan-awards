@@ -173,10 +173,41 @@ test.describe('the edition page', () => {
       await expect(page.getByText(item).first()).toBeVisible();
     }
 
-    // 2026 is missing its key visual in the seed, so something is outstanding
-    // — and the button is still pressable.
+    // The seed's 2026 has a nominee in every category, so nothing is locked —
+    // it is missing its key visual, which only warns. The button stays live.
     const advance = page.getByRole('button', { name: /ໄປຂັ້ນ/ });
     await expect(advance).toBeEnabled();
+    await expect(page.getByText(/ຍັງຂາດ \d+ ຢ່າງຂ້າງເທິງ/)).toBeVisible();
+  });
+
+  /**
+   * The one thing on the list that does stop the button (PRD §4.3.3): a
+   * category with nobody in it cannot be announced, and the way out is to
+   * remove the category rather than invent a nominee for it.
+   */
+  test('an empty category locks the announcement until it is removed', async ({ page }) => {
+    const url = page.url().split('?')[0];
+    await page.goto(`${url}?tab=categories`);
+
+    await page.getByRole('button', { name: 'ເພີ່ມສາຂາ' }).first().click();
+    await page.getByRole('textbox', { name: 'ຊື່ສາຂາ (ລາວ)' }).fill('ສາຂາທົດສອບວ່າງເປົ່າ');
+    await page.getByRole('textbox', { name: 'slug' }).fill('empty-test');
+    await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
+    await expect(page.getByText('ສາຂາທົດສອບວ່າງເປົ່າ')).toBeVisible();
+
+    try {
+      await page.goto(url);
+      await expect(page.getByRole('button', { name: /ໄປຂັ້ນ/ })).toBeDisabled();
+      await expect(page.getByText(/ຕ້ອງແກ້ \d+ ຢ່າງທີ່ໝາຍສີແດງກ່ອນ/)).toBeVisible();
+    } finally {
+      await page.goto(`${url}?tab=categories`);
+      await page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' }).click();
+      await page.getByRole('button', { name: 'ລຶບ', exact: true }).click();
+      await expect(page.getByText('ສາຂາທົດສອບວ່າງເປົ່າ')).toBeHidden();
+    }
+
+    await page.goto(url);
+    await expect(page.getByRole('button', { name: /ໄປຂັ້ນ/ })).toBeEnabled();
   });
 
   test('crowning a winner un-crowns the previous one', async ({ page }) => {

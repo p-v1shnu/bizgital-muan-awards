@@ -43,6 +43,7 @@ export function PublishPanel({
 
   const checks = buildChecklist(edition, categories, judges);
   const missing = checks.filter((check) => !check.ok);
+  const blocking = missing.filter((check) => nextPhase && check.locks?.includes(nextPhase));
 
   const [confirming, setConfirming] = useState(false);
 
@@ -69,8 +70,11 @@ export function PublishPanel({
                 {check.ok ? (
                   <Check className="mt-0.5 size-4 shrink-0 text-ok" />
                 ) : (
-                  // Quiet, not alarming: nothing on this list stops the phase.
-                  <X className="mt-0.5 size-4 shrink-0 text-ink-3" />
+                  <X
+                    className={`mt-0.5 size-4 shrink-0 ${
+                      nextPhase && check.locks?.includes(nextPhase) ? 'text-stop' : 'text-ink-3'
+                    }`}
+                  />
                 )}
                 <span className={check.ok ? 'text-ink-2' : 'text-ink'}>
                   {check.label}
@@ -102,15 +106,21 @@ export function PublishPanel({
               <Button
                 variant="primary"
                 className="w-full"
-                disabled={changePhase.isPending}
+                disabled={blocking.length > 0 || changePhase.isPending}
                 onClick={() => setConfirming(true)}
               >
                 {changePhase.isPending ? 'ກຳລັງດຳເນີນການ…' : `ໄປຂັ້ນ “${PHASE_LABEL[nextPhase]}”`}
               </Button>
-              {missing.length > 0 && (
-                <p className="mt-2 text-[11.5px] text-ink-3">
-                  ຍັງຂາດ {missing.length} ຢ່າງຂ້າງເທິງ — ໄປຕໍ່ໄດ້ ແຕ່ໜ້າປີຈະຍັງບໍ່ຄົບ
+              {blocking.length > 0 ? (
+                <p className="mt-2 text-[11.5px] text-stop">
+                  ຕ້ອງແກ້ {blocking.length} ຢ່າງທີ່ໝາຍສີແດງກ່ອນ — ໃສ່ນອມິນີ ຫຼື ລຶບສາຂາທີ່ວ່າງອອກ
                 </p>
+              ) : (
+                missing.length > 0 && (
+                  <p className="mt-2 text-[11.5px] text-ink-3">
+                    ຍັງຂາດ {missing.length} ຢ່າງຂ້າງເທິງ — ໄປຕໍ່ໄດ້ ແຕ່ໜ້າປີຈະຍັງບໍ່ຄົບ
+                  </p>
+                )
               )}
             </>
           ) : (
@@ -223,6 +233,11 @@ interface CheckRow {
   label: string;
   detail: string;
   ok: boolean;
+  /**
+   * Set on the two the API refuses outright. Everything else is editorial and
+   * only warns, so this stays absent on most rows.
+   */
+  locks?: EditionPhase[];
 }
 
 /**
@@ -236,6 +251,9 @@ interface CheckRow {
  * which is exactly why the PRD says warn.
  */
 function buildChecklist(edition: Edition, categories: Category[], judges: number): CheckRow[] {
+  // Announcing a shortlist for a category nobody is in — or results for one
+  // with no winner — is refused by the API, so the button says so first rather
+  // than letting the click fail.
   const withoutNominees = categories.filter((c) => (c._count?.nominations ?? 0) === 0).length;
   const withoutWinner = categories.filter((c) => (c.nominations?.length ?? 0) === 0).length;
   const featured = categories.filter((c) => c.isFeatured).length;
@@ -276,13 +294,21 @@ function buildChecklist(edition: Edition, categories: Category[], judges: number
     },
     {
       label: 'ທຸກສາຂາມີນອມິນີ',
-      detail: withoutNominees === 0 ? 'ຄົບແລ້ວ' : `ຍັງເຫຼືອ ${withoutNominees} ສາຂາ`,
+      detail:
+        withoutNominees === 0
+          ? 'ຄົບແລ້ວ'
+          : `ຍັງເຫຼືອ ${withoutNominees} ສາຂາ — ໃສ່ນອມິນີ ຫຼື ລຶບສາຂານັ້ນອອກ`,
       ok: withoutNominees === 0,
+      locks: ['NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED'],
     },
     {
       label: 'ທຸກສາຂາຕິດຜູ້ຊະນະແລ້ວ',
-      detail: withoutWinner === 0 ? 'ຄົບແລ້ວ' : `ຍັງເຫຼືອ ${withoutWinner} ສາຂາ`,
+      detail:
+        withoutWinner === 0
+          ? 'ຄົບແລ້ວ'
+          : `ຍັງເຫຼືອ ${withoutWinner} ສາຂາ — ຕິດຜູ້ຊະນະ ຫຼື ລຶບສາຂານັ້ນອອກ`,
       ok: withoutWinner === 0,
+      locks: ['WINNERS_ANNOUNCED'],
     },
   ];
 }

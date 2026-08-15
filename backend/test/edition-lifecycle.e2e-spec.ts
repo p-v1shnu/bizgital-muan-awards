@@ -52,26 +52,46 @@ describe('edition lifecycle', () => {
     });
 
     /**
-     * PRD §4.3.3 asks the checklist to warn and not block, and this used to
-     * refuse. Blocking reads as prudent until a year has to be recorded as it
-     * actually was: an old edition whose winners are known but whose category
-     * list was never filled in completely could not be entered at all, which
-     * is the backfill §7.5 exists for. The warning lives beside the button in
-     * the back office, where the person deciding can see it.
+     * PRD §4.3.3: most of the checklist warns, this one locks. A category
+     * announced with nobody in it tells the public a prize exists and has no
+     * shortlist, and opens on an empty heading.
+     *
+     * The message has to name the categories, because the way out is to remove
+     * them — a year copied from a bigger one arrives with headings that drew no
+     * entries, and "two categories have no nominees" leaves the team hunting.
      */
-    it('announces nominees even with an empty category, warning rather than refusing', async () => {
+    it('refuses to announce nominees while a category is empty, and names it', async () => {
+      const response = await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(400);
+
+      expect(response.body.message).toContain('ບໍ່ມີນອມິນີ');
+      expect(response.body.message).toContain('ລຶບສາຂານັ້ນອອກກ່ອນ');
+    });
+
+    it('lets the announcement through once the empty category is removed', async () => {
+      const categories = await api(h)
+        .get(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .expect(200);
+
+      const empty = categories.body.data.filter(
+        (category: { _count?: { nominations: number } }) =>
+          (category._count?.nominations ?? 0) === 0,
+      );
+      expect(empty.length).toBeGreaterThan(0);
+
+      for (const category of empty) {
+        await api(h).delete(path(`/admin/categories/${category.id}`)).set(h.auth).expect(204);
+      }
+
       await api(h)
         .patch(path(`/admin/editions/${editionId}/phase`))
         .set(h.auth)
         .send({ phase: 'NOMINEES_ANNOUNCED' })
         .expect(200);
-
-      // Still forward-only — that rule is structural and stays enforced.
-      await api(h)
-        .patch(path(`/admin/editions/${editionId}/phase`))
-        .set(h.auth)
-        .send({ phase: 'PUBLISHED' })
-        .expect(400);
     });
 
     it('refuses to delete a published edition', async () => {

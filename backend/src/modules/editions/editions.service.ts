@@ -175,12 +175,9 @@ export class EditionsService {
    * any phase — that is how an old year is backfilled straight to
    * WINNERS_ANNOUNCED — but once it has left DRAFT it can never go back.
    *
-   * Nothing about the year's *content* is checked here. PRD §4.3.3 asks for a
-   * checklist that warns and does not block, and this refused the move
-   * instead: a year with an empty category could not be published, and a
-   * backfilled 2023 whose winners are known but whose categories were never
-   * fully filled in could not be recorded at all. The list is shown on the
-   * page beside the button, where a warning belongs.
+   * Two things about the year's content are refused outright, and only two —
+   * see `assertAnnouncable`. Everything else on the pre-publish checklist is a
+   * warning shown beside the button (PRD §4.3.3).
    */
   async changePhase(id: string, dto: ChangePhaseDto, actorId: string, ipAddress?: string) {
     const edition = await this.findById(id);
@@ -192,6 +189,8 @@ export class EditionsService {
         `Cannot move a published edition back from ${edition.phase} to ${dto.phase}`,
       );
     }
+
+    await this.assertAnnouncable(edition.id, dto.phase);
 
     const after = await this.prisma.edition.update({ where: { id }, data: { phase: dto.phase } });
     await this.audit.log({
@@ -320,6 +319,52 @@ export class EditionsService {
     });
   }
 
+  /**
+   * The two states an announcement cannot be true in.
+   *
+   * Everything else on the checklist is editorial — a year with no venue is
+   * incomplete, not wrong. These two are different: a category announced with
+   * nobody in it is a public statement that a prize exists and has no
+   * shortlist, and the visitor is left looking at a heading that opens on
+   * nothing. Publishing the year itself is not gated, because at that point
+   * nominees are not supposed to exist yet (PRD §4.1).
+   *
+   * The way out is to remove the category, not to invent a nominee for it: a
+   * year copied from the one before arrives with every heading of a bigger
+   * year, and the ones that drew no entries are meant to be deleted before the
+   * shortlist goes out.
+   */
+  private async assertAnnouncable(editionId: string, target: EditionPhase) {
+    if (target !== EditionPhase.NOMINEES_ANNOUNCED && target !== EditionPhase.WINNERS_ANNOUNCED) {
+      return;
+    }
+
+    const empty = await this.prisma.category.findMany({
+      where: { editionId, nominations: { none: {} } },
+      select: { nameLo: true },
+      orderBy: { sortOrder: 'asc' },
+    });
+    if (empty.length > 0) {
+      throw new BadRequestException(
+        `ຍັງມີ ${empty.length} ສາຂາທີ່ບໍ່ມີນອມິນີ: ${empty.map((c) => c.nameLo).join(', ')} — ` +
+          'ໃສ່ນອມິນີ ຫຼື ລຶບສາຂານັ້ນອອກກ່ອນ',
+      );
+    }
+
+    if (target === EditionPhase.WINNERS_ANNOUNCED) {
+      const withoutWinner = await this.prisma.category.findMany({
+        where: { editionId, nominations: { none: { isWinner: true } } },
+        select: { nameLo: true },
+        orderBy: { sortOrder: 'asc' },
+      });
+      if (withoutWinner.length > 0) {
+        throw new BadRequestException(
+          `ຍັງມີ ${withoutWinner.length} ສາຂາທີ່ຍັງບໍ່ໄດ້ຕິດຜູ້ຊະນະ: ` +
+            `${withoutWinner.map((c) => c.nameLo).join(', ')} — ຕິດຜູ້ຊະນະ ຫຼື ລຶບສາຂານັ້ນອອກກ່ອນ`,
+        );
+      }
+    }
+  }
 }
 
 /** Re-exported so other modules can filter by the same definition of "public". */
