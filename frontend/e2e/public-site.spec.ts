@@ -422,6 +422,38 @@ test('every page has exactly one h1', async ({ page }) => {
   }
 });
 
+/**
+ * There are two ways to reach a 404 and Next answers them at different levels:
+ * a URL that matched a route and then called notFound() stops at the site
+ * group, and a URL that matched nothing at all goes all the way to the root.
+ * With only the group's file in place the second kind fell through to the
+ * framework's own unstyled page — no header, no way back, and a Lao site
+ * answering in a stock English sentence nobody chose.
+ *
+ * The count of <main> is the other half. The obvious fix — one file at the
+ * root that carries the chrome — puts a second header, footer and <main> on
+ * every 404 of the first kind, because the site layout still runs above it.
+ */
+test('both kinds of wrong URL get the same page', async ({ page }) => {
+  for (const route of ['/nope', '/creators/nobody-here', '/awards/1999', '/admin/nope']) {
+    const response = await page.goto(route);
+    expect(response?.status(), route).toBe(404);
+
+    // The page we designed, not the framework's.
+    await expect(page.getByRole('heading', { level: 1 }), route).toHaveText('Page not found');
+    await expect(page.locator('main'), route).toHaveCount(1);
+    // Exact: the closing sentence links the words "home page" as well.
+    await expect(
+      page.getByRole('main').getByRole('link', { name: 'Home', exact: true }),
+      route,
+    ).toBeVisible();
+
+    // The header is what makes it a way out rather than a dead end.
+    await expect(page.getByRole('banner'), route).toBeVisible();
+    await expect(page).toHaveTitle(/^Page not found/, { timeout: 5_000 });
+  }
+});
+
 test('old shared URLs keep working', async ({ page }) => {
   for (const [from, to] of [
     ['/muan/our-projects', '/winners'],

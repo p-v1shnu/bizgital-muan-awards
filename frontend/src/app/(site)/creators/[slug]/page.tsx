@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { Avatar, Section } from '@/components/site/primitives';
+import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { safeHttpUrl } from '@/lib/utils';
 import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, creatorJsonLd } from '@/lib/structured-data';
@@ -16,7 +17,8 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const profile = await tryGetPublic<PublicProfile>(`/creators/${slug}`);
-  if (!profile) return { title: 'Creator not found' };
+  // The 404 page's title, not a wording of its own — see the year page.
+  if (!profile) return { title: NOT_FOUND_TITLE };
 
   return {
     title: profile.nameLo,

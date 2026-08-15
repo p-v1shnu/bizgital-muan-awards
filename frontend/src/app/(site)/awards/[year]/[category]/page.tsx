@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { CreatorCard, Section } from '@/components/site/primitives';
+import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';
@@ -20,7 +21,8 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year, category } = await params;
   const page = await tryGetPublic<PublicCategoryPage>(`/editions/${year}/categories/${category}`);
-  if (!page) return { title: 'Category not found' };
+  // The 404 page's title, not a wording of its own — see the year page.
+  if (!page) return { title: NOT_FOUND_TITLE };
 
   const title = `${page.nameLo} · ${page.edition.titleLo}`;
   return {

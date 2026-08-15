@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { CalendarDays, Clock, Eye, MapPin } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
+import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrDraft, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
@@ -21,11 +22,12 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year } = await params;
   const edition = await tryGetPublic<PublicEdition>(`/editions/${year}`);
-  // English, like the rest of a failure state. In practice the page below
-  // calls notFound() on the same miss and the title the reader sees comes from
-  // (site)/not-found.tsx — this is the honest answer for the branch, not the
-  // one that ships.
-  if (!edition) return { title: 'Year not found' };
+  // The same title the 404 page carries, not a wording of its own. The page
+  // below calls notFound() on this same miss, so the reader gets the boundary's
+  // title first and this one after hydration — two different sentences meant a
+  // tab that read "Page not found" and then changed its mind to "Year not
+  // found" a moment later.
+  if (!edition) return { title: NOT_FOUND_TITLE };
 
   return {
     title: edition.titleLo,
