@@ -135,9 +135,25 @@ export default async function AboutPage() {
           <div>
             <h3 className="font-serif text-[19px] text-ink">ສະຖິຕິການເຂົ້າຊົມ</h3>
             <p className="mt-2">
-              ເວັບໃຊ້ Google Analytics ເພື່ອນັບຈຳນວນຜູ້ເຂົ້າຊົມ ·
-              ຈະເລີ່ມເກັບ<b className="text-ink">ຕໍ່ເມື່ອທ່ານກົດຍອມຮັບ</b>ເທົ່ານັ້ນ
-              ປະຕິເສດແລ້ວເວັບຍັງໃຊ້ໄດ້ຄົບທຸກຢ່າງ
+              ເວັບໃຊ້ <b className="text-ink">Google Analytics</b> ນັບຈຳນວນຜູ້ເຂົ້າຊົມ
+              ແລະ ເບິ່ງວ່າໜ້າໃດຖືກເປີດຫຼາຍ · ເລີ່ມນັບ<b className="text-ink">ຕັ້ງແຕ່ທ່ານເປີດໜ້າ</b>
+            </p>
+            <p className="mt-2">
+              ສິ່ງທີ່ຖືກນັບແມ່ນ <b className="text-ink">ໜ້າທີ່ເປີດ, ຊະນິດອຸປະກອນ, ພາສາ ແລະ
+              ປະເທດໂດຍປະມານ</b> — <b className="text-ink">ບໍ່ແມ່ນຊື່ ຫຼື ອີເມວຂອງທ່ານ</b>{' '}
+              ແລະ Google ບໍ່ໄດ້ບັນທຶກທີ່ຢູ່ IP ໄວ້ໃນລາຍງານ
+            </p>
+            <p className="mt-2">
+              ບໍ່ຢາກຖືກນັບ: ເປີດໂໝດ “ບໍ່ຕິດຕາມ” ຫຼື ບລັອກຄຸກກີໃນເບົາເຊີ ຫຼື ຕິດຕັ້ງ{' '}
+              <a
+                href="https://tools.google.com/dlpage/gaoptout"
+                target="_blank"
+                rel="noreferrer"
+                className="text-brand-deep underline"
+              >
+                ສ່ວນເສີມປິດ Google Analytics
+              </a>{' '}
+              — ເວັບຍັງໃຊ້ໄດ້ຄົບທຸກຢ່າງ
             </p>
           </div>
 

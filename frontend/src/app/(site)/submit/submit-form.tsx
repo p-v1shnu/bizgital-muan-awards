@@ -9,6 +9,12 @@ import type { SubmissionForm } from '@/types/public';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
+declare global {
+  interface Window {
+    gtag?: (command: string, event: string, params?: Record<string, unknown>) => void;
+  }
+}
+
 /**
  * The public form. Personal details are optional on purpose (PRD §10): the
  * point is to learn about a creator, not to collect a database of senders.
@@ -55,6 +61,9 @@ export function SubmitForm({ form }: { form: SubmissionForm }) {
         throw new Error(payload?.message ?? 'ສົ່ງບໍ່ສຳເລັດ ລອງໃໝ່ອີກຄັ້ງ');
       }
       setState('sent');
+      // The number PRD §2 leads with: entries sent, split by category. Guarded
+      // because gtag only exists once analytics is configured for the build.
+      window.gtag?.('event', 'submission_sent', { category_id: values.categoryId });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'ສົ່ງບໍ່ສຳເລັດ');
       setState('idle');

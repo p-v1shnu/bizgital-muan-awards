@@ -1,4 +1,17 @@
+import { GoogleAnalytics } from '@next/third-parties/google';
+
 import { SiteFooter, SiteHeader } from '@/components/site/chrome';
+
+/**
+ * Measurement starts with the page, as the team asked — there is no banner to
+ * agree to. It is only on the visitor-facing pages: the back office is the
+ * team's own work and is nobody's business to measure.
+ *
+ * Absent unless NEXT_PUBLIC_GA_ID is set, so development and the test runs
+ * never send anything. The id is read at build time like every NEXT_PUBLIC
+ * value, so changing it needs a rebuild (docs/deployment.md).
+ */
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 /** The visitor-facing shell. The back office sits outside this group. */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
@@ -17,6 +30,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
       <SiteFooter />
+      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
     </div>
   );
 }

@@ -37,6 +37,7 @@ openssl rand -base64 32   # → REVALIDATE_SECRET
 | `S3_ENDPOINT` | `http://minio:9000` | `https://sgp1.digitaloceanspaces.com` (หรือ region ที่ใช้) |
 | `S3_PUBLIC_URL` | `http://localhost:9000/muan-awards` | URL ของ CDN เช่น `https://muan.sgp1.cdn.digitaloceanspaces.com` |
 | `NEXT_PUBLIC_IMAGE_BASE_URL` | เหมือน `S3_PUBLIC_URL` | **ต้องตรงกับ `S3_PUBLIC_URL`** |
+| `NEXT_PUBLIC_GA_ID` | **เว้นว่าง** | รหัส GA4 จริง (`G-XXXXXXX`) — ใส่แล้วเว็บเริ่มนับทันทีที่คนเปิดหน้า |
 
 > `NEXT_PUBLIC_*` ถูก **ฝังตอน build** ไม่ใช่ตอนรัน — แก้แล้วต้อง `docker compose build` ใหม่
 > และ `NEXT_PUBLIC_IMAGE_BASE_URL` ยังเป็นตัวกำหนดว่า `next/image` ยอมดึงรูปจากโฮสต์ไหน
@@ -149,6 +150,19 @@ curl -s -o /dev/null -w '%{content_type} %{size_download}\n' \
 #   คาดหวัง: image/avif และเล็กกว่าไฟล์ต้นฉบับมาก
 #   ถ้าได้ 400 → NEXT_PUBLIC_IMAGE_BASE_URL ไม่ตรงกับโฮสต์จริงของรูป ต้อง build ใหม่
 ```
+
+**Google Analytics เริ่มนับจริง:**
+
+```bash
+curl -s https://muanawards.com/ | grep -o 'gtag/js?id=[A-Z0-9-]*'
+#   คาดหวัง: id ตรงกับ property จริง · ถ้าไม่มีเลย = ลืมใส่ NEXT_PUBLIC_GA_ID ตอน build
+curl -s https://muanawards.com/admin/login | grep -c googletagmanager
+#   คาดหวัง: 0 — หลังบ้านไม่ถูกนับ
+```
+
+> ถ้าเปลี่ยนสิ่งที่ GA เก็บ (เช่น เปิด Google signals) **ต้องแก้ข้อความใน `/about#privacy` ให้ตรงด้วย**
+> ตอนนี้หน้านั้นเขียนไว้ว่า: นับตั้งแต่เปิดหน้า, เก็บหน้าที่เปิด/อุปกรณ์/ภาษา/ประเทศโดยประมาณ,
+> ไม่เก็บชื่อหรืออีเมล และบอกวิธีปิดไว้ให้ผู้ใช้
 
 **แคสล้างทันทีตอนกดบันทึก** (ข้อ 9):
 

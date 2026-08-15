@@ -275,6 +275,25 @@ test('the site says what it does with what people type in', async ({ page }) => 
   const privacy = page.locator('#privacy');
   await expect(privacy.getByText('ເກັບໄວ້ດົນປານໃດ')).toBeVisible();
   await expect(privacy.getByText('12 ເດືອນ')).toBeVisible();
+
+  // The page has to describe the analytics that actually runs: it starts with
+  // the page, so it must not claim to wait for permission.
+  await expect(privacy.getByText('Google Analytics', { exact: true })).toBeVisible();
+  await expect(privacy.getByText('ຕັ້ງແຕ່ທ່ານເປີດໜ້າ')).toBeVisible();
+  await expect(privacy.getByRole('link', { name: /ປິດ Google Analytics/ })).toBeVisible();
+});
+
+test('analytics stays out of the back office, and off without an id', async ({ page }) => {
+  // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
+  // all here — a test run must never report into the real property.
+  await page.goto('/');
+  expect(await page.locator('script[src*="googletagmanager"]').count()).toBe(0);
+
+  await page.goto('/admin/login');
+  expect(
+    await page.locator('script[src*="googletagmanager"]').count(),
+    'the back office is the team at work, not an audience',
+  ).toBe(0);
 });
 
 test('every page has exactly one h1', async ({ page }) => {

@@ -73,6 +73,9 @@ services:
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        # Empty outside production, so a staging build cannot report into the
+        # real property.
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
         # Where pictures are served from. Baked in at build time, because it
         # also decides which remote host next/image is allowed to fetch.
         NEXT_PUBLIC_IMAGE_BASE_URL: ${NEXT_PUBLIC_IMAGE_BASE_URL}
