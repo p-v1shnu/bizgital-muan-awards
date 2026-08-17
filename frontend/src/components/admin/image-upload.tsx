@@ -5,16 +5,17 @@ import { Trash2, UploadCloud } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { ErrorNote, Spinner } from '@/components/ui/feedback';
-import { apiFetch } from '@/lib/api/client';
+import { getAccessToken, refreshAccessToken } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 
 export type Folder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site';
 
-interface UploadTicket {
+interface UploadResult {
   key: string;
-  uploadUrl: string;
   publicUrl: string;
 }
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
 
 export function imagePublicUrl(key: string | null | undefined) {
   if (!key) return null;
@@ -23,26 +24,40 @@ export function imagePublicUrl(key: string | null | undefined) {
 }
 
 /**
- * Asks the API for a short-lived signed URL, then PUTs the file straight to
- * object storage — the bytes never pass through the API container.
+ * Sends the file itself to the API, which writes it to storage.
+ *
+ * The first design had the browser PUT straight to a signed URL, bytes never
+ * touching this container. That cannot make the file readable afterward:
+ * DigitalOcean Spaces drops the ACL grant a signed URL carries in its query
+ * string when the signing key is scoped to one bucket, even though that same
+ * key grants the identical ACL when it makes the write itself — the two
+ * authentication styles are evidently not treated alike here, confirmed
+ * against the real bucket rather than assumed. Only the API can make that
+ * second kind of request, so the file goes through it.
  */
 export async function uploadImage(file: File, folder: Folder) {
-  const ticket = await apiFetch<UploadTicket>('/admin/uploads', {
-    method: 'POST',
-    body: { folder, contentType: file.type, sizeBytes: file.size },
-  });
+  const body = new FormData();
+  body.append('file', file);
+  body.append('folder', folder);
 
-  // The API can hand out a signed URL while storage itself is unreachable —
-  // signing is arithmetic and never touches the bucket. With MinIO stopped the
-  // browser threw its own "Failed to fetch", which reached the team untranslated
-  // and blamed the wrong thing.
+  const send = () =>
+    fetch(`${API_BASE}/admin/uploads`, {
+      method: 'POST',
+      body,
+      headers: getAccessToken() ? { Authorization: `Bearer ${getAccessToken()}` } : undefined,
+      credentials: 'include',
+    });
+
+  // The API can be unreachable while nothing in the form itself is wrong —
+  // signing used to be arithmetic that never touched the bucket, and now the
+  // request never even leaves the browser. Either way the fetch itself throws,
+  // which reached the team as an untranslated "Failed to fetch" before this.
   let response: Response;
   try {
-    response = await fetch(ticket.uploadUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
+    response = await send();
+    if (response.status === 401 && (await refreshAccessToken())) {
+      response = await send();
+    }
   } catch {
     // English, like the other back-office failures: the team reads it, it
     // appears only when something is broken, and an unreviewable Lao sentence
@@ -51,8 +66,12 @@ export async function uploadImage(file: File, folder: Folder) {
       'Could not reach image storage. Pictures elsewhere on the site may be missing too — tell whoever runs the server.',
     );
   }
-  if (!response.ok) throw new Error(`Upload was refused (HTTP ${response.status}).`);
-  return ticket.key;
+
+  const payload = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(payload?.message ?? `Upload was refused (HTTP ${response.status}).`);
+  }
+  return (payload?.data as UploadResult).key;
 }
 
 export function ImageUpload({

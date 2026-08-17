@@ -289,12 +289,21 @@ test('nothing sensitive is kept in localStorage', async ({ page }) => {
 
 /**
  * A picture is readable by the person who has the key, and by nobody browsing
- * the bucket — the two ends of a real production incident (docs/seo.md's
- * neighbour, `storage.service.ts`). Spaces has no working `PutBucketPolicy`,
- * so read access has to be won per object with a canned ACL rather than a
- * bucket-wide policy, which is what this proves end to end: the ticket the API
- * hands out, a real PUT with no ACL header of the browser's own, and the file
- * actually readable afterward with nothing but its key.
+ * the bucket — the two ends of a real production incident (`storage.service.ts`).
+ * Spaces has no working `PutBucketPolicy`, and a key scoped to one bucket
+ * cannot grant an ACL through a presigned URL either — confirmed against the
+ * real bucket, which is why the file goes through the API rather than
+ * straight from the browser to storage. This proves the plumbing end to end:
+ * a real multipart upload, the file readable by its key afterward, and the
+ * bucket itself still not browsable.
+ *
+ * The "readable by its key" half is not a regression test for the ACL grant
+ * specifically — checked directly: it still passes here with `ACL:
+ * 'public-read'` removed from storage.service.ts, because local dev's bucket
+ * policy (docs/storage-policy.json) already makes every object readable on
+ * its own, independent of any per-object ACL. Spaces has no equivalent
+ * bucket-wide policy, which is the entire reason the ACL exists — so this
+ * assertion is only a true regression test against the real bucket, not here.
  */
 test('an uploaded file is readable by its key alone, not by browsing the bucket', async ({ request }) => {
   const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
@@ -303,34 +312,27 @@ test('an uploaded file is readable by its key alone, not by browsing the bucket'
   });
   const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
 
-  const body = Buffer.from('not a real image, just bytes to move');
-  const ticket = await request.post(`${api}/admin/uploads`, {
+  const upload = await request.post(`${api}/admin/uploads`, {
     headers: auth,
-    data: { folder: 'creators', contentType: 'image/png', sizeBytes: body.length },
+    multipart: {
+      folder: 'creators',
+      file: {
+        name: 'probe.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('not a real image, just bytes to move'),
+      },
+    },
   });
-  const { key, uploadUrl } = (await ticket.json()).data;
+  expect(upload.status(), 'the API took the upload').toBe(201);
+  const { publicUrl } = (await upload.json()).data;
 
-  // The signature covers ACL as a query parameter, not as a header the
-  // browser has to add — read it back out of the ticket rather than assuming.
-  expect(uploadUrl, 'the ticket grants read on this one object').toContain('x-amz-acl=public-read');
-
-  // A bare PUT, the way a browser actually sends one — no x-amz-acl header at
-  // all. If ACL had to travel as a signed header instead, this would fail with
-  // SignatureDoesNotMatch rather than take the upload.
-  const put = await request.put(uploadUrl, { data: body, headers: { 'Content-Type': 'image/png' } });
-  expect(put.status(), 'storage accepted the file').toBe(200);
-
-  const publicBase = (process.env.S3_PUBLIC_URL ?? process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? '').replace(
-    /\/$/,
-    '',
-  );
-  const readByKey = await request.get(`${publicBase}/${key}`);
+  const readByKey = await request.get(publicUrl);
   expect(readByKey.status(), 'readable by anyone who has the key').toBe(200);
 
   // Path-style addressing (forcePathStyle in storage.service.ts) puts the
   // bucket name as the URL's first path segment, so this is the bucket's own
   // root — not the object's — regardless of host.
-  const url = new URL(uploadUrl);
+  const url = new URL(publicUrl);
   const bucketRoot = `${url.origin}${url.pathname.split('/').slice(0, 2).join('/')}`;
   const listAttempt = await request.get(`${bucketRoot}/?list-type=2`, { failOnStatusCode: false });
   expect(listAttempt.status(), 'but the bucket itself must not be browsable').not.toBe(200);

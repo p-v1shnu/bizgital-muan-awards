@@ -1,6 +1,5 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { randomUUID } from 'node:crypto';
 
 /** Only formats the site actually renders. Anything else is refused. */
@@ -11,7 +10,8 @@ const ALLOWED = new Map([
   ['image/avif', 'avif'],
 ]);
 
-const MAX_BYTES = 8 * 1024 * 1024;
+/** Also the ceiling multer is configured with, in storage.controller.ts. */
+export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
 export type UploadFolder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site';
 
@@ -35,59 +35,54 @@ export class StorageService {
   }
 
   /**
-   * The browser uploads straight to object storage with this URL, so image
-   * bytes never pass through the API container.
+   * The file passes through this container rather than going straight from
+   * the browser to storage, which is not how this started. A presigned PUT
+   * URL was the first design — bytes never touching the API — but it cannot
+   * make the object it creates readable: DigitalOcean Spaces silently drops
+   * an ACL grant signed into a presigned URL's query string, on a key scoped
+   * to one bucket, even though that exact key can grant the exact same ACL
+   * when it makes the PutObject call itself, authenticated the ordinary way.
+   * Confirmed both halves against the real bucket, not assumed. Query-string
+   * auth and header auth are evidently not treated alike here, and the
+   * request has to be the second kind — which only this process, not the
+   * browser, can make.
+   *
+   * The alternative was a Full Access (all-buckets) key kept just for
+   * granting ACLs after the fact. That key would reach every other Bizgital
+   * bucket on the same account, not just this one, for a problem this file
+   * upload solves without needing it at all.
    */
-  async createUploadUrl(folder: UploadFolder, contentType: string, sizeBytes: number) {
-    const extension = ALLOWED.get(contentType);
+  async uploadFile(file: Express.Multer.File, folder: UploadFolder) {
+    const extension = ALLOWED.get(file.mimetype);
     if (!extension) {
-      throw new BadRequestException(`Unsupported type ${contentType}. Use JPEG, PNG, WebP or AVIF.`);
-    }
-    if (sizeBytes > MAX_BYTES) {
-      throw new BadRequestException(`File is too large. The limit is ${MAX_BYTES / 1024 / 1024} MB.`);
+      throw new BadRequestException(`Unsupported type ${file.mimetype}. Use JPEG, PNG, WebP or AVIF.`);
     }
 
     const key = `${folder}/${randomUUID()}.${extension}`;
-    const uploadUrl = await getSignedUrl(
-      this.client,
-      // ContentLength is part of what gets signed, so storage refuses a body of
-      // any other size. Without it the check above was a promise the browser
-      // made and nothing kept: a ticket asked for on behalf of a 100-byte file
-      // uploaded 6 MB and storage took it. The eight-megabyte ceiling is only
-      // real once the bucket is the one enforcing it.
-      //
-      // Deliberately no ACL here. It was tried — `getSignedUrl` can carry
-      // `ACL: 'public-read'` as a query parameter on the URL, no header
-      // required from the browser — and it does nothing: DigitalOcean Spaces
-      // silently drops an ACL grant signed by a key scoped to one bucket.
-      // GetObjectAcl on a file uploaded this way showed only the owner, no
-      // AllUsers grant, confirmed against the real bucket. Making it granted
-      // needs a Full Access (all-buckets) key, which is not a key this
-      // process should ever hold — it would reach every other Bizgital
-      // bucket on the same account, not just this one. That grant happens
-      // out of band instead: see scripts/grant-public-read.js and
-      // docs/deployment.md §2.1.
+    await this.client.send(
       new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
-        ContentType: contentType,
-        ContentLength: sizeBytes,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ContentLength: file.size,
+        ACL: 'public-read',
       }),
-      { expiresIn: 300 },
     );
 
     // The key is what gets stored on the record; the public URL is derived
     // from it at render time so the CDN host can change without a migration.
-    return { key, uploadUrl, publicUrl: this.publicUrl(key) };
+    return { key, publicUrl: this.publicUrl(key) };
   }
 
   /**
    * Asks the bucket whether it is there, for the health probe.
    *
-   * Nothing else in a request path notices that storage is down: signing a URL
-   * is arithmetic, and the pictures are fetched by the visitor's browser, not
-   * by us. Stopping MinIO left every page answering 200 with every picture
-   * missing — so the only way anyone finds out is to ask on purpose.
+   * A visitor's browser fetches pictures straight from the public URL, not
+   * through this container, so stopping MinIO left every page answering 200
+   * with every picture missing — the only way anyone finds out is to ask on
+   * purpose. Uploading now goes through this container too (uploadFile
+   * above), so a down bucket also surfaces there, as an upload that fails.
    *
    * The five-second ceiling is the point of the abort: the SDK's own retries
    * would otherwise keep a probe waiting long past the moment the answer stops

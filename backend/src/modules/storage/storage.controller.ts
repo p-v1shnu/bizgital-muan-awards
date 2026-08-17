@@ -1,24 +1,17 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsString, Min } from 'class-validator';
+import { BadRequestException, Body, Controller, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
+import { IsEnum } from 'class-validator';
+import { memoryStorage } from 'multer';
 
-import { StorageService, type UploadFolder } from './storage.service';
+import { MAX_UPLOAD_BYTES, StorageService, type UploadFolder } from './storage.service';
 
 const FOLDERS = ['creators', 'judges', 'sponsors', 'editions', 'site'] as const;
 
-export class CreateUploadUrlDto {
+export class UploadImageDto {
   @ApiProperty({ enum: FOLDERS })
   @IsEnum(FOLDERS)
   folder!: UploadFolder;
-
-  @ApiProperty({ example: 'image/jpeg' })
-  @IsString()
-  contentType!: string;
-
-  @ApiProperty({ example: 482_910 })
-  @IsInt()
-  @Min(1)
-  sizeBytes!: number;
 }
 
 @ApiTags('storage-admin')
@@ -27,8 +20,13 @@ export class StorageController {
   constructor(private readonly storage: StorageService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Get a short-lived URL to upload one image directly to storage' })
-  create(@Body() dto: CreateUploadUrlDto) {
-    return this.storage.createUploadUrl(dto.folder, dto.contentType, dto.sizeBytes);
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload one image; the file is written to storage and its key returned' })
+  // memoryStorage rather than the disk default: files are small (the ceiling
+  // below) and never need to survive past this one request.
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage(), limits: { fileSize: MAX_UPLOAD_BYTES } }))
+  create(@UploadedFile() file: Express.Multer.File, @Body() dto: UploadImageDto) {
+    if (!file) throw new BadRequestException('No file was sent.');
+    return this.storage.uploadFile(file, dto.folder);
   }
 }

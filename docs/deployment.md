@@ -12,7 +12,7 @@
 |---|---|
 | เซิร์ฟเวอร์ Linux + Docker + Docker Compose | Caddy ติดตั้งอยู่แล้วบนเครื่อง |
 | โดเมน `muanawards.com` ชี้มาที่ IP เซิร์ฟเวอร์ | ต้องชี้ก่อน Caddy จะขอใบรับรอง TLS ได้ |
-| DigitalOcean Spaces (หรือ S3 ที่เข้ากันได้) | สร้าง bucket + ตั้ง policy ตาม `docs/storage-policy.json` (**อ่านไฟล์ได้ แต่ list ไม่ได้** — ดูข้อ 4.1) |
+| DigitalOcean Spaces (หรือ S3 ที่เข้ากันได้) | สร้าง bucket เปล่าไว้ก่อนพอ — bucket ACL ปล่อยเป็น `private` (ค่า default) **ไม่ต้องตั้ง policy อะไรเลย** โค้ดจัดการสิทธิ์อ่านให้เองตอนอัปโหลด (**อ่านไฟล์ได้ แต่ list ไม่ได้** — ดูข้อ 2.1) |
 | GitHub PAT | fine-grained ให้สิทธิ์แค่ **Contents: Read** พอ — เครื่อง production ไม่เคย push |
 
 > **`docker-compose.yml` ตัวนี้ไม่มี MinIO** — production คาดว่าใช้ object storage ข้างนอก
@@ -141,69 +141,59 @@ Migration รันเองตอน container สตาร์ท (`prisma migr
 > ตอบ **403** แม้ใช้กุญแจสิทธิ์เต็ม (ไฟล์นี้ยังใช้ได้กับ MinIO ที่เครื่องพัฒนา — ดู
 > `docker-compose.local.yml`)
 
-**สามอย่างที่ลองแล้วไม่ได้ผล บนเซิร์ฟเวอร์จริง ก่อนจะเจอของจริง:**
+**สามอย่างที่ลองแล้วไม่ได้ผล ก่อนจะเจอของจริง — ทุกอย่างทดสอบกับ bucket จริง ไม่ใช่เดา:**
 
 | ลองแล้ว | ผล |
 |---|---|
 | `PutBucketPolicy` (policy JSON) | ❌ 403 ทุกครั้ง แม้กุญแจสิทธิ์เต็ม |
-| ให้กุญแจของแอปเอง (Read/Write/Delete) ตั้ง ACL ให้ไฟล์ตอนอัปโหลด | ❌ Spaces เงียบๆ ไม่ยอมให้ ACL นั้นมีผล — อัปโหลดผ่าน (200) แต่ไฟล์ยังอ่านไม่ได้ |
+| เซ็น URL แล้วให้**เบราว์เซอร์** PUT ตรงไป bucket พร้อม ACL แนบใน URL | ❌ Spaces เงียบๆ ไม่ยอมให้ ACL นั้นมีผล — อัปโหลดผ่าน (200) แต่ไฟล์ยังอ่านไม่ได้ |
 | bucket ACL `public-read` (ทั้งถัง) | ❌ ให้แค่สิทธิ์ **list** ไม่ได้ทำให้ไฟล์แต่ละไฟล์อ่านได้เลย — และเปิดช่องให้ไล่ดูไฟล์ทั้งหมดด้วย |
 
 **bucket ACL ต้องเป็น `private` เสมอ** — ไม่ช่วยเรื่องอ่านไฟล์ มีแต่จะเปิดความเสี่ยงเรื่อง list
 
-**สิ่งเดียวที่ทำให้ไฟล์อ่านได้จริงคือ object ACL รายไฟล์ ตั้งด้วยกุญแจสิทธิ์เต็มเท่านั้น**
-— Spaces ไม่มีกุญแจแบบ "สิทธิ์เต็มแต่จำกัด bucket เดียว" ให้เลือก (เช็กแล้วในหน้าเว็บ มีแค่
-Read / Read-Write-Delete ต่อ bucket) มีแต่ **All Buckets (Full Access)** ซึ่งคุมได้ทุก bucket
-ในบัญชี **จึงห้ามฝังกุญแจนี้ไว้ในแอปที่รันอยู่ตลอดเวลา** — ถ้าเซิร์ฟเวอร์นี้โดนเจาะ กุญแจจะพาไปถึง
-bucket ของระบบอื่นในออฟฟิศด้วย ไม่ใช่แค่ของ Muan Awards
+**ของจริงที่ใช้ได้ — ให้เซิร์ฟเวอร์เป็นคนอัปโหลดเอง ไม่ใช่เบราว์เซอร์**
 
-**ทางที่ใช้จริง — แยกกุญแจสิทธิ์เต็มไว้นอกแอปเลย** ด้วย `scripts/grant-public-read.js` (อยู่ใน
-backend, build ติดไปกับ image แล้ว) เป็นสคริปต์เดียวที่ถือกุญแจนี้ ไม่เขียนไว้ใน `.env` หรือ
-`docker-compose.yml` — รับกุญแจจากบรรทัดคำสั่งตอนรันเท่านั้น
+กุญแจ Read/Write/Delete ของแอปเอง **ตั้ง ACL ให้ไฟล์ได้จริง** ถ้าเป็นเซิร์ฟเวอร์เรียก
+`PutObjectCommand` เอง (auth ผ่าน header) — ต่างจากเซ็น URL ให้เบราว์เซอร์ไปยิงเอง (auth ผ่าน
+query string) ซึ่ง Spaces ปฏิบัติกับสองแบบนี้ไม่เหมือนกัน ยืนยันแล้วทั้งสองด้าน ไม่ใช่แค่ทฤษฎี
 
-**ตั้งครั้งเดียว:**
-
-1. สร้างกุญแจใหม่ตั้งชื่อให้รู้จุดประสงค์ เช่น `muan-awards-acl-sweep` แบบ **All Buckets (Full Access)**
-2. เก็บไว้ในไฟล์แยกต่างหาก **นอกโฟลเดอร์ repo** ให้ root อ่านได้คนเดียว:
-   ```bash
-   sudo install -m 600 /dev/null /root/.muan-spaces-admin.env
-   sudo tee /root/.muan-spaces-admin.env > /dev/null <<'EOF'
-   S3_ADMIN_ACCESS_KEY=<access key ตัวใหม่>
-   S3_ADMIN_SECRET_KEY=<secret ตัวใหม่>
-   EOF
-   ```
-3. ทดสอบรันครั้งแรกด้วยมือ (ไล่ทุกไฟล์ในถัง ให้สิทธิ์ไฟล์ที่ยังไม่มี):
-   ```bash
-   cd /home/automation-hub-sgp01/muan-awards
-   set -a && . /root/.muan-spaces-admin.env && set +a
-   docker compose exec -T \
-     -e S3_ADMIN_ACCESS_KEY -e S3_ADMIN_SECRET_KEY \
-     backend node scripts/grant-public-read.js
-   ```
-   คาดหวัง: `done — granted N, already public M, failed 0`
-4. ตั้ง cron ให้รันทุก 5 นาที (ไฟล์ใหม่จะอ่านได้ภายในไม่กี่นาทีหลังทีมอัปโหลด ไม่ใช่ทันที):
-   ```bash
-   sudo crontab -e
-   ```
-   ```cron
-   */5 * * * *  cd /home/automation-hub-sgp01/muan-awards && set -a && . /root/.muan-spaces-admin.env && set +a && docker compose exec -T -e S3_ADMIN_ACCESS_KEY -e S3_ADMIN_SECRET_KEY backend node scripts/grant-public-read.js >> /var/log/muan-grant-public-read.log 2>&1
-   ```
+ระบบตอนนี้เลยทำงานแบบ **ไฟล์วิ่งผ่าน API** (`storage.controller.ts` / `storage.service.ts`) —
+เบราว์เซอร์ส่งไฟล์มาที่ backend ทาง `multipart/form-data`, backend เป็นคนอัปโหลดเข้า bucket เอง
+พร้อม `ACL: 'public-read'` **ไม่ต้องมีกุญแจสิทธิ์เต็มอยู่ในระบบเลยสักตัว** กุญแจของแอปที่จำกัดแค่
+bucket นี้พอแล้ว
 
 **ยืนยันว่าทำงาน:**
 
 ```bash
-tail -5 /var/log/muan-grant-public-read.log
 curl -s -o /dev/null -w "list ทั้งถัง (ต้องไม่ใช่ 200)  %{http_code}\n" "https://<bucket>.<region>.digitaloceanspaces.com/"
-curl -s -o /dev/null -w "รูปที่มีจริง (ต้องได้ 200)      %{http_code}\n" "https://<bucket-url>/site/<key ที่มีจริง>.jpg"
 ```
+
+แล้วลองอัปโหลดรูปจริงในหน้าหลังบ้าน — ต้องขึ้นทันที ไม่ต้องรอ
 
 > **ทำไมต้องห้าม list:** ทีมอัปโหลดรูปผู้ชนะ **ก่อน**ประกาศผลเสมอ (นั่นคือวิธีทำงานตามข้อ 4.1)
 > ถ้า bucket ยอมให้ list ใครก็ตามไล่ดูไฟล์ทั้งหมดได้ → รู้ผลก่อนประกาศ ทั้งที่ API กันไว้อย่างดีแล้ว
 > — bucket ACL อยู่ที่ `private` เสมอ กันเรื่องนี้ไว้ได้แน่นอน เพราะการให้สิทธิ์อ่านตอนนี้ทำที่ระดับ
 > ไฟล์ ไม่ใช่ระดับถัง
 
-> **กุญแจทดลองที่ใช้ตอน debug ปัญหานี้ (ชื่อ `muan-setup-temp` หรือคล้ายกัน) ลบทิ้งได้แล้ว**
-> ตอนนี้มีกุญแจตัวใหม่ที่ตั้งชื่อไว้ชัดเจน เก็บแยกไว้ใช้เฉพาะงานนี้แทนแล้ว
+### 2.1.1 ถ้ามีไฟล์ค้างจากก่อนแก้ (เช่น รูปที่อัปโหลดผ่านทาง presigned URL แบบเก่า)
+
+ไฟล์ที่อัปโหลดไปแล้ว**ก่อน**แก้เป็นทาง server-upload จะยังอ่านไม่ได้ค้างอยู่ (เพราะตอนอัปโหลด
+ไม่มี ACL ติดไปด้วย) — มีสคริปต์ `scripts/grant-public-read.js` ไว้ซ่อมทีเดียวจบ **ใช้แค่ครั้งเดียว
+ไม่ต้องตั้ง cron** เพราะไฟล์ใหม่ตั้งแต่นี้ไปได้ ACL ถูกต้องตั้งแต่ตอนอัปโหลดอยู่แล้ว
+
+1. สร้างกุญแจชั่วคราวแบบ **All Buckets (Full Access)** — ใช้เสร็จลบทิ้งได้เลย ไม่ต้องเก็บถาวร
+2. รัน:
+   ```bash
+   cd /home/automation-hub-sgp01/muan-awards
+   read -p  "Access Key ID: " S3_ADMIN_ACCESS_KEY
+   read -sp "Secret Key   : " S3_ADMIN_SECRET_KEY; echo
+   docker compose exec -T \
+     -e S3_ADMIN_ACCESS_KEY -e S3_ADMIN_SECRET_KEY \
+     backend node scripts/grant-public-read.js
+   unset S3_ADMIN_ACCESS_KEY S3_ADMIN_SECRET_KEY
+   ```
+   คาดหวัง: `done — granted N, already public M, failed 0`
+3. **ลบกุญแจ Full Access ตัวนั้นทิ้ง** — งานเสร็จแล้ว ไม่มีเหตุผลให้เก็บไว้ต่อ
 
 ---
 
@@ -320,12 +310,16 @@ docker compose logs backend | grep -i "trust proxy" || true
 # แล้วลองจากเน็ตอื่น (มือถือ) ต้องยังส่งได้ — ถ้าโดน 429 ด้วย แปลว่า trust proxy ไม่ทำงาน
 ```
 
-**อัปโหลดรูปจริง** (จุดที่พังบ่อยที่สุดเพราะ CORS ของ bucket):
+**อัปโหลดรูปจริง**
+
+รูปวิ่งผ่าน API เอง (`POST /admin/uploads` แบบ `multipart/form-data`) ไม่ได้ยิงตรงไป Spaces
+จากเบราว์เซอร์แล้ว — จึงไม่มีเรื่อง CORS ของ bucket ให้ต้องตั้งอีกต่อไป (ข้อ 4 ที่เคยเขียนไว้เรื่อง
+CORS Configurations เป็นของยุคเก่า ไม่ต้องทำแล้ว)
 
 1. เข้า `/admin` → คลังครีเอเตอร์ → เพิ่มคน → อัปโหลดรูป
-2. รูปต้องขึ้นทันทีในหน้าแก้ไข
-3. ถ้าไม่ขึ้น: เปิด DevTools ดู request `PUT` ไป Spaces — มักเป็น **CORS ของ bucket**
-   ต้องอนุญาต `PUT` จาก `https://muanawards.com`
+2. รูปต้องขึ้น**ทันที**ในหน้าแก้ไข — ไม่ต้องรอ ไม่ต้องซ่อมทีหลัง
+3. ถ้าไม่ขึ้น: เปิด DevTools ดู response ของ `POST /api/v1/admin/uploads` โดยตรง — ข้อความ error
+   จะบอกสาเหตุตรงๆ (ชนิดไฟล์ไม่รองรับ, ไฟล์ใหญ่เกิน 8 MB, หรือ bucket ต่อไม่ติด)
 
 **รูปถูกย่อจริง** (ข้อ 10):
 
@@ -409,7 +403,8 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 | API ไม่ขึ้นเลย | `docker compose logs backend` — มักเป็น `JWT_SECRET` สั้นกว่า 32 ตัว หรือ `DATABASE_URL` ผิด |
 | เข้าเว็บได้แต่หลังบ้านล็อกอินแล้วเด้งออก | `CORS_ORIGINS` ไม่มีโดเมนจริง หรือเข้าผ่าน `www.` ที่ไม่ได้ใส่ไว้ |
 | รูปขึ้น 400 ทั้งเว็บ | `NEXT_PUBLIC_IMAGE_BASE_URL` ไม่ตรงกับโฮสต์รูป → ต้อง build ใหม่ |
-| อัปโหลดรูปไม่ผ่าน | CORS ของ bucket ไม่อนุญาต `PUT` จากโดเมนเว็บ |
+| อัปโหลดผ่านแต่รูปเปิดไม่ขึ้น (403) | ไฟล์ค้างจากก่อนแก้เป็น server-upload — ดูข้อ 2.1.1 |
+| อัปโหลดปฏิเสธตรงๆ (error ขึ้นทันที) | อ่านข้อความจาก API ตรงๆ — บอกชนิดไฟล์/ขนาด/bucket ต่อไม่ติด |
 | หน้าเว็บไม่อัปเดตหลังกดบันทึก | `REVALIDATE_SECRET` สองฝั่งไม่ตรงกัน |
 | ฟอร์มส่งรายชื่อโดน 429 ทั้งที่คนละคน | `trust proxy` ไม่ทำงาน — Caddy ต้องส่ง `X-Forwarded-For` |
 
