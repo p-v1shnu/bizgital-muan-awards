@@ -285,8 +285,8 @@ Scenario ที่ต้องรองรับ: **งาน 2026 จบไป�
 
 | ส่วนของหน้า | ฟอนต์ลาว | คู่กับละติน | ขนาด/น้ำหนัก |
 |---|---|---|---|
-| ชื่องาน / H1 หน้าปี | Noto Serif Lao | Bodoni Moda | 34–58px / 400 |
-| ชื่อสาขา (H2, H3) | Noto Serif Lao | Bodoni Moda | 23–24px / 400 |
+| ชื่องาน / H1 หน้าปี | Noto Serif Lao | Bodoni Moda | 34–58px / 700 |
+| ชื่อสาขา (H2, H3) | Noto Serif Lao | Bodoni Moda | 23–24px / 700 |
 | ชื่อผู้ชนะ | Noto Serif Lao | Bodoni Moda | 26px / 400 |
 | เลขแผ่นลาว `໐໑ ໐໒` | Noto Serif Lao | — | 32px / 400 |
 | ข้อความนำใต้หัวเรื่อง (lead) | Noto Serif Lao | — | 18–19px / 400 |

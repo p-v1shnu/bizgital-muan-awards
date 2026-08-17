@@ -12,14 +12,14 @@ const bodoni = Bodoni_Moda({
   subsets: ['latin'],
   variable: '--font-bodoni',
   display: 'swap',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
 });
 
 const notoSerifLao = Noto_Serif_Lao({
   subsets: ['lao'],
   variable: '--font-noto-serif-lao',
   display: 'swap',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '600', '700'],
 });
 
 const dmSans = DM_Sans({
