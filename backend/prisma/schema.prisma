@@ -345,6 +345,10 @@ model SiteSetting {
   ctaTitleLo       String  @default("ຮູ້ຈັກຜູ້ສ້າງສັນທີ່ຄູ່ຄວນບໍ?")
   ctaBodyLo        String  @default("ສົ່ງຊື່ເຂົ້າມາໄດ້ ບໍ່ຈຳເປັນຕ້ອງບອກຊື່ຜູ້ສົ່ງ")
   galleryImageKeys Json?
+  /// The organisation's own accounts, shown as icon links in the footer —
+  /// separate from a Creator's or Judge's own socialLinks. { facebook, tiktok,
+  /// youtube, instagram }; a platform with no value here shows no icon.
+  socialLinks Json?
 
   updatedAt DateTime @updatedAt
 

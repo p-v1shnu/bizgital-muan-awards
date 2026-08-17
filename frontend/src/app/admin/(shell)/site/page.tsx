@@ -13,6 +13,8 @@ import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { SiteSettings } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
+const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
+
 /**
  * The evergreen content of the homepage (PRD §6.1.1). Nothing here may name a
  * year — anything year-specific belongs on the edition instead.
@@ -31,6 +33,7 @@ export default function SitePage() {
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
+  const [socials, setSocials] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
 
   // Seed the form once the settings arrive.
@@ -47,6 +50,7 @@ export default function SitePage() {
     });
     setHeroImageKey(data.heroImageKey);
     setGallery(data.galleryImageKeys ?? []);
+    setSocials(data.socialLinks ?? {});
   }, [data]);
 
   const save = useApiMutation<Record<string, unknown>>('/admin/site', 'PUT', ['/admin/site', '/site']);
@@ -82,6 +86,7 @@ export default function SitePage() {
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
+                socialLinks: socials,
               },
               { onSuccess: () => setSaved(true) },
             );
@@ -172,6 +177,24 @@ export default function SitePage() {
             <CardHeader title="ຄັງພາບໜ້າແຮກ" aside={`${gallery.length} ຮູບ`} />
             <CardBody>
               <GalleryEditor keys={gallery} onChange={setGallery} folder="site" />
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="ລິງກ໌ໂຊຊຽວ" />
+            <CardBody>
+              <Note>ຂຶ້ນເປັນໄອຄອນໃນ footer — ຊ່ອງໃດເວັ້ນວ່າງ ໄອຄອນນັ້ນຈະບໍ່ຂຶ້ນ</Note>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {SOCIALS.map((platform) => (
+                  <Input
+                    key={platform}
+                    type="url"
+                    placeholder={`${platform}…`}
+                    value={socials[platform] ?? ''}
+                    onChange={(event) => setSocials({ ...socials, [platform]: event.target.value })}
+                  />
+                ))}
+              </div>
             </CardBody>
           </Card>
 

@@ -1,10 +1,37 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { tryGetPublic } from '@/lib/api/server';
 import type { Edition, SiteSettings } from '@/types/api';
+
+/** No official TikTok mark ships in lucide-react, so this one is hand-drawn to match its stroke style. */
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <path d="M14 3v11a3 3 0 1 1-3-3" />
+      <path d="M14 6.5A5 5 0 0 0 19 9" />
+    </svg>
+  );
+}
+
+/** Organisation-wide accounts shown in the footer (PRD §6.0.2) — a platform with no link set gets no icon. */
+const SOCIAL_ICONS: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
+  facebook: { icon: Facebook, label: 'Facebook' },
+  tiktok: { icon: TikTokIcon, label: 'TikTok' },
+  youtube: { icon: Youtube, label: 'YouTube' },
+  instagram: { icon: Instagram, label: 'Instagram' },
+};
 
 /**
  * The nav is deliberately year-free except for one label: the awards link
@@ -100,6 +127,10 @@ export async function SiteFooter() {
     tryGetPublic<Edition | null>('/editions/accepting-submissions'),
   ]);
 
+  const socials = Object.entries(site?.socialLinks ?? {}).filter(
+    (entry): entry is [string, string] => Boolean(entry[1]) && entry[0] in SOCIAL_ICONS,
+  );
+
   return (
     <footer className="mt-24 bg-ink text-[#e8e1d7]">
       <div className="foil h-[3px]" aria-hidden />
@@ -118,6 +149,25 @@ export async function SiteFooter() {
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">
               {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ'}
             </p>
+            {socials.length > 0 && (
+              <div className="mt-5 flex gap-2">
+                {socials.map(([platform, href]) => {
+                  const { icon: Icon, label } = SOCIAL_ICONS[platform];
+                  return (
+                    <a
+                      key={platform}
+                      href={href}
+                      target="_blank"
+                      rel="noreferrer"
+                      aria-label={label}
+                      className="grid size-9 place-items-center rounded-full border border-white/20 text-[#e8e1d7] transition-colors hover:border-white hover:bg-white hover:text-ink"
+                    >
+                      <Icon className="size-4" />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <FooterColumn

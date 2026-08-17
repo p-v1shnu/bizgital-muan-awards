@@ -3,11 +3,9 @@ import { Prisma } from '@prisma/client';
 
 import { AuditService } from '../audit/audit.service';
 import { PaginationDto, paginate } from '../../common/dto/pagination.dto';
+import { cleanSocialLinks } from '../../common/utils/social-links';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCreatorDto, UpdateCreatorDto } from './dto/creator.dto';
-
-/** Anything outside this list is dropped rather than stored (PRD §8). */
-const ALLOWED_SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
 
 @Injectable()
 export class CreatorsService {
@@ -72,7 +70,7 @@ export class CreatorsService {
     await this.assertSlugFree(dto.slug);
 
     const creator = await this.prisma.creator.create({
-      data: { ...dto, socialLinks: cleanSocials(dto.socialLinks) },
+      data: { ...dto, socialLinks: cleanSocialLinks(dto.socialLinks) },
     });
     await this.audit.log({
       userId: actorId,
@@ -94,7 +92,7 @@ export class CreatorsService {
       where: { id },
       data: {
         ...dto,
-        socialLinks: dto.socialLinks === undefined ? undefined : cleanSocials(dto.socialLinks),
+        socialLinks: dto.socialLinks === undefined ? undefined : cleanSocialLinks(dto.socialLinks),
       },
     });
     await this.audit.log({
@@ -140,30 +138,4 @@ export class CreatorsService {
     const clash = await this.prisma.creator.findUnique({ where: { slug } });
     if (clash) throw new ConflictException('That slug is already taken');
   }
-}
-
-/**
- * Keeps the four known networks, and only if the value is a web address.
- *
- * The keys were filtered before but the values were not, so `javascript:` went
- * in untouched and came back out as the href of the icon on the public profile
- * — a link that runs code in the site's own origin for whoever clicks it
- * (OWASP A05:2025). One compromised back-office account should not be able to
- * leave that behind on a page everyone visits.
- */
-function cleanSocials(links?: Record<string, string>) {
-  if (!links) return undefined;
-  const out: Record<string, string> = {};
-  for (const key of ALLOWED_SOCIALS) {
-    const value = links[key];
-    if (typeof value !== 'string' || !value.trim()) continue;
-    const trimmed = value.trim();
-    try {
-      const { protocol } = new URL(trimmed);
-      if (protocol === 'http:' || protocol === 'https:') out[key] = trimmed;
-    } catch {
-      // Not a URL at all — drop it rather than store something unusable.
-    }
-  }
-  return out;
 }

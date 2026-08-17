@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, IsArray, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /** Evergreen, site-level content — nothing here may name a year (PRD §6.1.1). */
 export class UpdateSiteSettingsDto {
@@ -75,4 +75,12 @@ export class UpdateSiteSettingsDto {
   @ArrayMaxSize(24)
   @IsString({ each: true })
   galleryImageKeys?: string[];
+
+  @ApiPropertyOptional({
+    example: { facebook: 'https://…', tiktok: 'https://…' },
+    description: 'The organisation\'s own accounts, shown in the footer. Only facebook, tiktok, youtube and instagram are kept',
+  })
+  @IsOptional()
+  @IsObject()
+  socialLinks?: Record<string, string>;
 }
