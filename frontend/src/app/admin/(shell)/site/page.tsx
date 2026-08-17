@@ -33,6 +33,8 @@ export default function SitePage() {
     heroCaptionLo: '',
     contactEmail: '',
     contactPhone: '',
+    faqEligibilityLo: '',
+    faqJudgesLo: '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
@@ -53,6 +55,8 @@ export default function SitePage() {
       heroCaptionLo: data.heroCaptionLo ?? '',
       contactEmail: data.contactEmail ?? '',
       contactPhone: data.contactPhone ?? '',
+      faqEligibilityLo: data.faqEligibilityLo ?? '',
+      faqJudgesLo: data.faqJudgesLo ?? '',
     });
     setHeroImageKey(data.heroImageKey);
     setGallery(data.galleryImageKeys ?? []);
@@ -93,6 +97,8 @@ export default function SitePage() {
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
                 contactEmail: emptyToNull(form.contactEmail),
                 contactPhone: emptyToNull(form.contactPhone),
+                faqEligibilityLo: emptyToNull(form.faqEligibilityLo),
+                faqJudgesLo: emptyToNull(form.faqJudgesLo),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
@@ -173,6 +179,41 @@ export default function SitePage() {
                   onChange={(event) => setForm({ ...form, aboutHistoryLo: event.target.value })}
                 />
               </Field>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="ຄຳຖາມທີ່ພົບເລື້ອຍ (ໜ້າ /about)" />
+            <CardBody>
+              <Note>
+                ສອງຄຳຖາມນີ້ເປັນ<b>ນະໂຍບາຍຂອງທີມງານ</b> ຈຶ່ງໃຫ້ແກ້ໄດ້ຈາກບ່ອນນີ້ ·
+                ຄຳຖາມອື່ນໃນລາຍການແມ່ນອະທິບາຍວິທີທຳງານຂອງລະບົບ ຈຶ່ງແກ້ຈາກຫຼັງບ້ານບໍ່ໄດ້
+                ເພື່ອບໍ່ໃຫ້ຂໍ້ຄວາມກັບຄວາມຈິງຕ່າງກັນ
+              </Note>
+              <div className="mt-4">
+                <Field
+                  label="ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ຄຳຖາມນີ້ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
+                >
+                  <Textarea
+                    className="min-h-28"
+                    value={form.faqEligibilityLo}
+                    onChange={(event) => setForm({ ...form, faqEligibilityLo: event.target.value })}
+                  />
+                </Field>
+                <Field
+                  label="ຄະນະກຳມະການເລືອກມາແນວໃດ?"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່"
+                >
+                  <Textarea
+                    className="min-h-28"
+                    value={form.faqJudgesLo}
+                    onChange={(event) => setForm({ ...form, faqJudgesLo: event.target.value })}
+                  />
+                </Field>
+              </div>
             </CardBody>
           </Card>
 

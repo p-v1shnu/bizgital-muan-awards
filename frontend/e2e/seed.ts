@@ -42,6 +42,29 @@ export default async function seed() {
     await api.dispose();
   };
 
+  // The site-level content the public pages are read against. Written on every
+  // seed, not only the first: a database seeded before a field existed has
+  // nothing in it, so the spec for that field fails on a re-run for a reason
+  // that has nothing to do with the page. CI starts empty and never sees this;
+  // a laptop that has run the suite before sees it every time a field is added.
+  await api.put('admin/site', {
+    headers: auth,
+    data: {
+      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
+      aboutSummaryLo: 'ມ່ວນ ອະວອດ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັນລາວ ໃນທຸກຮູບແບບ',
+      // The contact box on /about, and — separately, for the footer's icon row
+      // — the organisation's own Facebook page.
+      contactEmail: 'info@muanawards.la',
+      contactPhone: '020 5555 5555',
+      socialLinks: { facebook: 'https://facebook.com/muanawards' },
+      // The two FAQ answers the team owns. Two paragraphs in the first one, so
+      // the page is checked with more than a single line to lay out.
+      faqEligibilityLo:
+        'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
+      faqJudgesLo: 'ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ ຈາກຄົນທຳງານໃນວົງການ',
+    },
+  });
+
   // Already seeded by an earlier run — but two fixtures are switches that the
   // specs themselves flip (entries open, the ticket link) and restore. A run
   // killed part-way leaves them the wrong way round and eight later tests fail
@@ -54,19 +77,6 @@ export default async function seed() {
     await purge();
     return;
   }
-
-  await api.put('admin/site', {
-    headers: auth,
-    data: {
-      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
-      aboutSummaryLo: 'ມ່ວນ ອະວອດ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັນລາວ ໃນທຸກຮູບແບບ',
-      // The contact box on /about, and — separately, for the footer's icon row
-      // — the organisation's own Facebook page.
-      contactEmail: 'info@muanawards.la',
-      contactPhone: '020 5555 5555',
-      socialLinks: { facebook: 'https://facebook.com/muanawards' },
-    },
-  });
 
   const creators: Record<string, string> = {};
   for (const [slug, nameLo] of [

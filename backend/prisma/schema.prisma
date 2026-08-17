@@ -365,6 +365,16 @@ model SiteSetting {
   /// page, so a second copy here would only be one more thing to keep in step.
   contactEmail String?
   contactPhone String?
+  /// The two FAQ answers on /about that are the team's own policy rather than a
+  /// description of how the system behaves: who may be nominated, and how the
+  /// panel is chosen. The other three answers stay in the page, because they
+  /// describe rules the code enforces — editable copy there could only ever
+  /// drift into saying something untrue.
+  ///
+  /// One paragraph per line, same convention as aboutHistoryLo. Nullable: each
+  /// question keeps its visible placeholder until the team writes the answer.
+  faqEligibilityLo String? @db.Text
+  faqJudgesLo      String? @db.Text
 
   updatedAt DateTime @updatedAt
 

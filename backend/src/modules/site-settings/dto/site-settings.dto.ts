@@ -112,4 +112,16 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(60)
   contactPhone?: string | null;
+
+  @ApiPropertyOptional({ description: 'Who may be nominated — the /about FAQ, one paragraph per line' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  faqEligibilityLo?: string | null;
+
+  @ApiPropertyOptional({ description: 'How the panel is chosen — the /about FAQ, one paragraph per line' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  faqJudgesLo?: string | null;
 }

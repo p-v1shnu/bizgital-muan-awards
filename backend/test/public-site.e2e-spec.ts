@@ -365,16 +365,30 @@ describe('public site', () => {
         .expect(400);
     });
 
+    it('carries the two team-owned FAQ answers, newlines and all', async () => {
+      const eligibility = 'ຄົນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນປີນັ້ນ';
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ faqEligibilityLo: eligibility, faqJudgesLo: 'ທີມງານເຊີນເອງ' })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.faqEligibilityLo).toBe(eligibility);
+      expect(response.body.data.faqJudgesLo).toBe('ທີມງານເຊີນເອງ');
+    });
+
     it('takes an emptied field as emptied, not as unchanged', async () => {
       await api(h)
         .put(path('/admin/site'))
         .set(h.auth)
-        .send({ contactEmail: null, contactPhone: null })
+        .send({ contactEmail: null, contactPhone: null, faqJudgesLo: null })
         .expect(200);
 
       const response = await api(h).get(path('/site')).expect(200);
       expect(response.body.data.contactEmail).toBeNull();
       expect(response.body.data.contactPhone).toBeNull();
+      expect(response.body.data.faqJudgesLo).toBeNull();
     });
   });
 

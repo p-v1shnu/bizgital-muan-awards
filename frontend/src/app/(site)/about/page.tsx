@@ -72,47 +72,63 @@ function Channel({
     <div className={shell}>{inner}</div>
   );
 }
-function faqFor({ hasContact }: { hasContact: boolean }): {
+/** One paragraph per line, as it is typed in the back office. */
+function paragraphs(value: string | null | undefined) {
+  return (value ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/** Written by the team, or the placeholder that says it is still waiting. */
+function answer(written: string[], waitingFor: string) {
+  return written.length > 0
+    ? { a: written }
+    : { a: [waitingFor], placeholder: true as const };
+}
+
+function faqFor({
+  hasContact,
+  eligibility,
+  judges,
+}: {
+  hasContact: boolean;
+  eligibility: string[];
+  judges: string[];
+}): {
   q: string;
-  a: string;
+  a: string[];
   placeholder?: boolean;
 }[] {
   return [
     {
       q: 'ໃຜສາມາດເສີນຊື່ໄດ້?',
-      a: 'ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ',
+      a: ['ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ'],
     },
     {
       q: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
-      a: 'ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
+      a: ['ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ'],
     },
     {
       q: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
-      a: 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ',
-      placeholder: true,
+      ...answer(eligibility, 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ'),
     },
     {
       q: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
-      a: 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ',
-      placeholder: true,
+      ...answer(judges, 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ'),
     },
     {
       q: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
       ...(hasContact
-        ? { a: 'ຕິດຕໍ່ທີມງານຕາມຊ່ອງທາງໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້ານີ້' }
-        : { a: 'ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ', placeholder: true }),
+        ? { a: ['ຕິດຕໍ່ທີມງານຕາມຊ່ອງທາງໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້ານີ້'] }
+        : { a: ['ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ'], placeholder: true }),
     },
   ];
 }
 
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
-  // One paragraph per line, typed free-hand in the back office — same
-  // convention as Edition.activitiesLo.
-  const history = (site?.aboutHistoryLo ?? '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const history = paragraphs(site?.aboutHistoryLo);
 
   // How to reach the team: an address and a number. The team's Facebook page is
   // not repeated here — the footer already carries it on every page.
@@ -121,7 +137,11 @@ export default async function AboutPage() {
   // One number is dialable; "020 … / 021 …" is not, and a tel: link holding
   // both would silently dial neither, so that case stays as plain text.
   const dialable = phone != null && /^[\d\s+\-().]+$/.test(phone);
-  const faq = faqFor({ hasContact: Boolean(email || phone) });
+  const faq = faqFor({
+    hasContact: Boolean(email || phone),
+    eligibility: paragraphs(site?.faqEligibilityLo),
+    judges: paragraphs(site?.faqJudgesLo),
+  });
 
   return (
     <>
@@ -170,9 +190,13 @@ export default async function AboutPage() {
               <summary className="cursor-pointer list-none px-5 py-4 font-serif text-[19px] text-ink">
                 {item.q}
               </summary>
-              <p className="px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
-                {item.placeholder ? <Placeholder>{item.a}</Placeholder> : item.a}
-              </p>
+              <div className="space-y-2 px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
+                {item.a.map((paragraph, index) => (
+                  <p key={index}>
+                    {item.placeholder ? <Placeholder>{paragraph}</Placeholder> : paragraph}
+                  </p>
+                ))}
+              </div>
             </details>
           ))}
         </div>

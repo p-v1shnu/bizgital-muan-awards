@@ -420,6 +420,30 @@ test('the page says how to reach the team', async ({ page }) => {
   await expect(page.getByText('ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ')).toHaveCount(0);
 });
 
+/**
+ * Two of the FAQ answers are the team's own policy and come from the back
+ * office; the other three describe rules the code enforces and stay in the page.
+ */
+test('the FAQ answers the team wrote reach the page', async ({ page }) => {
+  await page.goto('/about#faq');
+  const faq = page.locator('#faq');
+
+  await faq.getByText('ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?').click();
+  // Both paragraphs of the answer, not just the first line.
+  await expect(faq.getByText('ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ')).toBeVisible();
+  await expect(faq.getByText('ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ')).toBeVisible();
+
+  await faq.getByText('ຄະນະກຳມະການເລືອກມາແນວໃດ?').click();
+  await expect(faq.getByText('ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ', { exact: false })).toBeVisible();
+
+  // Nothing in the list is left waiting on the team.
+  await expect(faq.getByText('ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ')).toHaveCount(0);
+
+  // And the answers the code enforces are still the page's own words.
+  await faq.getByText('ໃຜສາມາດເສີນຊື່ໄດ້?').click();
+  await expect(faq.getByText('ບໍ່ຕ້ອງລົງທະບຽນ', { exact: false })).toBeVisible();
+});
+
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
   // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
   // all here — a test run must never report into the real property.

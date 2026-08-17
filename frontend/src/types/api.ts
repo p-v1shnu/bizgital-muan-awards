@@ -136,6 +136,8 @@ export interface SiteSettings {
   aboutHistoryLo: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  faqEligibilityLo: string | null;
+  faqJudgesLo: string | null;
   updatedAt: string;
 }
 
