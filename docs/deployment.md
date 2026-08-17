@@ -134,24 +134,50 @@ Migration รันเองตอน container สตาร์ท (`prisma migr
 > ส่วนหน้าปี/สาขา/โปรไฟล์ ไม่ถูกอบไว้ — ถ้า API ล่ม หน้าพวกนี้จะขึ้น **500 (ลองใหม่ภายหลัง)**
 > ไม่ใช่ 404 โดยตั้งใจ เพราะ 404 จะทำให้ Google ถอดหน้าออกจากดัชนีถาวร
 
-### 2.1 ตั้ง policy ของ bucket — อ่านได้ แต่ห้าม list
+### 2.1 สิทธิ์อ่านของ bucket — อ่านได้ แต่ห้าม list
 
-ใช้ไฟล์ `docs/storage-policy.json` (แก้ชื่อ bucket ให้ตรง) — อนุญาตแค่ `s3:GetObject`
-**ห้ามใส่ `s3:ListBucket`**
+> **⚠️ `docs/storage-policy.json` ใช้ไม่ได้กับ DigitalOcean Spaces** — เขียนไว้ตอนแรกโดย
+> คิดว่า Spaces รองรับ bucket policy JSON แบบ AWS เต็มรูปแบบ ทดสอบจริงแล้ว
+> `PutBucketPolicy` ตอบ **403** แม้ใช้กุญแจสิทธิ์เต็ม (`Full Access`) — Spaces ใช้ระบบ
+> **canned ACL** แบบ S3 ยุคเก่าแทน ไม่ใช่ policy JSON ขั้นตอนข้างล่างนี้คือของจริงที่ใช้ได้
+
+โค้ด (`storage.service.ts`) ตั้ง `ACL: 'public-read'` ให้**ทุกไฟล์เดี่ยว**ตอนเซ็น URL อัปโหลด
+อยู่แล้ว — งานที่เหลือของคุณมีแค่อย่างเดียวคือ **ยืนยันว่า bucket เองไม่ใช่ `public-read`**
 
 ```bash
-# DigitalOcean Spaces / S3
-aws s3api put-bucket-policy --bucket muan-awards --policy file://docs/storage-policy.json \
-  --endpoint-url https://sgp1.digitaloceanspaces.com
+# ต้องได้ 403 (หรืออะไรก็ตามที่ไม่ใช่ 200) — ไม่มีใครควร list ทั้งถังได้
+curl -s -o /dev/null -w "list ทั้งถัง  %{http_code}\n" "https://<bucket>.<region>.digitaloceanspaces.com/"
+```
 
-# ตรวจว่าถูกต้อง — ต้องได้ 403 กับ 200 ตามลำดับ
-curl -s -o /dev/null -w "list  %{http_code}\n" "https://<bucket-url>/?list-type=2"
+**ถ้าได้ 200 พร้อม `<ListBucketResult>`** — bucket ถูกตั้งเป็น public เต็มรูปแบบ (ผ่านปุ่มในหน้าเว็บ
+DO หรือ `PutBucketAcl` ระดับถัง) ต้องปิดด้วยกุญแจแบบ **Full Access ชั่วคราว** (กุญแจของแอปทำไม่ได้
+— นั่นคือจุดประสงค์):
+
+```bash
+docker compose exec -T -e ADMIN_KEY='<full-access key>' -e ADMIN_SECRET='<secret>' \
+  backend node -e "
+const S = require('@aws-sdk/client-s3');
+new S.S3Client({ region: process.env.S3_REGION, endpoint: process.env.S3_ENDPOINT, forcePathStyle: true,
+  credentials: { accessKeyId: process.env.ADMIN_KEY, secretAccessKey: process.env.ADMIN_SECRET } })
+ .send(new S.PutBucketAclCommand({ Bucket: process.env.S3_BUCKET, ACL: 'private' }))
+ .then(() => console.log('bucket -> private ✓'))
+ .catch(e => console.log('ERR', e.name));
+"
+```
+
+แล้วลบกุญแจ Full Access ตัวนั้นทิ้งทันที — ใช้ครั้งเดียวตอนตั้งค่า ไม่ใช่ของที่ต้องเก็บไว้
+
+```bash
+# ยืนยันอีกรอบ: list ต้องปิด, รูปที่มีจริงยังอ่านได้
+curl -s -o /dev/null -w "list  %{http_code}\n" "https://<bucket>.<region>.digitaloceanspaces.com/"
 curl -s -o /dev/null -w "รูป   %{http_code}\n" "https://<bucket-url>/site/<ไฟล์ที่มีจริง>.png"
 ```
 
 > **ทำไมต้องห้าม list:** ทีมอัปโหลดรูปผู้ชนะ **ก่อน**ประกาศผลเสมอ (นั่นคือวิธีทำงานตามข้อ 4.1)
-> ถ้า bucket ยอมให้ list ใครก็ตามไล่ดูไฟล์ทั้งหมดได้ → รู้ผลก่อนประกาศ
-> ทั้งที่ API กันไว้อย่างดีแล้ว · ทดสอบกับ MinIO ในเครื่องแล้วว่า policy นี้ทำงานถูก (list 403 / รูป 200)
+> ถ้า bucket ยอมให้ list ใครก็ตามไล่ดูไฟล์ทั้งหมดได้ → รู้ผลก่อนประกาศ ทั้งที่ API กันไว้อย่างดีแล้ว
+> — เจอเรื่องนี้จริงตอน deploy: กด `PutBucketAcl` เป็น `public-read` **ระดับถัง** เพื่อแก้เรื่องอ่าน
+> รูปไม่ได้ กลับกลายเป็นเปิด listing ไปด้วยโดยไม่ได้ตั้งใจ — `public-read` บนถังทั้งใบให้ทั้งอ่าน
+> **และ** list พร้อมกันในรุ่น ACL แบบเดิม ต่างจากการให้สิทธิ์เฉพาะไฟล์
 
 ---
 

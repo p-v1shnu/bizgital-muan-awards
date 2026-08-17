@@ -286,4 +286,53 @@ test('only a super admin reaches users and the audit trail', async ({ page }) =>
 test('nothing sensitive is kept in localStorage', async ({ page }) => {
   expect(await page.evaluate(() => window.localStorage.length)).toBe(0);
 });
+
+/**
+ * A picture is readable by the person who has the key, and by nobody browsing
+ * the bucket — the two ends of a real production incident (docs/seo.md's
+ * neighbour, `storage.service.ts`). Spaces has no working `PutBucketPolicy`,
+ * so read access has to be won per object with a canned ACL rather than a
+ * bucket-wide policy, which is what this proves end to end: the ticket the API
+ * hands out, a real PUT with no ACL header of the browser's own, and the file
+ * actually readable afterward with nothing but its key.
+ */
+test('an uploaded file is readable by its key alone, not by browsing the bucket', async ({ request }) => {
+  const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
+  const login = await request.post(`${api}/auth/login`, {
+    data: { email: 'admin@muanawards.com', password: 'a-very-long-password' },
+  });
+  const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+
+  const body = Buffer.from('not a real image, just bytes to move');
+  const ticket = await request.post(`${api}/admin/uploads`, {
+    headers: auth,
+    data: { folder: 'creators', contentType: 'image/png', sizeBytes: body.length },
+  });
+  const { key, uploadUrl } = (await ticket.json()).data;
+
+  // The signature covers ACL as a query parameter, not as a header the
+  // browser has to add — read it back out of the ticket rather than assuming.
+  expect(uploadUrl, 'the ticket grants read on this one object').toContain('x-amz-acl=public-read');
+
+  // A bare PUT, the way a browser actually sends one — no x-amz-acl header at
+  // all. If ACL had to travel as a signed header instead, this would fail with
+  // SignatureDoesNotMatch rather than take the upload.
+  const put = await request.put(uploadUrl, { data: body, headers: { 'Content-Type': 'image/png' } });
+  expect(put.status(), 'storage accepted the file').toBe(200);
+
+  const publicBase = (process.env.S3_PUBLIC_URL ?? process.env.NEXT_PUBLIC_IMAGE_BASE_URL ?? '').replace(
+    /\/$/,
+    '',
+  );
+  const readByKey = await request.get(`${publicBase}/${key}`);
+  expect(readByKey.status(), 'readable by anyone who has the key').toBe(200);
+
+  // Path-style addressing (forcePathStyle in storage.service.ts) puts the
+  // bucket name as the URL's first path segment, so this is the bucket's own
+  // root — not the object's — regardless of host.
+  const url = new URL(uploadUrl);
+  const bucketRoot = `${url.origin}${url.pathname.split('/').slice(0, 2).join('/')}`;
+  const listAttempt = await request.get(`${bucketRoot}/?list-type=2`, { failOnStatusCode: false });
+  expect(listAttempt.status(), 'but the bucket itself must not be browsable').not.toBe(200);
+});
 });
