@@ -394,6 +394,31 @@ test('the site says what it does with what people type in', async ({ page }) => 
   await expect(privacy.getByRole('link', { name: /ປິດ Google Analytics/ })).toBeVisible();
 });
 
+/**
+ * The privacy section tells a submitter to write in to be forgotten, and the
+ * FAQ sends a would-be sponsor to the same place — both of which are only true
+ * if the channels the team entered actually reach the page.
+ */
+test('the page says how to reach the team', async ({ page }) => {
+  await page.goto('/about#contact');
+  const contact = page.locator('#contact');
+
+  await expect(contact.getByRole('link', { name: 'info@muanawards.la' })).toHaveAttribute(
+    'href',
+    'mailto:info@muanawards.la',
+  );
+  // A single number is dialable, spaces and all.
+  await expect(contact.getByRole('link', { name: '020 5555 5555' })).toHaveAttribute(
+    'href',
+    'tel:02055555555',
+  );
+  // The Facebook page is the footer's, not a second copy of it.
+  await expect(contact.getByRole('link', { name: 'facebook.com/muanawards' })).toBeVisible();
+
+  // And the sponsorship answer stops saying it is waiting for a channel.
+  await expect(page.getByText('ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ')).toHaveCount(0);
+});
+
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
   // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
   // all here — a test run must never report into the real property.

@@ -354,6 +354,17 @@ model SiteSetting {
   /// defaulted, since /about shows an explicit placeholder until this is
   /// filled in. One paragraph per line, same convention as Edition.activitiesLo.
   aboutHistoryLo String? @db.Text
+  /// How to reach the team, shown in /about's contact box. Two promises on that
+  /// page already depend on it: the privacy section tells a submitter to write
+  /// in to have their name removed, and the FAQ answers where to ask about
+  /// sponsorship. Nullable: the box shows an explicit placeholder until at
+  /// least one channel is filled in.
+  ///
+  /// The team's own Facebook page is deliberately not a third column here —
+  /// the contact box links the one already in socialLinks, so there is a single
+  /// place to change it rather than two that can drift apart.
+  contactEmail String?
+  contactPhone String?
 
   updatedAt DateTime @updatedAt
 

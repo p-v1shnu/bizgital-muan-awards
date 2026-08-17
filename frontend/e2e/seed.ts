@@ -60,6 +60,11 @@ export default async function seed() {
     data: {
       brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
       aboutSummaryLo: 'ມ່ວນ ອະວອດ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັນລາວ ໃນທຸກຮູບແບບ',
+      // The contact box on /about, and the Facebook page it borrows from the
+      // footer's social links rather than holding a second copy of.
+      contactEmail: 'info@muanawards.la',
+      contactPhone: '020 5555 5555',
+      socialLinks: { facebook: 'https://facebook.com/muanawards' },
     },
   });
 

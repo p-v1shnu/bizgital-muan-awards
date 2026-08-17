@@ -31,6 +31,8 @@ export default function SitePage() {
     ctaTitleLo: '',
     ctaBodyLo: '',
     heroCaptionLo: '',
+    contactEmail: '',
+    contactPhone: '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
@@ -49,6 +51,8 @@ export default function SitePage() {
       ctaTitleLo: data.ctaTitleLo ?? '',
       ctaBodyLo: data.ctaBodyLo ?? '',
       heroCaptionLo: data.heroCaptionLo ?? '',
+      contactEmail: data.contactEmail ?? '',
+      contactPhone: data.contactPhone ?? '',
     });
     setHeroImageKey(data.heroImageKey);
     setGallery(data.galleryImageKeys ?? []);
@@ -87,6 +91,8 @@ export default function SitePage() {
                 ctaTitleLo: form.ctaTitleLo,
                 ctaBodyLo: form.ctaBodyLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
+                contactEmail: emptyToNull(form.contactEmail),
+                contactPhone: emptyToNull(form.contactPhone),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
@@ -167,6 +173,36 @@ export default function SitePage() {
                   onChange={(event) => setForm({ ...form, aboutHistoryLo: event.target.value })}
                 />
               </Field>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader title="ຊ່ອງທາງຕິດຕໍ່ທີມງານ (ໜ້າ /about)" />
+            <CardBody>
+              <Field label="ອີເມວ" hint="— ບໍ່ບັງຄັບ">
+                <Input
+                  type="email"
+                  placeholder="info@muanawards.la"
+                  value={form.contactEmail}
+                  onChange={(event) => setForm({ ...form, contactEmail: event.target.value })}
+                />
+              </Field>
+              <Field
+                label="ເບີໂທ"
+                hint="— ບໍ່ບັງຄັບ"
+                help="ໃສ່ຫຼາຍເບີໄດ້ — ຖ້າໃສ່ເບີດຽວ ຄົນເປີດຈາກໂທລະສັບຈະກົດໂທໄດ້ເລີຍ"
+              >
+                <Input
+                  placeholder="020 5555 5555"
+                  value={form.contactPhone}
+                  onChange={(event) => setForm({ ...form, contactPhone: event.target.value })}
+                />
+              </Field>
+              <Note>
+                ຂຶ້ນໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້າ /about — ຊ່ອງໃດເວັ້ນວ່າງ ແຖວນັ້ນຈະບໍ່ຂຶ້ນ
+                · ຖ້າເວັ້ນວ່າງທັງສອງ ໜ້ານັ້ນຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ · <b>ເພຈ Facebook</b>{' '}
+                ໃຊ້ອັນດຽວກັບໃນ “ລິງກ໌ໂຊຊຽວ” ຂ້າງລຸ່ມ ຈຶ່ງບໍ່ຕ້ອງພິມສອງບ່ອນ
+              </Note>
             </CardBody>
           </Card>
 

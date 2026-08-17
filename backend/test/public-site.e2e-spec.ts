@@ -338,6 +338,46 @@ describe('public site', () => {
     });
   });
 
+  /**
+   * The contact box on /about is what the privacy section points a submitter at
+   * when they ask to be forgotten, so the channels have to survive the trip from
+   * the back office to the public payload — and a mistyped address has to be
+   * refused at the door rather than become a dead mailto: link on the page.
+   */
+  describe('the team contact channels', () => {
+    it('reaches the public payload once the team fills it in', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ contactEmail: 'info@muanawards.la', contactPhone: '020 5555 5555' })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.contactEmail).toBe('info@muanawards.la');
+      expect(response.body.data.contactPhone).toBe('020 5555 5555');
+    });
+
+    it('refuses an address that is not one', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ contactEmail: 'ຕິດຕໍ່ພວກເຮົາ' })
+        .expect(400);
+    });
+
+    it('takes an emptied field as emptied, not as unchanged', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ contactEmail: null, contactPhone: null })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.contactEmail).toBeNull();
+      expect(response.body.data.contactPhone).toBeNull();
+    });
+  });
+
   describe('the sitemap feed', () => {
     it('lists public years and their categories, and no drafts', async () => {
       const response = await api(h).get(path('/sitemap-entries')).expect(200);

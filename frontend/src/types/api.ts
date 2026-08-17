@@ -134,6 +134,8 @@ export interface SiteSettings {
   galleryImageKeys: string[] | null;
   socialLinks: Record<string, string> | null;
   aboutHistoryLo: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
   updatedAt: string;
 }
 

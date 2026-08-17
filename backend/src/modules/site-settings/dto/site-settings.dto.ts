@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, IsArray, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEmail,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 /** Evergreen, site-level content — nothing here may name a year (PRD §6.1.1). */
 export class UpdateSiteSettingsDto {
@@ -89,4 +97,19 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(3000)
   aboutHistoryLo?: string | null;
+
+  @ApiPropertyOptional({ description: 'Team address for the contact box on /about' })
+  @IsOptional()
+  @IsEmail({}, { message: 'contactEmail must be an email address' })
+  @MaxLength(200)
+  contactEmail?: string | null;
+
+  @ApiPropertyOptional({
+    example: '020 5555 5555',
+    description: 'Team phone for the contact box on /about. Free text — more than one number is allowed, in which case the page shows it without making it dialable',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(60)
+  contactPhone?: string | null;
 }

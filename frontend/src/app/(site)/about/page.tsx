@@ -14,32 +14,44 @@ export const metadata: Metadata = {
  * The one page whose copy is written rather than entered in the back office.
  * Anything still marked as a placeholder is waiting on the content team; the
  * markers are meant to be obvious so none of them reaches production unnoticed.
+ *
+ * The sponsorship answer is the exception: it was only ever waiting on the
+ * contact channels, which the team now enters in /admin/site, so it resolves by
+ * itself rather than sitting there as a placeholder above a filled-in contact
+ * box saying the opposite.
  */
-const FAQ: { q: string; a: string; placeholder?: boolean }[] = [
-  {
-    q: 'ໃຜສາມາດເສີນຊື່ໄດ້?',
-    a: 'ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ',
-  },
-  {
-    q: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
-    a: 'ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
-  },
-  {
-    q: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
-    a: 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ',
-    placeholder: true,
-  },
-  {
-    q: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
-    a: 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ',
-    placeholder: true,
-  },
-  {
-    q: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
-    a: 'ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ',
-    placeholder: true,
-  },
-];
+function faqFor({ hasContact }: { hasContact: boolean }): {
+  q: string;
+  a: string;
+  placeholder?: boolean;
+}[] {
+  return [
+    {
+      q: 'ໃຜສາມາດເສີນຊື່ໄດ້?',
+      a: 'ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ',
+    },
+    {
+      q: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
+      a: 'ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
+    },
+    {
+      q: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+      a: 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ',
+      placeholder: true,
+    },
+    {
+      q: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
+      a: 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ',
+      placeholder: true,
+    },
+    {
+      q: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
+      ...(hasContact
+        ? { a: 'ຕິດຕໍ່ທີມງານຕາມຊ່ອງທາງໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້ານີ້' }
+        : { a: 'ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ', placeholder: true }),
+    },
+  ];
+}
 
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
@@ -49,6 +61,17 @@ export default async function AboutPage() {
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
+
+  // How to reach the team. The Facebook page comes from the footer's social
+  // links rather than a field of its own, so the team enters it once.
+  const email = site?.contactEmail?.trim() || null;
+  const phone = site?.contactPhone?.trim() || null;
+  const facebook = site?.socialLinks?.facebook?.trim() || null;
+  // One number is dialable; "020 … / 021 …" is not, and a tel: link holding
+  // both would silently dial neither, so that case stays as plain text.
+  const dialable = phone != null && /^[\d\s+\-().]+$/.test(phone);
+  const contacts = [email, phone, facebook].filter(Boolean);
+  const faq = faqFor({ hasContact: contacts.length > 0 });
 
   return (
     <>
@@ -92,7 +115,7 @@ export default async function AboutPage() {
 
       <Section id="faq" eyebrow="ຄຳຖາມທີ່ພົບເລື້ອຍ" title="FAQ">
         <div className="max-w-3xl overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
-          {FAQ.map((item) => (
+          {faq.map((item) => (
             <details key={item.q} className="border-b border-hairline last:border-b-0">
               <summary className="cursor-pointer list-none px-5 py-4 font-serif text-[19px] text-ink">
                 {item.q}
@@ -186,9 +209,56 @@ export default async function AboutPage() {
           id="sponsor"
           className="max-w-2xl rounded-[var(--radius-box)] border border-rule bg-panel p-6"
         >
-          <p className="text-[14.5px] leading-relaxed text-ink-2">
-            <Placeholder>ອີເມວ / ເບີໂທ / ເພຈ Facebook — ລໍຖ້າຂໍ້ມູນຈາກທີມງານ</Placeholder>
-          </p>
+          {contacts.length > 0 ? (
+            <dl className="grid gap-2.5 text-[14.5px] leading-relaxed text-ink-2">
+              {email != null && (
+                <div className="flex flex-wrap items-baseline gap-x-3">
+                  <dt className="w-28 shrink-0 text-ink-3">ອີເມວ</dt>
+                  <dd>
+                    <a href={`mailto:${email}`} className="text-brand-deep underline">
+                      {email}
+                    </a>
+                  </dd>
+                </div>
+              )}
+              {phone != null && (
+                <div className="flex flex-wrap items-baseline gap-x-3">
+                  <dt className="w-28 shrink-0 text-ink-3">ເບີໂທ</dt>
+                  <dd dir="ltr">
+                    {dialable ? (
+                      <a
+                        href={`tel:${phone.replace(/[^\d+]/g, '')}`}
+                        className="text-brand-deep underline"
+                      >
+                        {phone}
+                      </a>
+                    ) : (
+                      phone
+                    )}
+                  </dd>
+                </div>
+              )}
+              {facebook != null && (
+                <div className="flex flex-wrap items-baseline gap-x-3">
+                  <dt className="w-28 shrink-0 text-ink-3">ເພຈ Facebook</dt>
+                  <dd>
+                    <a
+                      href={facebook}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-brand-deep underline"
+                    >
+                      {facebook.replace(/^https?:\/\//, '')}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          ) : (
+            <p className="text-[14.5px] leading-relaxed text-ink-2">
+              <Placeholder>ອີເມວ / ເບີໂທ / ເພຈ Facebook — ລໍຖ້າຂໍ້ມູນຈາກທີມງານ</Placeholder>
+            </p>
+          )}
           <div className="mt-5">
             <ActionLink href="/submit" tone="quiet">
               ສົ່ງລາຍຊື່
