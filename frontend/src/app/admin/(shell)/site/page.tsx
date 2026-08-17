@@ -20,7 +20,12 @@ import { emptyToNull } from '@/lib/utils';
 export default function SitePage() {
   const { data, isLoading, error } = useApi<SiteSettings>('/admin/site');
 
-  const [form, setForm] = useState({ brandStatementLo: '', aboutSummaryLo: '', heroCaptionLo: '' });
+  const [form, setForm] = useState({
+    heroTitleLo: '',
+    brandStatementLo: '',
+    aboutSummaryLo: '',
+    heroCaptionLo: '',
+  });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
@@ -29,6 +34,7 @@ export default function SitePage() {
   useEffect(() => {
     if (!data) return;
     setForm({
+      heroTitleLo: data.heroTitleLo ?? '',
       brandStatementLo: data.brandStatementLo ?? '',
       aboutSummaryLo: data.aboutSummaryLo ?? '',
       heroCaptionLo: data.heroCaptionLo ?? '',
@@ -61,6 +67,7 @@ export default function SitePage() {
             setSaved(false);
             save.mutate(
               {
+                heroTitleLo: form.heroTitleLo,
                 brandStatementLo: form.brandStatementLo,
                 aboutSummaryLo: form.aboutSummaryLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
@@ -74,6 +81,13 @@ export default function SitePage() {
           <Card>
             <CardHeader title="ຂໍ້ຄວາມໜ້າແຮກ" />
             <CardBody>
+              <Field label="ຊື່ງານເທິງສຸດຂອງໜ້າແຮກ" help="ຫົວຂໍ້ໃຫຍ່ເທິງຮູບ hero">
+                <Input
+                  required
+                  value={form.heroTitleLo}
+                  onChange={(event) => setForm({ ...form, heroTitleLo: event.target.value })}
+                />
+              </Field>
               <Field
                 label="ຂໍ້ຄວາມແບຣນ"
                 help="ປະໂຫຍກດຽວໃຕ້ຊື່ງານເທິງສຸດຂອງໜ້າແຮກ"

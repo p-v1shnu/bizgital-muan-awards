@@ -21,6 +21,12 @@ export class UpdateSiteSettingsDto {
   @MaxLength(200)
   heroCaptionEn?: string | null;
 
+  @ApiPropertyOptional({ description: 'The homepage hero heading — the site\'s own name' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  heroTitleLo?: string;
+
   @ApiPropertyOptional({ description: 'The one-line statement under the homepage title' })
   @IsOptional()
   @IsString()

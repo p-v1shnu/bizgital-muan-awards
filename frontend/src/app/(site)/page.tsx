@@ -82,7 +82,7 @@ export default async function HomePage() {
             <div className="mx-auto max-w-6xl px-5 pb-28 md:pb-32">
               <div className="foil mb-5 h-[3px] w-20 rounded-sm" aria-hidden />
               <h1 className="max-w-2xl font-serif text-4xl leading-[1.1] text-white md:text-6xl">
-                ມ່ວນ ອະວອດ
+                {site?.heroTitleLo || 'ມ່ວນ ອະວອດ'}
               </h1>
               <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-white/85 md:text-base">
                 {site?.brandStatementLo || (

@@ -125,6 +125,7 @@ export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
   heroCaptionLo: string | null;
+  heroTitleLo: string;
   brandStatementLo: string;
   aboutSummaryLo: string;
   galleryImageKeys: string[] | null;
