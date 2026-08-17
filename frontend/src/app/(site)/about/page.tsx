@@ -43,6 +43,12 @@ const FAQ: { q: string; a: string; placeholder?: boolean }[] = [
 
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
+  // One paragraph per line, typed free-hand in the back office — same
+  // convention as Edition.activitiesLo.
+  const history = (site?.aboutHistoryLo ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
 
   return (
     <>
@@ -52,9 +58,17 @@ export default async function AboutPage() {
             <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           )}
         </p>
-        <p className="mt-4 max-w-2xl text-[15px] leading-[1.9] text-ink-3">
-          <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ</Placeholder>
-        </p>
+        {history.length > 0 ? (
+          <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-[1.9] text-ink-3">
+            {history.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-4 max-w-2xl text-[15px] leading-[1.9] text-ink-3">
+            <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ</Placeholder>
+          </p>
+        )}
       </Section>
 
       <Section id="judging" eyebrow="ວິທີການຕັດສິນ" title="ຂັ້ນຕອນ" className="bg-panel-2/50">

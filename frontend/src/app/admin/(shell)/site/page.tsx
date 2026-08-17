@@ -27,6 +27,7 @@ export default function SitePage() {
     brandStatementLo: '',
     aboutTitleLo: '',
     aboutSummaryLo: '',
+    aboutHistoryLo: '',
     ctaTitleLo: '',
     ctaBodyLo: '',
     heroCaptionLo: '',
@@ -44,6 +45,7 @@ export default function SitePage() {
       brandStatementLo: data.brandStatementLo ?? '',
       aboutTitleLo: data.aboutTitleLo ?? '',
       aboutSummaryLo: data.aboutSummaryLo ?? '',
+      aboutHistoryLo: data.aboutHistoryLo ?? '',
       ctaTitleLo: data.ctaTitleLo ?? '',
       ctaBodyLo: data.ctaBodyLo ?? '',
       heroCaptionLo: data.heroCaptionLo ?? '',
@@ -81,6 +83,7 @@ export default function SitePage() {
                 brandStatementLo: form.brandStatementLo,
                 aboutTitleLo: form.aboutTitleLo,
                 aboutSummaryLo: form.aboutSummaryLo,
+                aboutHistoryLo: emptyToNull(form.aboutHistoryLo),
                 ctaTitleLo: form.ctaTitleLo,
                 ctaBodyLo: form.ctaBodyLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
@@ -145,6 +148,23 @@ export default function SitePage() {
                   required
                   value={form.ctaBodyLo}
                   onChange={(event) => setForm({ ...form, ctaBodyLo: event.target.value })}
+                />
+              </Field>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ (ໜ້າ /about)" />
+            <CardBody>
+              <Field
+                label="ເນື້ອຫາ"
+                hint="— ບໍ່ບັງຄັບ"
+                help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
+              >
+                <Textarea
+                  className="min-h-40"
+                  value={form.aboutHistoryLo}
+                  onChange={(event) => setForm({ ...form, aboutHistoryLo: event.target.value })}
                 />
               </Field>
             </CardBody>

@@ -349,6 +349,11 @@ model SiteSetting {
   /// separate from a Creator's or Judge's own socialLinks. { facebook, tiktok,
   /// youtube, instagram }; a platform with no value here shows no icon.
   socialLinks Json?
+  /// The "where this came from and what it's for" paragraphs on /about,
+  /// written by the team rather than typed at launch — nullable rather than
+  /// defaulted, since /about shows an explicit placeholder until this is
+  /// filled in. One paragraph per line, same convention as Edition.activitiesLo.
+  aboutHistoryLo String? @db.Text
 
   updatedAt DateTime @updatedAt
 

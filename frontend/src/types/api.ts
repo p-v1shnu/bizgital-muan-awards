@@ -133,6 +133,7 @@ export interface SiteSettings {
   ctaBodyLo: string;
   galleryImageKeys: string[] | null;
   socialLinks: Record<string, string> | null;
+  aboutHistoryLo: string | null;
   updatedAt: string;
 }
 

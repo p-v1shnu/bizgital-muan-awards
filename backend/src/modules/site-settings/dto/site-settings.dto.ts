@@ -83,4 +83,10 @@ export class UpdateSiteSettingsDto {
   @IsOptional()
   @IsObject()
   socialLinks?: Record<string, string>;
+
+  @ApiPropertyOptional({ description: 'The "where this came from" paragraphs on /about, one per line' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(3000)
+  aboutHistoryLo?: string | null;
 }
