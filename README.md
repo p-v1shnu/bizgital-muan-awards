@@ -110,7 +110,7 @@ sudo caddy reload --config /etc/caddy/Caddyfile
 Migrations run automatically on container start (`prisma migrate deploy`), so a
 deploy needs no manual database step.
 
-### Four things that will bite on a server that already runs something
+### Five things that will bite on a server that already runs something
 
 Each of these was hit on a real first deploy, and each one presents as a
 different problem than it is.
@@ -134,6 +134,16 @@ different problem than it is.
   the error and returns 0 while Caddy rejects the new config and keeps running
   the old one. The symptom is a browser TLS error on a domain whose block looks
   correct in the file — because it was never loaded.
+- **The `.cdn.` image domain does not exist until CDN is switched on.** Every
+  Space answers on `<bucket>.<region>.digitaloceanspaces.com` the moment it's
+  created; `<bucket>.<region>.cdn.digitaloceanspaces.com` only resolves once
+  someone enables CDN for it in the dashboard. Put the `.cdn.` host into
+  `S3_PUBLIC_URL` / `NEXT_PUBLIC_IMAGE_BASE_URL` before that and pictures fail
+  with `DNS_PROBE_POSSIBLE`, not a permission error — worth telling apart from
+  the previous point, since editing `NEXT_PUBLIC_*` needs a frontend rebuild
+  either way and it is easy to reach for that fix when the domain is the one
+  that's actually wrong. Start on the origin host; move to `.cdn.` only after
+  CDN is confirmed on.
 
 `docker compose up` had never been run against this repository when it was
 written, only validated, so treat the first deploy on any new machine as an

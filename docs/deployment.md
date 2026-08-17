@@ -96,13 +96,27 @@ openssl rand -base64 32   # → REVALIDATE_SECRET
 | ตัวแปร | ค่าตอน dev | ค่าที่ต้องเป็นบน production |
 |---|---|---|
 | `S3_ENDPOINT` | `http://minio:9000` | `https://sgp1.digitaloceanspaces.com` (หรือ region ที่ใช้) |
-| `S3_PUBLIC_URL` | `http://localhost:9000/muan-awards` | URL ของ CDN เช่น `https://muan.sgp1.cdn.digitaloceanspaces.com` |
+| `S3_PUBLIC_URL` | `http://localhost:9000/muan-awards` | `https://<bucket>.<region>.digitaloceanspaces.com` (โดเมนต้นทาง — ดูคำเตือนข้างล่าง) |
 | `NEXT_PUBLIC_IMAGE_BASE_URL` | เหมือน `S3_PUBLIC_URL` | **ต้องตรงกับ `S3_PUBLIC_URL`** |
 | `NEXT_PUBLIC_GA_ID` | **เว้นว่าง** | รหัส GA4 จริง (`G-XXXXXXX`) — ใส่แล้วเว็บเริ่มนับทันทีที่คนเปิดหน้า |
 
 > `NEXT_PUBLIC_*` ถูก **ฝังตอน build** ไม่ใช่ตอนรัน — แก้แล้วต้อง `docker compose build` ใหม่
 > และ `NEXT_PUBLIC_IMAGE_BASE_URL` ยังเป็นตัวกำหนดว่า `next/image` ยอมดึงรูปจากโฮสต์ไหน
 > ถ้าตั้งผิด รูปจะขึ้น 400 ทั้งเว็บ
+
+> **⚠️ อย่าใส่โดเมน `.cdn.` จนกว่าจะกดเปิด CDN ในหน้า Spaces จริงแล้ว** — Space ทุกอันมีโดเมน
+> `<bucket>.<region>.digitaloceanspaces.com` (ต้นทาง) ใช้ได้ทันทีตั้งแต่สร้าง bucket แต่โดเมน
+> `<bucket>.<region>.cdn.digitaloceanspaces.com` **มีอยู่ก็ต่อเมื่อกด Enable CDN ในแท็บ Settings
+> ของ Space นั้นแล้วเท่านั้น** — ถ้ายังไม่เปิดแล้วตั้งค่าเป็นโดเมนนี้ไว้ก่อน DNS จะหาไม่เจอเลย
+>
+> **สองอาการนี้แยกกันเด็ดขาด อย่าไล่แก้ปนกัน:**
+> | เจอ | แปลว่า | แก้ตรงไหน |
+> |---|---|---|
+> | `403 Forbidden` (เซิร์ฟเวอร์ตอบจริง แค่ปฏิเสธ) | ปัญหาสิทธิ์อ่านไฟล์ — ดูข้อ 2.1 | โค้ด/ACL ของไฟล์ |
+> | `DNS_PROBE_POSSIBLE` / เชื่อมต่อไม่ได้เลย | โดเมนไม่มีอยู่จริง — มักเป็นเพราะยังไม่เปิด CDN | `.env` สองบรรทัดข้างบน |
+>
+> เริ่มด้วยโดเมนต้นทางไปก่อนเสมอ ใช้ได้แน่นอนไม่ต้องเปิดอะไรเพิ่ม — ค่อยเปลี่ยนเป็น `.cdn.`
+> ทีหลังตอนกด Enable CDN แล้วจริงๆ (แก้ทีเดียวสองบรรทัด แล้ว build frontend ใหม่)
 
 ตัวที่เหลือ:
 
@@ -404,6 +418,7 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 | เข้าเว็บได้แต่หลังบ้านล็อกอินแล้วเด้งออก | `CORS_ORIGINS` ไม่มีโดเมนจริง หรือเข้าผ่าน `www.` ที่ไม่ได้ใส่ไว้ |
 | รูปขึ้น 400 ทั้งเว็บ | `NEXT_PUBLIC_IMAGE_BASE_URL` ไม่ตรงกับโฮสต์รูป → ต้อง build ใหม่ |
 | อัปโหลดผ่านแต่รูปเปิดไม่ขึ้น (403) | ไฟล์ค้างจากก่อนแก้เป็น server-upload — ดูข้อ 2.1.1 |
+| อัปโหลดผ่าน รูปเปิดไม่ขึ้น แต่ error เป็น `DNS_PROBE_POSSIBLE`/เชื่อมต่อไม่ได้เลย (ไม่ใช่ 403) | คนละเรื่องกับแถวบน — `NEXT_PUBLIC_IMAGE_BASE_URL`/`S3_PUBLIC_URL` ชี้ไปโดเมน `.cdn.` ที่ยังไม่ได้เปิด CDN ดูข้อ 1 |
 | อัปโหลดปฏิเสธตรงๆ (error ขึ้นทันที) | อ่านข้อความจาก API ตรงๆ — บอกชนิดไฟล์/ขนาด/bucket ต่อไม่ติด |
 | หน้าเว็บไม่อัปเดตหลังกดบันทึก | `REVALIDATE_SECRET` สองฝั่งไม่ตรงกัน |
 | ฟอร์มส่งรายชื่อโดน 429 ทั้งที่คนละคน | `trust proxy` ไม่ทำงาน — Caddy ต้องส่ง `X-Forwarded-For` |
