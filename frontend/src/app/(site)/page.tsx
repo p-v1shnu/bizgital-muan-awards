@@ -157,7 +157,7 @@ export default async function HomePage() {
               (item, index) => (
                 <div
                   key={index}
-                  className={`relative aspect-square overflow-hidden rounded-[var(--radius-sm)] bg-panel-2 ${
+                  className={`group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-panel-2 ${
                     index === 0 ? 'col-span-2 row-span-2' : ''
                   }`}
                 >
@@ -166,6 +166,7 @@ export default async function HomePage() {
                       imageKey={item}
                       alt="ບັນຍາກາດງານ ມ່ວນ ອະວອດ"
                       sizes="(max-width: 768px) 33vw, 200px"
+                      className="transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="size-full border border-dashed border-rule" />
@@ -292,11 +293,19 @@ export default async function HomePage() {
         <Section eyebrow="ບັນຍາກາດ" title="ຄັງພາບ">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
             {gallery.slice(0, 6).map((key) => (
-              <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2">
+              <div
+                key={key}
+                className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-panel-2"
+              >
                 <SiteImage
                   imageKey={key}
                   alt="ບັນຍາກາດງານ ມ່ວນ ອະວອດ"
                   sizes="(max-width: 768px) 50vw, 380px"
+                  className="transition-transform duration-500 group-hover:scale-[1.07]"
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                  aria-hidden
                 />
               </div>
             ))}
