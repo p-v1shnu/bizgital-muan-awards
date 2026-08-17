@@ -1,13 +1,35 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
   IsEmail,
+  IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
+
+/**
+ * One question and its answer on /about. A question with no answer behind it is
+ * refused here rather than stored: on the page it would be a heading that opens
+ * onto nothing, which is worse than the question not being there at all.
+ */
+export class FaqItemDto {
+  @ApiProperty({ example: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  questionLo!: string;
+
+  @ApiProperty({ description: 'One paragraph per line' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
+  answerLo!: string;
+}
 
 /** Evergreen, site-level content — nothing here may name a year (PRD §6.1.1). */
 export class UpdateSiteSettingsDto {
@@ -113,15 +135,14 @@ export class UpdateSiteSettingsDto {
   @MaxLength(60)
   contactPhone?: string | null;
 
-  @ApiPropertyOptional({ description: 'Who may be nominated — the /about FAQ, one paragraph per line' })
+  @ApiPropertyOptional({
+    type: [FaqItemDto],
+    description: 'The whole /about FAQ, in display order. The team writes the questions as well as the answers',
+  })
   @IsOptional()
-  @IsString()
-  @MaxLength(2000)
-  faqEligibilityLo?: string | null;
-
-  @ApiPropertyOptional({ description: 'How the panel is chosen — the /about FAQ, one paragraph per line' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(2000)
-  faqJudgesLo?: string | null;
+  @IsArray()
+  @ArrayMaxSize(40)
+  @ValidateNested({ each: true })
+  @Type(() => FaqItemDto)
+  faq?: FaqItemDto[];
 }

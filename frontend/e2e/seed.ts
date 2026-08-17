@@ -57,11 +57,20 @@ export default async function seed() {
       contactEmail: 'info@muanawards.la',
       contactPhone: '020 5555 5555',
       socialLinks: { facebook: 'https://facebook.com/muanawards' },
-      // The two FAQ answers the team owns. Two paragraphs in the first one, so
-      // the page is checked with more than a single line to lay out.
-      faqEligibilityLo:
-        'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
-      faqJudgesLo: 'ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ ຈາກຄົນທຳງານໃນວົງການ',
+      // The FAQ, questions and all, in the order the team arranged it. The first
+      // answer has two paragraphs, so the page is read with more than one line
+      // to lay out.
+      faq: [
+        {
+          questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+          answerLo:
+            'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
+        },
+        {
+          questionLo: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
+          answerLo: 'ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ ຈາກຄົນທຳງານໃນວົງການ',
+        },
+      ],
     },
   });
 

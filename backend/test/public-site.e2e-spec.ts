@@ -365,30 +365,81 @@ describe('public site', () => {
         .expect(400);
     });
 
-    it('carries the two team-owned FAQ answers, newlines and all', async () => {
-      const eligibility = 'ຄົນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນປີນັ້ນ';
-      await api(h)
-        .put(path('/admin/site'))
-        .set(h.auth)
-        .send({ faqEligibilityLo: eligibility, faqJudgesLo: 'ທີມງານເຊີນເອງ' })
-        .expect(200);
-
-      const response = await api(h).get(path('/site')).expect(200);
-      expect(response.body.data.faqEligibilityLo).toBe(eligibility);
-      expect(response.body.data.faqJudgesLo).toBe('ທີມງານເຊີນເອງ');
-    });
-
     it('takes an emptied field as emptied, not as unchanged', async () => {
       await api(h)
         .put(path('/admin/site'))
         .set(h.auth)
-        .send({ contactEmail: null, contactPhone: null, faqJudgesLo: null })
+        .send({ contactEmail: null, contactPhone: null })
         .expect(200);
 
       const response = await api(h).get(path('/site')).expect(200);
       expect(response.body.data.contactEmail).toBeNull();
       expect(response.body.data.contactPhone).toBeNull();
-      expect(response.body.data.faqJudgesLo).toBeNull();
+    });
+  });
+
+  /**
+   * The team writes the questions as well as the answers, so the list has to
+   * survive the trip in the order it was arranged, and a half-written entry must
+   * not reach the page as a heading that opens onto nothing.
+   */
+  describe('the FAQ the team keeps', () => {
+    it('keeps the entries in the order they were arranged', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          faq: [
+            { questionLo: 'ຖາມກ່ອນ', answerLo: 'ຕອບກ່ອນ\nຫຍໍ້ໜ້າສອງ' },
+            { questionLo: 'ຖາມຫຼັງ', answerLo: 'ຕອບຫຼັງ' },
+          ],
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.faq).toEqual([
+        { questionLo: 'ຖາມກ່ອນ', answerLo: 'ຕອບກ່ອນ\nຫຍໍ້ໜ້າສອງ' },
+        { questionLo: 'ຖາມຫຼັງ', answerLo: 'ຕອບຫຼັງ' },
+      ]);
+    });
+
+    it('drops a row the team added and left blank', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          faq: [
+            { questionLo: '  ຖາມແທ້  ', answerLo: '  ຕອບແທ້  ' },
+            { questionLo: '   ', answerLo: '   ' },
+          ],
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.faq).toEqual([{ questionLo: 'ຖາມແທ້', answerLo: 'ຕອບແທ້' }]);
+    });
+
+    it('refuses a question with no answer behind it', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ faq: [{ questionLo: 'ຖາມລອຍໆ' }] })
+        .expect(400);
+    });
+
+    it('refuses a key it does not know, rather than storing it', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ faq: [{ questionLo: 'ຖາມ', answerLo: 'ຕອບ', answerEn: 'not yet a field' }] })
+        .expect(400);
+    });
+
+    it('empties the list when the team removes the last entry', async () => {
+      await api(h).put(path('/admin/site')).set(h.auth).send({ faq: [] }).expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.faq).toEqual([]);
     });
   });
 

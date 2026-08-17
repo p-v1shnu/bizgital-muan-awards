@@ -365,16 +365,16 @@ model SiteSetting {
   /// page, so a second copy here would only be one more thing to keep in step.
   contactEmail String?
   contactPhone String?
-  /// The two FAQ answers on /about that are the team's own policy rather than a
-  /// description of how the system behaves: who may be nominated, and how the
-  /// panel is chosen. The other three answers stay in the page, because they
-  /// describe rules the code enforces — editable copy there could only ever
-  /// drift into saying something untrue.
+  /// The whole FAQ on /about, in display order: `[{ questionLo, answerLo }]`.
+  /// The team writes the questions as well as the answers and can add or remove
+  /// entries, so a question nobody anticipated does not need a migration — which
+  /// is what the first two attempts at this got wrong, first as hardcoded copy
+  /// and then as one column per question.
   ///
-  /// One paragraph per line, same convention as aboutHistoryLo. Nullable: each
-  /// question keeps its visible placeholder until the team writes the answer.
-  faqEligibilityLo String? @db.Text
-  faqJudgesLo      String? @db.Text
+  /// An answer holds one paragraph per line, same convention as aboutHistoryLo.
+  /// Nullable: /about shows a placeholder rather than an empty accordion, and
+  /// the five entries the page used to hard-code are seeded as the starting set.
+  faq Json?
 
   updatedAt DateTime @updatedAt
 

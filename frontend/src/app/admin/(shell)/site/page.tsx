@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
 import { ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { FaqEditor } from '@/components/admin/faq-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { SiteSettings } from '@/types/api';
+import type { FaqItem, SiteSettings } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -33,12 +34,11 @@ export default function SitePage() {
     heroCaptionLo: '',
     contactEmail: '',
     contactPhone: '',
-    faqEligibilityLo: '',
-    faqJudgesLo: '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
   const [socials, setSocials] = useState<Record<string, string>>({});
+  const [faq, setFaq] = useState<FaqItem[]>([]);
   const [saved, setSaved] = useState(false);
 
   // Seed the form once the settings arrive.
@@ -55,12 +55,11 @@ export default function SitePage() {
       heroCaptionLo: data.heroCaptionLo ?? '',
       contactEmail: data.contactEmail ?? '',
       contactPhone: data.contactPhone ?? '',
-      faqEligibilityLo: data.faqEligibilityLo ?? '',
-      faqJudgesLo: data.faqJudgesLo ?? '',
     });
     setHeroImageKey(data.heroImageKey);
     setGallery(data.galleryImageKeys ?? []);
     setSocials(data.socialLinks ?? {});
+    setFaq(data.faq ?? []);
   }, [data]);
 
   const save = useApiMutation<Record<string, unknown>>('/admin/site', 'PUT', ['/admin/site', '/site']);
@@ -97,8 +96,9 @@ export default function SitePage() {
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
                 contactEmail: emptyToNull(form.contactEmail),
                 contactPhone: emptyToNull(form.contactPhone),
-                faqEligibilityLo: emptyToNull(form.faqEligibilityLo),
-                faqJudgesLo: emptyToNull(form.faqJudgesLo),
+                // An entry the team started and left blank is dropped rather
+                // than refused, so a stray empty row cannot block a save.
+                faq: faq.filter((item) => item.questionLo.trim() && item.answerLo.trim()),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
@@ -183,36 +183,21 @@ export default function SitePage() {
           </Card>
 
           <Card className="xl:col-span-2">
-            <CardHeader title="ຄຳຖາມທີ່ພົບເລື້ອຍ (ໜ້າ /about)" />
+            <CardHeader title="ຄຳຖາມທີ່ພົບເລື້ອຍ (ໜ້າ /about)" aside={`${faq.length} ຂໍ້`} />
             <CardBody>
               <Note>
-                ສອງຄຳຖາມນີ້ເປັນ<b>ນະໂຍບາຍຂອງທີມງານ</b> ຈຶ່ງໃຫ້ແກ້ໄດ້ຈາກບ່ອນນີ້ ·
-                ຄຳຖາມອື່ນໃນລາຍການແມ່ນອະທິບາຍວິທີທຳງານຂອງລະບົບ ຈຶ່ງແກ້ຈາກຫຼັງບ້ານບໍ່ໄດ້
-                ເພື່ອບໍ່ໃຫ້ຂໍ້ຄວາມກັບຄວາມຈິງຕ່າງກັນ
+                ເພີ່ມ ຫຼື ລຶບຄຳຖາມໄດ້ຕາມໃຈ ແລະ ຈັດລຳດັບດ້ວຍລູກສອນ — ໜ້າ /about ຂຶ້ນຕາມລຳດັບນີ້ ·
+                ຂໍ້ໃດເວັ້ນຄຳຖາມ ຫຼື ຄຳຕອບໄວ້ວ່າງ ຂໍ້ນັ້ນຈະບໍ່ຖືກບັນທຶກ
               </Note>
+              {!faq.some((item) => item.questionLo.includes('ຄຸນສົມບັດ')) && (
+                <Note tone="brand">
+                  ສອງຄຳຖາມທີ່ຄົນຖາມເລື້ອຍແຕ່ຍັງບໍ່ມີໃນລາຍການ — ມີແຕ່ທີມງານທີ່ຕອບໄດ້:{' '}
+                  <b>ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?</b> ແລະ{' '}
+                  <b>ຄະນະກຳມະການເລືອກມາແນວໃດ?</b>
+                </Note>
+              )}
               <div className="mt-4">
-                <Field
-                  label="ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?"
-                  hint="— ບໍ່ບັງຄັບ"
-                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ຄຳຖາມນີ້ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
-                >
-                  <Textarea
-                    className="min-h-28"
-                    value={form.faqEligibilityLo}
-                    onChange={(event) => setForm({ ...form, faqEligibilityLo: event.target.value })}
-                  />
-                </Field>
-                <Field
-                  label="ຄະນະກຳມະການເລືອກມາແນວໃດ?"
-                  hint="— ບໍ່ບັງຄັບ"
-                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່"
-                >
-                  <Textarea
-                    className="min-h-28"
-                    value={form.faqJudgesLo}
-                    onChange={(event) => setForm({ ...form, faqJudgesLo: event.target.value })}
-                  />
-                </Field>
+                <FaqEditor items={faq} onChange={setFaq} />
               </div>
             </CardBody>
           </Card>

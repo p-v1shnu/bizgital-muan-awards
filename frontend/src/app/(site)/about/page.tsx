@@ -80,52 +80,6 @@ function paragraphs(value: string | null | undefined) {
     .filter(Boolean);
 }
 
-/** Written by the team, or the placeholder that says it is still waiting. */
-function answer(written: string[], waitingFor: string) {
-  return written.length > 0
-    ? { a: written }
-    : { a: [waitingFor], placeholder: true as const };
-}
-
-function faqFor({
-  hasContact,
-  eligibility,
-  judges,
-}: {
-  hasContact: boolean;
-  eligibility: string[];
-  judges: string[];
-}): {
-  q: string;
-  a: string[];
-  placeholder?: boolean;
-}[] {
-  return [
-    {
-      q: 'ໃຜສາມາດເສີນຊື່ໄດ້?',
-      a: ['ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ'],
-    },
-    {
-      q: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
-      a: ['ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ'],
-    },
-    {
-      q: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
-      ...answer(eligibility, 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ'),
-    },
-    {
-      q: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
-      ...answer(judges, 'ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ'),
-    },
-    {
-      q: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
-      ...(hasContact
-        ? { a: ['ຕິດຕໍ່ທີມງານຕາມຊ່ອງທາງໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້ານີ້'] }
-        : { a: ['ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ'], placeholder: true }),
-    },
-  ];
-}
-
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
   const history = paragraphs(site?.aboutHistoryLo);
@@ -137,11 +91,8 @@ export default async function AboutPage() {
   // One number is dialable; "020 … / 021 …" is not, and a tel: link holding
   // both would silently dial neither, so that case stays as plain text.
   const dialable = phone != null && /^[\d\s+\-().]+$/.test(phone);
-  const faq = faqFor({
-    hasContact: Boolean(email || phone),
-    eligibility: paragraphs(site?.faqEligibilityLo),
-    judges: paragraphs(site?.faqJudgesLo),
-  });
+  // Questions and answers both, in the order the team put them in.
+  const faq = site?.faq ?? [];
 
   return (
     <>
@@ -184,22 +135,29 @@ export default async function AboutPage() {
       </Section>
 
       <Section id="faq" eyebrow="ຄຳຖາມທີ່ພົບເລື້ອຍ" title="FAQ">
-        <div className="max-w-3xl overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
-          {faq.map((item) => (
-            <details key={item.q} className="border-b border-hairline last:border-b-0">
-              <summary className="cursor-pointer list-none px-5 py-4 font-serif text-[19px] text-ink">
-                {item.q}
-              </summary>
-              <div className="space-y-2 px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
-                {item.a.map((paragraph, index) => (
-                  <p key={index}>
-                    {item.placeholder ? <Placeholder>{paragraph}</Placeholder> : paragraph}
-                  </p>
-                ))}
-              </div>
-            </details>
-          ))}
-        </div>
+        {faq.length > 0 ? (
+          <div className="max-w-3xl overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
+            {faq.map((item, position) => (
+              <details
+                key={`${position}-${item.questionLo}`}
+                className="border-b border-hairline last:border-b-0"
+              >
+                <summary className="cursor-pointer list-none px-5 py-4 font-serif text-[19px] text-ink">
+                  {item.questionLo}
+                </summary>
+                <div className="space-y-2 px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
+                  {paragraphs(item.answerLo).map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
+        ) : (
+          <p className="text-[14.5px] leading-relaxed text-ink-2">
+            <Placeholder>ຍັງບໍ່ມີຄຳຖາມ — ເພີ່ມໄດ້ໃນ /admin/site</Placeholder>
+          </p>
+        )}
       </Section>
 
       {/* The form asks for a name and an email, so the page has to say what

@@ -121,6 +121,13 @@ export interface SubmissionGroup {
   entries: SubmissionEntry[];
 }
 
+/** One /about question and its answer, written by the team. */
+export interface FaqItem {
+  questionLo: string;
+  /** One paragraph per line. */
+  answerLo: string;
+}
+
 export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
@@ -136,8 +143,7 @@ export interface SiteSettings {
   aboutHistoryLo: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
-  faqEligibilityLo: string | null;
-  faqJudgesLo: string | null;
+  faq: FaqItem[] | null;
   updatedAt: string;
 }
 

@@ -415,33 +415,31 @@ test('the page says how to reach the team', async ({ page }) => {
   // The team's Facebook page belongs to the footer, and is not repeated here.
   await expect(contact.getByRole('link', { name: /facebook/i })).toHaveCount(0);
   await expect(page.locator('footer').getByRole('link', { name: 'Facebook' })).toBeVisible();
-
-  // And the sponsorship answer stops saying it is waiting for a channel.
-  await expect(page.getByText('ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ')).toHaveCount(0);
 });
 
 /**
- * Two of the FAQ answers are the team's own policy and come from the back
- * office; the other three describe rules the code enforces and stay in the page.
+ * The FAQ is the team's, questions included: the page renders the list it was
+ * given, in the order it was given, and holds no questions of its own.
  */
-test('the FAQ answers the team wrote reach the page', async ({ page }) => {
+test('the FAQ the team wrote reaches the page', async ({ page }) => {
   await page.goto('/about#faq');
   const faq = page.locator('#faq');
 
+  // In the order the seed arranged them, and nothing else in the list.
+  await expect(faq.locator('details summary')).toHaveText([
+    'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+    'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
+  ]);
+
   await faq.getByText('ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?').click();
-  // Both paragraphs of the answer, not just the first line.
-  await expect(faq.getByText('ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ')).toBeVisible();
-  await expect(faq.getByText('ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ')).toBeVisible();
+  // Both paragraphs of the answer, as two paragraphs rather than one run-on.
+  await expect(faq.locator('details').first().locator('p')).toHaveText([
+    'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ',
+    'ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
+  ]);
 
   await faq.getByText('ຄະນະກຳມະການເລືອກມາແນວໃດ?').click();
   await expect(faq.getByText('ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ', { exact: false })).toBeVisible();
-
-  // Nothing in the list is left waiting on the team.
-  await expect(faq.getByText('ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ')).toHaveCount(0);
-
-  // And the answers the code enforces are still the page's own words.
-  await faq.getByText('ໃຜສາມາດເສີນຊື່ໄດ້?').click();
-  await expect(faq.getByText('ບໍ່ຕ້ອງລົງທະບຽນ', { exact: false })).toBeVisible();
 });
 
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
