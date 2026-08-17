@@ -56,30 +56,22 @@ export class StorageService {
       // uploaded 6 MB and storage took it. The eight-megabyte ceiling is only
       // real once the bucket is the one enforcing it.
       //
-      // ACL is here rather than on the bucket. DigitalOcean Spaces has no real
-      // support for an AWS-style bucket policy JSON — `PutBucketPolicy` answers
-      // 403 even with a fully-privileged key — so PRD §10's "readable, not
-      // listable" has to be won per object with a canned ACL instead. A
-      // bucket-level `public-read` ACL was tried first and does the opposite of
-      // what it sounds like: on the S3 permission model that grants both read
-      // *and* ListBucket to everyone, so `GET /` returned every key in the
-      // store — including a nominee's picture before the category announcing
-      // them existed. Confirmed on this bucket, not assumed. The bucket ACL
-      // must stay `private`; only the object gets `public-read` — reading it
-      // still needs the key, which nothing but the site itself hands out.
-      //
-      // Nothing extra is required of the PUT itself: `getSignedUrl` carries
-      // ACL as a plain query parameter on the URL (`x-amz-acl=public-read`,
-      // visible in the ticket), not as a signed header — confirmed by reading
-      // the signed URL, where `X-Amz-SignedHeaders` lists only
-      // `content-length;host`. A browser PUT with no ACL header of its own
-      // still applies it, and one bringing its own value can't override it.
+      // Deliberately no ACL here. It was tried — `getSignedUrl` can carry
+      // `ACL: 'public-read'` as a query parameter on the URL, no header
+      // required from the browser — and it does nothing: DigitalOcean Spaces
+      // silently drops an ACL grant signed by a key scoped to one bucket.
+      // GetObjectAcl on a file uploaded this way showed only the owner, no
+      // AllUsers grant, confirmed against the real bucket. Making it granted
+      // needs a Full Access (all-buckets) key, which is not a key this
+      // process should ever hold — it would reach every other Bizgital
+      // bucket on the same account, not just this one. That grant happens
+      // out of band instead: see scripts/grant-public-read.js and
+      // docs/deployment.md §2.1.
       new PutObjectCommand({
         Bucket: this.bucket,
         Key: key,
         ContentType: contentType,
         ContentLength: sizeBytes,
-        ACL: 'public-read',
       }),
       { expiresIn: 300 },
     );

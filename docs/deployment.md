@@ -136,48 +136,74 @@ Migration รันเองตอน container สตาร์ท (`prisma migr
 
 ### 2.1 สิทธิ์อ่านของ bucket — อ่านได้ แต่ห้าม list
 
-> **⚠️ `docs/storage-policy.json` ใช้ไม่ได้กับ DigitalOcean Spaces** — เขียนไว้ตอนแรกโดย
-> คิดว่า Spaces รองรับ bucket policy JSON แบบ AWS เต็มรูปแบบ ทดสอบจริงแล้ว
-> `PutBucketPolicy` ตอบ **403** แม้ใช้กุญแจสิทธิ์เต็ม (`Full Access`) — Spaces ใช้ระบบ
-> **canned ACL** แบบ S3 ยุคเก่าแทน ไม่ใช่ policy JSON ขั้นตอนข้างล่างนี้คือของจริงที่ใช้ได้
+> **⚠️ `docs/storage-policy.json` ใช้ไม่ได้กับ DigitalOcean Spaces เลย** — เขียนไว้ตอนแรกโดย
+> คิดว่า Spaces รองรับ bucket policy JSON แบบ AWS เต็มรูปแบบ ทดสอบจริงแล้ว `PutBucketPolicy`
+> ตอบ **403** แม้ใช้กุญแจสิทธิ์เต็ม (ไฟล์นี้ยังใช้ได้กับ MinIO ที่เครื่องพัฒนา — ดู
+> `docker-compose.local.yml`)
 
-โค้ด (`storage.service.ts`) ตั้ง `ACL: 'public-read'` ให้**ทุกไฟล์เดี่ยว**ตอนเซ็น URL อัปโหลด
-อยู่แล้ว — งานที่เหลือของคุณมีแค่อย่างเดียวคือ **ยืนยันว่า bucket เองไม่ใช่ `public-read`**
+**สามอย่างที่ลองแล้วไม่ได้ผล บนเซิร์ฟเวอร์จริง ก่อนจะเจอของจริง:**
+
+| ลองแล้ว | ผล |
+|---|---|
+| `PutBucketPolicy` (policy JSON) | ❌ 403 ทุกครั้ง แม้กุญแจสิทธิ์เต็ม |
+| ให้กุญแจของแอปเอง (Read/Write/Delete) ตั้ง ACL ให้ไฟล์ตอนอัปโหลด | ❌ Spaces เงียบๆ ไม่ยอมให้ ACL นั้นมีผล — อัปโหลดผ่าน (200) แต่ไฟล์ยังอ่านไม่ได้ |
+| bucket ACL `public-read` (ทั้งถัง) | ❌ ให้แค่สิทธิ์ **list** ไม่ได้ทำให้ไฟล์แต่ละไฟล์อ่านได้เลย — และเปิดช่องให้ไล่ดูไฟล์ทั้งหมดด้วย |
+
+**bucket ACL ต้องเป็น `private` เสมอ** — ไม่ช่วยเรื่องอ่านไฟล์ มีแต่จะเปิดความเสี่ยงเรื่อง list
+
+**สิ่งเดียวที่ทำให้ไฟล์อ่านได้จริงคือ object ACL รายไฟล์ ตั้งด้วยกุญแจสิทธิ์เต็มเท่านั้น**
+— Spaces ไม่มีกุญแจแบบ "สิทธิ์เต็มแต่จำกัด bucket เดียว" ให้เลือก (เช็กแล้วในหน้าเว็บ มีแค่
+Read / Read-Write-Delete ต่อ bucket) มีแต่ **All Buckets (Full Access)** ซึ่งคุมได้ทุก bucket
+ในบัญชี **จึงห้ามฝังกุญแจนี้ไว้ในแอปที่รันอยู่ตลอดเวลา** — ถ้าเซิร์ฟเวอร์นี้โดนเจาะ กุญแจจะพาไปถึง
+bucket ของระบบอื่นในออฟฟิศด้วย ไม่ใช่แค่ของ Muan Awards
+
+**ทางที่ใช้จริง — แยกกุญแจสิทธิ์เต็มไว้นอกแอปเลย** ด้วย `scripts/grant-public-read.js` (อยู่ใน
+backend, build ติดไปกับ image แล้ว) เป็นสคริปต์เดียวที่ถือกุญแจนี้ ไม่เขียนไว้ใน `.env` หรือ
+`docker-compose.yml` — รับกุญแจจากบรรทัดคำสั่งตอนรันเท่านั้น
+
+**ตั้งครั้งเดียว:**
+
+1. สร้างกุญแจใหม่ตั้งชื่อให้รู้จุดประสงค์ เช่น `muan-awards-acl-sweep` แบบ **All Buckets (Full Access)**
+2. เก็บไว้ในไฟล์แยกต่างหาก **นอกโฟลเดอร์ repo** ให้ root อ่านได้คนเดียว:
+   ```bash
+   sudo install -m 600 /dev/null /root/.muan-spaces-admin.env
+   sudo tee /root/.muan-spaces-admin.env > /dev/null <<'EOF'
+   S3_ADMIN_ACCESS_KEY=<access key ตัวใหม่>
+   S3_ADMIN_SECRET_KEY=<secret ตัวใหม่>
+   EOF
+   ```
+3. ทดสอบรันครั้งแรกด้วยมือ (ไล่ทุกไฟล์ในถัง ให้สิทธิ์ไฟล์ที่ยังไม่มี):
+   ```bash
+   cd /home/automation-hub-sgp01/muan-awards
+   set -a && . /root/.muan-spaces-admin.env && set +a
+   docker compose exec -T \
+     -e S3_ADMIN_ACCESS_KEY -e S3_ADMIN_SECRET_KEY \
+     backend node scripts/grant-public-read.js
+   ```
+   คาดหวัง: `done — granted N, already public M, failed 0`
+4. ตั้ง cron ให้รันทุก 5 นาที (ไฟล์ใหม่จะอ่านได้ภายในไม่กี่นาทีหลังทีมอัปโหลด ไม่ใช่ทันที):
+   ```bash
+   sudo crontab -e
+   ```
+   ```cron
+   */5 * * * *  cd /home/automation-hub-sgp01/muan-awards && set -a && . /root/.muan-spaces-admin.env && set +a && docker compose exec -T -e S3_ADMIN_ACCESS_KEY -e S3_ADMIN_SECRET_KEY backend node scripts/grant-public-read.js >> /var/log/muan-grant-public-read.log 2>&1
+   ```
+
+**ยืนยันว่าทำงาน:**
 
 ```bash
-# ต้องได้ 403 (หรืออะไรก็ตามที่ไม่ใช่ 200) — ไม่มีใครควร list ทั้งถังได้
-curl -s -o /dev/null -w "list ทั้งถัง  %{http_code}\n" "https://<bucket>.<region>.digitaloceanspaces.com/"
-```
-
-**ถ้าได้ 200 พร้อม `<ListBucketResult>`** — bucket ถูกตั้งเป็น public เต็มรูปแบบ (ผ่านปุ่มในหน้าเว็บ
-DO หรือ `PutBucketAcl` ระดับถัง) ต้องปิดด้วยกุญแจแบบ **Full Access ชั่วคราว** (กุญแจของแอปทำไม่ได้
-— นั่นคือจุดประสงค์):
-
-```bash
-docker compose exec -T -e ADMIN_KEY='<full-access key>' -e ADMIN_SECRET='<secret>' \
-  backend node -e "
-const S = require('@aws-sdk/client-s3');
-new S.S3Client({ region: process.env.S3_REGION, endpoint: process.env.S3_ENDPOINT, forcePathStyle: true,
-  credentials: { accessKeyId: process.env.ADMIN_KEY, secretAccessKey: process.env.ADMIN_SECRET } })
- .send(new S.PutBucketAclCommand({ Bucket: process.env.S3_BUCKET, ACL: 'private' }))
- .then(() => console.log('bucket -> private ✓'))
- .catch(e => console.log('ERR', e.name));
-"
-```
-
-แล้วลบกุญแจ Full Access ตัวนั้นทิ้งทันที — ใช้ครั้งเดียวตอนตั้งค่า ไม่ใช่ของที่ต้องเก็บไว้
-
-```bash
-# ยืนยันอีกรอบ: list ต้องปิด, รูปที่มีจริงยังอ่านได้
-curl -s -o /dev/null -w "list  %{http_code}\n" "https://<bucket>.<region>.digitaloceanspaces.com/"
-curl -s -o /dev/null -w "รูป   %{http_code}\n" "https://<bucket-url>/site/<ไฟล์ที่มีจริง>.png"
+tail -5 /var/log/muan-grant-public-read.log
+curl -s -o /dev/null -w "list ทั้งถัง (ต้องไม่ใช่ 200)  %{http_code}\n" "https://<bucket>.<region>.digitaloceanspaces.com/"
+curl -s -o /dev/null -w "รูปที่มีจริง (ต้องได้ 200)      %{http_code}\n" "https://<bucket-url>/site/<key ที่มีจริง>.jpg"
 ```
 
 > **ทำไมต้องห้าม list:** ทีมอัปโหลดรูปผู้ชนะ **ก่อน**ประกาศผลเสมอ (นั่นคือวิธีทำงานตามข้อ 4.1)
 > ถ้า bucket ยอมให้ list ใครก็ตามไล่ดูไฟล์ทั้งหมดได้ → รู้ผลก่อนประกาศ ทั้งที่ API กันไว้อย่างดีแล้ว
-> — เจอเรื่องนี้จริงตอน deploy: กด `PutBucketAcl` เป็น `public-read` **ระดับถัง** เพื่อแก้เรื่องอ่าน
-> รูปไม่ได้ กลับกลายเป็นเปิด listing ไปด้วยโดยไม่ได้ตั้งใจ — `public-read` บนถังทั้งใบให้ทั้งอ่าน
-> **และ** list พร้อมกันในรุ่น ACL แบบเดิม ต่างจากการให้สิทธิ์เฉพาะไฟล์
+> — bucket ACL อยู่ที่ `private` เสมอ กันเรื่องนี้ไว้ได้แน่นอน เพราะการให้สิทธิ์อ่านตอนนี้ทำที่ระดับ
+> ไฟล์ ไม่ใช่ระดับถัง
+
+> **กุญแจทดลองที่ใช้ตอน debug ปัญหานี้ (ชื่อ `muan-setup-temp` หรือคล้ายกัน) ลบทิ้งได้แล้ว**
+> ตอนนี้มีกุญแจตัวใหม่ที่ตั้งชื่อไว้ชัดเจน เก็บแยกไว้ใช้เฉพาะงานนี้แทนแล้ว
 
 ---
 

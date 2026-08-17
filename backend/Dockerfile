@@ -23,6 +23,7 @@ COPY prisma ./prisma
 RUN npm ci --omit=dev && npx prisma generate && npm cache clean --force
 
 COPY --from=builder /app/dist ./dist
+COPY scripts ./scripts
 
 USER node
 EXPOSE 3001
