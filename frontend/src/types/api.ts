@@ -127,7 +127,10 @@ export interface SiteSettings {
   heroCaptionLo: string | null;
   heroTitleLo: string;
   brandStatementLo: string;
+  aboutTitleLo: string;
   aboutSummaryLo: string;
+  ctaTitleLo: string;
+  ctaBodyLo: string;
   galleryImageKeys: string[] | null;
   updatedAt: string;
 }

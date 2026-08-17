@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ClipboardList, Gavel, Megaphone, Trophy } from 'lucide-react';
+import { ArrowRight, ClipboardList, Gavel, Megaphone, Trophy } from 'lucide-react';
 
-import { ActionLink, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
+import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
@@ -126,18 +126,29 @@ export default async function HomePage() {
       </section>
 
       {/* 3 — what this is */}
-      <Section eyebrow="ກ່ຽວກັບງານ" title="ມ່ວນ ອະວອດ ຄືຫຍັງ">
+      <Section>
         <div className="grid gap-8 md:grid-cols-[1.1fr_1fr] md:items-center">
           <div>
+            <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
+              ກ່ຽວກັບງານ
+            </p>
+            <h2 className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
+              {site?.aboutTitleLo || 'ມ່ວນ ອະວອດ ຄືຫຍັງ'}
+            </h2>
+            <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
             <p className="text-[15px] leading-[1.85] text-ink-2">
               {site?.aboutSummaryLo || (
                 <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
               )}
             </p>
             <div className="mt-6">
-              <ActionLink href="/about" tone="quiet">
+              <Link
+                href="/about"
+                className="inline-flex items-center gap-1.5 border-b-[1.5px] border-brand pb-px text-[13.5px] font-semibold text-ink hover:text-brand-deep"
+              >
                 ອ່ານເພີ່ມ
-              </ActionLink>
+                <ArrowRight className="size-3.5" />
+              </Link>
             </div>
           </div>
 
@@ -177,16 +188,30 @@ export default async function HomePage() {
           >
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {featuredWinners.map((category) => (
-                <div key={category.id}>
-                  <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">
-                    {category.nameLo}
-                  </p>
-                  <CreatorCard
-                    creator={category.winner}
-                    isWinner
-                    href={`/creators/${category.winner.slug}`}
-                  />
-                </div>
+                <Link
+                  key={category.id}
+                  href={`/creators/${category.winner.slug}`}
+                  className="group block overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden bg-panel-2">
+                    <SiteImage
+                      imageKey={category.winner.avatarKey}
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
+                      className="transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="px-3.5 pb-4 pt-3.5">
+                    <p className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-ink-3">
+                      {category.nameLo}
+                    </p>
+                    <p className="mt-1 font-serif text-lg leading-tight text-ink">
+                      {category.winner.nameLo}
+                    </p>
+                    {category.winner.nameEn && (
+                      <p className="mt-0.5 text-[11.5px] text-ink-3">{category.winner.nameEn}</p>
+                    )}
+                  </div>
+                </Link>
               ))}
             </div>
             <div className="mt-8">
@@ -200,13 +225,13 @@ export default async function HomePage() {
 
       {/* 5 — running totals, counted from the data */}
       {stats && (
-        <Section className="py-10 md:py-12">
-          <dl className="grid grid-cols-3 divide-x divide-rule rounded-[var(--radius-box)] border border-rule bg-panel">
+        <section className="bg-ink py-11">
+          <dl className="mx-auto grid max-w-6xl grid-cols-3 gap-7 px-5">
             <Stat value={stats.years} label="ປີການປະກວດ" />
             <Stat value={stats.categories} label="ສາຂາລາງວັນ" />
             <Stat value={stats.creators} label="ຜູ້ສ້າງສັນທີ່ເຂົ້າຊິງ" />
           </dl>
-        </Section>
+        </section>
       )}
 
       {/* 6 — how it is judged, which stands in for a per-year judge list */}
@@ -291,28 +316,32 @@ export default async function HomePage() {
       )}
 
       {/* 9 — closing call to action */}
-      <Section className="pb-20">
-        <div className="rounded-[var(--radius-box)] border border-brand-edge bg-brand-soft px-6 py-10 text-center md:px-12">
-          <h2 className="font-serif text-3xl text-ink md:text-4xl">ຮູ້ຈັກຜູ້ສ້າງສັນທີ່ຄູ່ຄວນບໍ?</h2>
-          <p className="mx-auto mt-3 max-w-md text-[14.5px] leading-relaxed text-ink-2">
-            ສົ່ງຊື່ເຂົ້າມາໄດ້ ບໍ່ຈຳເປັນຕ້ອງບອກຊື່ຜູ້ສົ່ງ
+      <section className="border-y border-rule bg-panel px-5 py-14 text-center md:py-16">
+        <div className="mx-auto max-w-2xl">
+          <h2 className="font-serif text-[clamp(26px,3.6vw,38px)] text-ink">
+            {site?.ctaTitleLo || 'ຮູ້ຈັກຜູ້ສ້າງສັນທີ່ຄູ່ຄວນບໍ?'}
+          </h2>
+          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-ink-2">
+            {site?.ctaBodyLo || 'ສົ່ງຊື່ເຂົ້າມາໄດ້ ບໍ່ຈຳເປັນຕ້ອງບອກຊື່ຜູ້ສົ່ງ'}
           </p>
           <div className="mt-6 flex justify-center">
             <ActionLink href="/submit">ສົ່ງລາຍຊື່</ActionLink>
           </div>
         </div>
-      </Section>
+      </section>
     </>
   );
 }
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div className="px-4 py-6 text-center">
+    <div className="border-l border-white/15 pl-4 md:pl-5">
       <dt className="sr-only">{label}</dt>
       <dd>
-        <span className="block font-serif text-4xl leading-none text-ink">{value}</span>
-        <span className="mt-1.5 block text-[12px] text-ink-2">{label}</span>
+        <span className="block font-serif text-[clamp(32px,5vw,56px)] leading-none text-white tabular-nums">
+          {value}
+        </span>
+        <span className="mt-2 block text-[13px] text-white/60">{label}</span>
       </dd>
     </div>
   );

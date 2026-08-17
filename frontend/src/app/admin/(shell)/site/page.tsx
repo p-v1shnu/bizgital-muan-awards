@@ -23,7 +23,10 @@ export default function SitePage() {
   const [form, setForm] = useState({
     heroTitleLo: '',
     brandStatementLo: '',
+    aboutTitleLo: '',
     aboutSummaryLo: '',
+    ctaTitleLo: '',
+    ctaBodyLo: '',
     heroCaptionLo: '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
@@ -36,7 +39,10 @@ export default function SitePage() {
     setForm({
       heroTitleLo: data.heroTitleLo ?? '',
       brandStatementLo: data.brandStatementLo ?? '',
+      aboutTitleLo: data.aboutTitleLo ?? '',
       aboutSummaryLo: data.aboutSummaryLo ?? '',
+      ctaTitleLo: data.ctaTitleLo ?? '',
+      ctaBodyLo: data.ctaBodyLo ?? '',
       heroCaptionLo: data.heroCaptionLo ?? '',
     });
     setHeroImageKey(data.heroImageKey);
@@ -69,7 +75,10 @@ export default function SitePage() {
               {
                 heroTitleLo: form.heroTitleLo,
                 brandStatementLo: form.brandStatementLo,
+                aboutTitleLo: form.aboutTitleLo,
                 aboutSummaryLo: form.aboutSummaryLo,
+                ctaTitleLo: form.ctaTitleLo,
+                ctaBodyLo: form.ctaBodyLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
@@ -98,12 +107,39 @@ export default function SitePage() {
                   onChange={(event) => setForm({ ...form, brandStatementLo: event.target.value })}
                 />
               </Field>
+              <Field label="ຫົວຂໍ້ສ່ວນ “ເກີ່ຍວກັບງານ”" help="ຫົວຂໍ້ໃຫຍ່ຂອງໜ້າແຮກ ກ່ອນຫຍໍ້ໜ້າແນະນຳງານ">
+                <Input
+                  required
+                  value={form.aboutTitleLo}
+                  onChange={(event) => setForm({ ...form, aboutTitleLo: event.target.value })}
+                />
+              </Field>
               <Field label="ຫຍໍ້ໜ້າແນະນຳງານ" help="ຫຍໍ້ໜ້າສັ້ນໆ ຂຶ້ນໜ້າແຮກ ແລະ ຫົວໜ້າ “ກ່ຽວກັບ”">
                 <Textarea
                   required
                   className="min-h-32"
                   value={form.aboutSummaryLo}
                   onChange={(event) => setForm({ ...form, aboutSummaryLo: event.target.value })}
+                />
+              </Field>
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader title="ຂໍ້ຄວາມ CTA ປິດທ້າຍໜ້າແຮກ" />
+            <CardBody>
+              <Field label="ຫົວຂໍ້" help="ຫົວຂໍ້ໃຫຍ່ ກ່ອນປຸ່ມ “ສົ່ງລາຍຊື່” ໃນທ້າຍໜ້າແຮກ">
+                <Input
+                  required
+                  value={form.ctaTitleLo}
+                  onChange={(event) => setForm({ ...form, ctaTitleLo: event.target.value })}
+                />
+              </Field>
+              <Field label="ຄຳອະທິບາຍ">
+                <Textarea
+                  required
+                  value={form.ctaBodyLo}
+                  onChange={(event) => setForm({ ...form, ctaBodyLo: event.target.value })}
                 />
               </Field>
             </CardBody>

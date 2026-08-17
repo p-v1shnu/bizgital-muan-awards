@@ -39,6 +39,12 @@ export class UpdateSiteSettingsDto {
   @MaxLength(400)
   brandStatementEn?: string;
 
+  @ApiPropertyOptional({ description: 'Heading of the homepage "what this is" section' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  aboutTitleLo?: string;
+
   @ApiPropertyOptional({ description: 'Short about paragraph shown on the homepage' })
   @IsOptional()
   @IsString()
@@ -50,6 +56,18 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(2000)
   aboutSummaryEn?: string;
+
+  @ApiPropertyOptional({ description: 'Heading of the homepage closing call-to-action' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  ctaTitleLo?: string;
+
+  @ApiPropertyOptional({ description: 'Body text of the homepage closing call-to-action' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  ctaBodyLo?: string;
 
   @ApiPropertyOptional({ type: [String], description: 'Homepage gallery, in display order' })
   @IsOptional()

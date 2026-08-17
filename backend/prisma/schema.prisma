@@ -335,8 +335,15 @@ model SiteSetting {
   heroTitleLo      String  @default("ມ່ວນ ອະວອດ")
   brandStatementLo String  @db.Text
   brandStatementEn String? @db.Text
+  /// Heading of the homepage's "what this is" section. Same hardcode-then-ask
+  /// history as heroTitleLo above.
+  aboutTitleLo     String  @default("ມ່ວນ ອະວອດ ຄືຫຍັງ")
   aboutSummaryLo   String  @db.Text
   aboutSummaryEn   String? @db.Text
+  /// Heading + body of the homepage's closing call-to-action, just above the
+  /// "ສົ່ງລາຍຊື່" button. Same story again.
+  ctaTitleLo       String  @default("ຮູ້ຈັກຜູ້ສ້າງສັນທີ່ຄູ່ຄວນບໍ?")
+  ctaBodyLo        String  @default("ສົ່ງຊື່ເຂົ້າມາໄດ້ ບໍ່ຈຳເປັນຕ້ອງບອກຊື່ຜູ້ສົ່ງ")
   galleryImageKeys Json?
 
   updatedAt DateTime @updatedAt
