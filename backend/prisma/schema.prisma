@@ -360,9 +360,9 @@ model SiteSetting {
   /// sponsorship. Nullable: the box shows an explicit placeholder until at
   /// least one channel is filled in.
   ///
-  /// The team's own Facebook page is deliberately not a third column here —
-  /// the contact box links the one already in socialLinks, so there is a single
-  /// place to change it rather than two that can drift apart.
+  /// An address and a number, and deliberately no third column for the team's
+  /// Facebook page: socialLinks above already puts it in the footer of every
+  /// page, so a second copy here would only be one more thing to keep in step.
   contactEmail String?
   contactPhone String?
 

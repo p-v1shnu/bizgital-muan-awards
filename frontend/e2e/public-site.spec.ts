@@ -412,8 +412,9 @@ test('the page says how to reach the team', async ({ page }) => {
     'href',
     'tel:02055555555',
   );
-  // The Facebook page is the footer's, not a second copy of it.
-  await expect(contact.getByRole('link', { name: 'facebook.com/muanawards' })).toBeVisible();
+  // The team's Facebook page belongs to the footer, and is not repeated here.
+  await expect(contact.getByRole('link', { name: /facebook/i })).toHaveCount(0);
+  await expect(page.locator('footer').getByRole('link', { name: 'Facebook' })).toBeVisible();
 
   // And the sponsorship answer stops saying it is waiting for a channel.
   await expect(page.getByText('ລໍຖ້າຊ່ອງທາງຕິດຕໍ່ຈາກທີມງານ')).toHaveCount(0);

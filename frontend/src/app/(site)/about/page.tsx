@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
+import { Mail, Phone } from 'lucide-react';
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
+import { cn } from '@/lib/utils';
 import { getPublic } from '@/lib/api/server';
 import type { SiteSettings } from '@/types/api';
 
@@ -20,6 +22,56 @@ export const metadata: Metadata = {
  * itself rather than sitting there as a placeholder above a filled-in contact
  * box saying the opposite.
  */
+
+/**
+ * One way to reach the team. Same shape as the entry cards under the homepage
+ * hero — brand-soft icon, eyebrow, then the value itself in the serif — rather
+ * than a bare label-and-value row, which is what this section used to be.
+ *
+ * Renders as a link when there is something to open and as a plain panel when
+ * there is not: a phone field holding two numbers cannot become one tel:.
+ */
+function Channel({
+  icon: Icon,
+  label,
+  value,
+  href,
+}: {
+  icon: typeof Mail;
+  label: string;
+  value: string;
+  href?: string;
+}) {
+  const inner = (
+    <>
+      <span className="grid size-11 shrink-0 place-items-center rounded-full border border-brand-edge bg-brand-soft text-brand-deep">
+        <Icon className="size-[18px]" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
+          {label}
+        </span>
+        <span
+          className="mt-1 block break-words font-serif text-[19px] leading-snug text-ink"
+          dir="ltr"
+        >
+          {value}
+        </span>
+      </span>
+    </>
+  );
+
+  const shell =
+    'flex min-w-[240px] flex-1 items-center gap-4 rounded-[var(--radius-box)] border border-rule bg-panel p-5';
+
+  return href ? (
+    <a href={href} className={cn(shell, 'transition-colors hover:border-ink-3')}>
+      {inner}
+    </a>
+  ) : (
+    <div className={shell}>{inner}</div>
+  );
+}
 function faqFor({ hasContact }: { hasContact: boolean }): {
   q: string;
   a: string;
@@ -62,16 +114,14 @@ export default async function AboutPage() {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  // How to reach the team. The Facebook page comes from the footer's social
-  // links rather than a field of its own, so the team enters it once.
+  // How to reach the team: an address and a number. The team's Facebook page is
+  // not repeated here — the footer already carries it on every page.
   const email = site?.contactEmail?.trim() || null;
   const phone = site?.contactPhone?.trim() || null;
-  const facebook = site?.socialLinks?.facebook?.trim() || null;
   // One number is dialable; "020 … / 021 …" is not, and a tel: link holding
   // both would silently dial neither, so that case stays as plain text.
   const dialable = phone != null && /^[\d\s+\-().]+$/.test(phone);
-  const contacts = [email, phone, facebook].filter(Boolean);
-  const faq = faqFor({ hasContact: contacts.length > 0 });
+  const faq = faqFor({ hasContact: Boolean(email || phone) });
 
   return (
     <>
@@ -205,61 +255,30 @@ export default async function AboutPage() {
       </Section>
 
       <Section id="contact" eyebrow="ຕິດຕໍ່" title="ຕິດຕໍ່ທີມງານ" className="pb-20">
-        <div
-          id="sponsor"
-          className="max-w-2xl rounded-[var(--radius-box)] border border-rule bg-panel p-6"
-        >
-          {contacts.length > 0 ? (
-            <dl className="grid gap-2.5 text-[14.5px] leading-relaxed text-ink-2">
+        <div id="sponsor" className="max-w-3xl">
+          {email != null || phone != null ? (
+            <div className="flex flex-wrap gap-4">
               {email != null && (
-                <div className="flex flex-wrap items-baseline gap-x-3">
-                  <dt className="w-28 shrink-0 text-ink-3">ອີເມວ</dt>
-                  <dd>
-                    <a href={`mailto:${email}`} className="text-brand-deep underline">
-                      {email}
-                    </a>
-                  </dd>
-                </div>
+                <Channel icon={Mail} label="ອີເມວ" value={email} href={`mailto:${email}`} />
               )}
               {phone != null && (
-                <div className="flex flex-wrap items-baseline gap-x-3">
-                  <dt className="w-28 shrink-0 text-ink-3">ເບີໂທ</dt>
-                  <dd dir="ltr">
-                    {dialable ? (
-                      <a
-                        href={`tel:${phone.replace(/[^\d+]/g, '')}`}
-                        className="text-brand-deep underline"
-                      >
-                        {phone}
-                      </a>
-                    ) : (
-                      phone
-                    )}
-                  </dd>
-                </div>
+                <Channel
+                  icon={Phone}
+                  label="ເບີໂທ"
+                  value={phone}
+                  href={dialable ? `tel:${phone.replace(/[^\d+]/g, '')}` : undefined}
+                />
               )}
-              {facebook != null && (
-                <div className="flex flex-wrap items-baseline gap-x-3">
-                  <dt className="w-28 shrink-0 text-ink-3">ເພຈ Facebook</dt>
-                  <dd>
-                    <a
-                      href={facebook}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-brand-deep underline"
-                    >
-                      {facebook.replace(/^https?:\/\//, '')}
-                    </a>
-                  </dd>
-                </div>
-              )}
-            </dl>
+            </div>
           ) : (
             <p className="text-[14.5px] leading-relaxed text-ink-2">
-              <Placeholder>ອີເມວ / ເບີໂທ / ເພຈ Facebook — ລໍຖ້າຂໍ້ມູນຈາກທີມງານ</Placeholder>
+              <Placeholder>ອີເມວ / ເບີໂທ — ລໍຖ້າຂໍ້ມູນຈາກທີມງານ</Placeholder>
             </p>
           )}
-          <div className="mt-5">
+          <p className="mt-6 text-[14.5px] leading-relaxed text-ink-2">
+            ຢາກເສີນຊື່ຜູ້ສ້າງສັນ? ບໍ່ຕ້ອງຕິດຕໍ່ທີມງານ ສົ່ງຜ່ານຟອມໄດ້ເລີຍ
+          </p>
+          <div className="mt-4">
             <ActionLink href="/submit" tone="quiet">
               ສົ່ງລາຍຊື່
             </ActionLink>
