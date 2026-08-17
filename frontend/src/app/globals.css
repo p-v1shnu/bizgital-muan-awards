@@ -59,6 +59,13 @@
   background-image: linear-gradient(90deg, #f9b8d5, #e897c9 46%, #c896d8);
 }
 
+/* A section divider, borrowed from woven Lao textile motifs (docs/design/home.html). */
+@utility weave {
+  background-image:
+    repeating-linear-gradient(45deg, var(--color-brand-edge) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(-45deg, var(--color-brand-edge) 0 2px, transparent 2px 9px);
+}
+
 @layer base {
   html {
     background-color: var(--color-paper);

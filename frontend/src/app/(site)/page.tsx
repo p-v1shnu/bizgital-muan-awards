@@ -80,7 +80,6 @@ export default async function HomePage() {
 
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-6xl px-5 pb-28 md:pb-32">
-              <div className="foil mb-5 h-[3px] w-20 rounded-sm" aria-hidden />
               <h1 className="max-w-2xl font-serif text-4xl leading-[1.1] text-white md:text-6xl">
                 {site?.heroTitleLo || 'ມ່ວນ ອະວອດ'}
               </h1>
@@ -169,31 +168,34 @@ export default async function HomePage() {
 
       {/* 4 — the latest winners, which swap themselves when a new year announces */}
       {featuredWinners.length > 0 && latestWinners && (
-        <Section
-          eyebrow={`ຜູ້ຊະນະປີ ${latestWinners.year}`}
-          title="ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ"
-          className="bg-panel-2/50"
-        >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {featuredWinners.map((category) => (
-              <div key={category.id}>
-                <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">
-                  {category.nameLo}
-                </p>
-                <CreatorCard
-                  creator={category.winner}
-                  isWinner
-                  href={`/creators/${category.winner.slug}`}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="mt-8">
-            <ActionLink href={`/awards/${latestWinners.slug}`} tone="quiet">
-              ເບິ່ງຜົນທັງໝົດປີ {latestWinners.year}
-            </ActionLink>
-          </div>
-        </Section>
+        <>
+          <div className="weave h-3 border-y border-rule bg-panel-2" aria-hidden />
+          <Section
+            eyebrow={`ຜູ້ຊະນະປີ ${latestWinners.year}`}
+            title="ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ"
+            className="bg-panel-2/50"
+          >
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredWinners.map((category) => (
+                <div key={category.id}>
+                  <p className="mb-2 text-center text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">
+                    {category.nameLo}
+                  </p>
+                  <CreatorCard
+                    creator={category.winner}
+                    isWinner
+                    href={`/creators/${category.winner.slug}`}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="mt-8">
+              <ActionLink href={`/awards/${latestWinners.slug}`} tone="quiet">
+                ເບິ່ງຜົນທັງໝົດປີ {latestWinners.year}
+              </ActionLink>
+            </div>
+          </Section>
+        </>
       )}
 
       {/* 5 — running totals, counted from the data */}
