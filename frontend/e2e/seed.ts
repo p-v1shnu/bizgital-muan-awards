@@ -243,9 +243,15 @@ export default async function seed() {
       headers: auth,
       data: { judgeId, role: 'CHAIR' },
     });
+    // The tier is a row of this year's own now, so it is created before the
+    // logo that sits under it — there is no enum value to fall back on.
+    const tier = await api.post(`admin/editions/${editionId}/sponsor-tiers`, {
+      headers: auth,
+      data: { nameLo: 'ຜູ້ສະໜັບສະໜູນຫຼັກ' },
+    });
     await api.post(`admin/editions/${editionId}/sponsors`, {
       headers: auth,
-      data: { name: 'Beerlao', tier: 'TITLE' },
+      data: { name: 'Beerlao', tierId: (await tier.json()).data.id },
     });
 
     for (const phase of ['PUBLISHED', 'NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED']) {

@@ -41,15 +41,6 @@ enum JudgeRole {
   MEMBER
 }
 
-enum SponsorTier {
-  TITLE
-  GOLD
-  SILVER
-  SUPPORTER
-  PARTNER
-  MEDIA
-}
-
 enum SubmissionStatus {
   PENDING
   ACCEPTED
@@ -116,9 +107,10 @@ model Edition {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  categories Category[]
-  judges     EditionJudge[]
-  sponsors   EditionSponsor[]
+  categories   Category[]
+  judges       EditionJudge[]
+  sponsors     EditionSponsor[]
+  sponsorTiers EditionSponsorTier[]
 
   @@index([phase, year])
   @@map("editions")
@@ -229,19 +221,47 @@ model EditionJudge {
   @@map("edition_judges")
 }
 
+/// The headings the sponsor logos sit under on the year page — "ລະດັບຄຳ" and
+/// the rest. Six of them used to be an enum, which meant the words were in the
+/// code and the set was the developer's: a year that sold a tier the list did
+/// not have could not say so, and renaming one was a deploy.
+///
+/// Per-edition rather than site-wide, for the same reason Category is: what a
+/// year sells changes with the year, and a rename must not rewrite the history
+/// of the years already published.
+model EditionSponsorTier {
+  id        String @id @default(cuid())
+  editionId String
+
+  nameLo    String
+  sortOrder Int    @default(0)
+
+  edition  Edition          @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  sponsors EditionSponsor[]
+
+  @@unique([editionId, nameLo])
+  @@index([editionId, sortOrder])
+  @@map("edition_sponsor_tiers")
+}
+
 model EditionSponsor {
   id        String @id @default(cuid())
   editionId String
 
+  /// Restrict, not Cascade: dropping a tier must not silently take the logos
+  /// with it. SponsorTiersService refuses while the tier still holds any, and
+  /// says how many are in the way.
+  tierId String
+
   name       String
   logoKey    String?
   websiteUrl String?
-  tier       SponsorTier @default(SUPPORTER)
-  sortOrder  Int         @default(0)
+  sortOrder  Int     @default(0)
 
-  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  edition Edition            @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  tier    EditionSponsorTier @relation(fields: [tierId], references: [id], onDelete: Restrict)
 
-  @@index([editionId, tier, sortOrder])
+  @@index([editionId, tierId, sortOrder])
   @@map("edition_sponsors")
 }
 

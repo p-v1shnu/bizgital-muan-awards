@@ -10,7 +10,7 @@ import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrDraft, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
-import type { Edition, SponsorTier } from '@/types/api';
+import type { Edition } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
 import { formatDate, formatDateTime } from '@/lib/dates';
 
@@ -45,14 +45,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 /** How many winner rows show before the rest fold away (PRD §7.6). */
 const WINNER_ROWS = 12;
 
-const TIER_LABEL: Record<SponsorTier, string> = {
-  TITLE: 'ຜູ້ສະໜັບສະໜູນຫຼັກ',
-  GOLD: 'ລະດັບຄຳ',
-  SILVER: 'ລະດັບເງິນ',
-  SUPPORTER: 'ຜູ້ສະໜັບສະໜູນ',
-  PARTNER: 'ພາດເນີ',
-  MEDIA: 'ສື່ມວນຊົນ',
-};
+/**
+ * Logos under the heading their year filed them under, in the order the API
+ * sends — which is the tier order the team set in the back office. A Map keeps
+ * that order without trusting the rows of one tier to arrive together.
+ */
+function byTier(sponsors: PublicEdition['sponsors']) {
+  const groups = new Map<string, { nameLo: string; sponsors: PublicEdition['sponsors'] }>();
+  for (const sponsor of sponsors) {
+    const group = groups.get(sponsor.tier.id);
+    if (group) group.sponsors.push(sponsor);
+    else groups.set(sponsor.tier.id, { nameLo: sponsor.tier.nameLo, sponsors: [sponsor] });
+  }
+  return [...groups];
+}
 
 interface WinnerRowData {
   category: { id: string; slug: string; nameLo: string };
@@ -428,18 +434,13 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 7 — sponsors, grouped by tier */}
       {edition.sponsors.length > 0 && (
         <Section eyebrow="ຜູ້ສະໜັບສະໜູນ" title="ຂອບໃຈຜູ້ສະໜັບສະໜູນປີນີ້" className="bg-panel-2/50">
-          {Object.entries(
-            edition.sponsors.reduce<Record<string, typeof edition.sponsors>>((groups, sponsor) => {
-              (groups[sponsor.tier] ??= []).push(sponsor);
-              return groups;
-            }, {}),
-          ).map(([tier, sponsors]) => (
-            <div key={tier} className="mb-8 last:mb-0">
+          {byTier(edition.sponsors).map(([tierId, tier]) => (
+            <div key={tierId} className="mb-8 last:mb-0">
               <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
-                {TIER_LABEL[tier as SponsorTier]}
+                {tier.nameLo}
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                {sponsors.map((sponsor) => {
+                {tier.sponsors.map((sponsor) => {
                   const inner = sponsor.logoKey ? (
                     <SiteImageFixed
                       imageKey={sponsor.logoKey}

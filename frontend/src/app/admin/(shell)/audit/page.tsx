@@ -29,6 +29,7 @@ const WORDS: Record<string, string> = {
   nomination: 'ນອມິນີ',
   site: 'ເນື້ອຫາເວັບ',
   sponsor: 'ສະປອນເຊີ',
+  sponsorTier: 'ລະດັບສະປອນເຊີ',
   submission: 'ລາຍຊື່ທາງບ້ານ',
   user: 'ບັນຊີ',
   password: 'ລະຫັດຜ່ານ',

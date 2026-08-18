@@ -160,9 +160,51 @@ test.describe('the edition page', () => {
     const url = page.url().split('?')[0];
     await page.goto(`${url}?tab=sponsors`);
 
-    const up = page.locator('[aria-label^="ຍ້າຍ"][aria-label$="ຂຶ້ນ"]');
-    await expect(up.first()).toBeVisible();
-    await expect(up.first(), 'the top of a tier has nowhere to go').toBeDisabled();
+    // By the sponsor's own name, not the first arrow on the page: the tier list
+    // above this one has arrows of its own, and "the first one" stopped meaning
+    // the sponsor wall the moment that card was added.
+    const up = page.locator('[aria-label="ຍ້າຍ Beerlao ຂຶ້ນ"]');
+    await expect(up).toBeVisible();
+    await expect(up, 'the top of a tier has nowhere to go').toBeDisabled();
+  });
+
+  /**
+   * The tier headings were six values in an enum until the team could name
+   * them. Two things are worth a browser for: that a new name reaches the list,
+   * and that the tier holding a logo cannot be deleted out from under it.
+   */
+  test('sponsor tiers are named here, and one holding a logo cannot be deleted', async ({
+    page,
+  }) => {
+    const url = page.url().split('?')[0];
+    await page.goto(`${url}?tab=sponsors`);
+
+    // The seed files Beerlao under this one, so it is in use. Anchored on the
+    // disabled button rather than on the tier's name: the name is also printed
+    // on the sponsor's own row below, as the badge saying which tier it is in.
+    const locked = page.getByLabel('ລຶບ ຜູ້ສະໜັບສະໜູນຫຼັກ ບໍ່ໄດ້ ຍັງມີສະປອນເຊີ');
+    await expect(locked).toBeDisabled();
+    await expect(page.locator('div', { has: locked }).last()).toContainText('1 ສະປອນເຊີ');
+
+    await page.getByRole('button', { name: 'ເພີ່ມລະດັບ' }).click();
+    const dialog = page.getByRole('dialog');
+    await dialog.getByRole('textbox').fill('ຄູ່ຮ່ວມມືທົດສອບ');
+    await dialog.getByRole('button', { name: 'ບັນທຶກ' }).click();
+
+    // Empty, so this one may go — and the sponsor form can now file a logo
+    // under it, which is the only reason a tier exists.
+    const fresh = page.getByLabel('ລຶບ ຄູ່ຮ່ວມມືທົດສອບ');
+    await expect(fresh).toBeEnabled();
+    await page.getByRole('button', { name: 'ເພີ່ມສະປອນເຊີ' }).click();
+    await expect(
+      page.getByRole('dialog').getByRole('option', { name: 'ຄູ່ຮ່ວມມືທົດສອບ' }),
+    ).toBeAttached();
+    await page.keyboard.press('Escape');
+
+    // Put the year back as it was found: the other specs read this page too.
+    await fresh.click();
+    await page.getByRole('dialog').getByRole('button', { name: 'ລຶບ' }).click();
+    await expect(page.getByText('ຄູ່ຮ່ວມມືທົດສອບ')).toHaveCount(0);
   });
 
   /**

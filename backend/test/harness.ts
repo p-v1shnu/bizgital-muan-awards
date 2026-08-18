@@ -60,6 +60,7 @@ export async function reset(prisma: PrismaService) {
   await prisma.nomination.deleteMany();
   await prisma.editionJudge.deleteMany();
   await prisma.editionSponsor.deleteMany();
+  await prisma.editionSponsorTier.deleteMany();
   await prisma.category.deleteMany();
   await prisma.edition.deleteMany();
   await prisma.creator.deleteMany();

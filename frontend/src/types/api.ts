@@ -3,7 +3,6 @@
 export type EditionPhase = 'DRAFT' | 'PUBLISHED' | 'NOMINEES_ANNOUNCED' | 'WINNERS_ANNOUNCED';
 export type AdminRole = 'SUPER_ADMIN' | 'ADMIN';
 export type JudgeRole = 'CHAIR' | 'MEMBER';
-export type SponsorTier = 'TITLE' | 'GOLD' | 'SILVER' | 'SUPPORTER' | 'PARTNER' | 'MEDIA';
 export type SubmissionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'MERGED';
 
 export interface Edition {
@@ -78,13 +77,28 @@ export interface EditionJudge {
   judge: Judge;
 }
 
+/**
+ * The heading a group of logos sits under. Six of these were an enum in the
+ * code until the tiers became rows the team names per year — so nothing here
+ * translates a code into words any more.
+ */
+export interface SponsorTier {
+  id: string;
+  editionId: string;
+  nameLo: string;
+  sortOrder: number;
+  /** How many logos are in the way of deleting it. */
+  _count: { sponsors: number };
+}
+
 export interface Sponsor {
   id: string;
   editionId: string;
   name: string;
   logoKey: string | null;
   websiteUrl: string | null;
-  tier: SponsorTier;
+  tierId: string;
+  tier: { id: string; nameLo: string; sortOrder: number };
   sortOrder: number;
 }
 

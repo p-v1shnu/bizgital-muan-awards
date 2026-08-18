@@ -237,12 +237,18 @@ describe('edition lifecycle', () => {
     });
 
     it('reorders sponsors within one edition', async () => {
+      const tier = await api(h)
+        .post(path(`/admin/editions/${hostId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ nameLo: 'ລະດັບຄຳ' })
+        .expect(201);
+
       const added = await Promise.all(
         ['Beerlao', 'Lao Telecom'].map((name) =>
           api(h)
             .post(path(`/admin/editions/${hostId}/sponsors`))
             .set(h.auth)
-            .send({ name, tier: 'GOLD' })
+            .send({ name, tierId: tier.body.data.id })
             .expect(201),
         ),
       );
@@ -254,6 +260,199 @@ describe('edition lifecycle', () => {
         .send({ items: [{ id: second, sortOrder: 0 }, { id: first, sortOrder: 1 }] })
         .expect(200);
       expect(reordered.body.data.map((row: { id: string }) => row.id)).toEqual([second, first]);
+    });
+  });
+
+  /**
+   * The tier headings over the sponsor logos were six values in an enum, so the
+   * words lived in the code — in two copies of the same Lao list, one in the
+   * back office and one on the year page. They are the year's own rows now.
+   *
+   * A new year starts with none deliberately: seeding six defaults would put
+   * the copy straight back into the code. The copy button is how last year's
+   * list arrives, exactly as it does for categories.
+   */
+  describe('sponsor tiers are the year’s own list', () => {
+    let editionId: string;
+    let lastYearId: string;
+    let lastYearTitle: string;
+
+    beforeAll(async () => {
+      editionId = (await createEdition({ year: 2043, slug: '2043', titleLo: 'ງານ 2043' })).body.data.id;
+      lastYearId = (await createEdition({ year: 2044, slug: '2044', titleLo: 'ງານ 2044' })).body.data.id;
+
+      // One at a time, not Promise.all: a new tier lands at the end by reading
+      // the highest sortOrder in use, so two creates racing can both land on the
+      // same number — and then "last year's order" is whatever MySQL felt like.
+      // The copy test below asserts that order, and this is what made it flaky.
+      const tiers = [];
+      for (const nameLo of ['ຜູ້ສະໜັບສະໜູນຫຼັກ', 'ລະດັບຄຳ']) {
+        tiers.push(
+          await api(h)
+            .post(path(`/admin/editions/${lastYearId}/sponsor-tiers`))
+            .set(h.auth)
+            .send({ nameLo })
+            .expect(201),
+        );
+      }
+      lastYearTitle = tiers[0].body.data.id;
+    });
+
+    it('starts with none, and refuses a sponsor that names no tier', async () => {
+      const list = await api(h)
+        .get(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .expect(200);
+      expect(list.body.data).toEqual([]);
+
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsors`))
+        .set(h.auth)
+        .send({ name: 'Beerlao' })
+        .expect(400);
+    });
+
+    /**
+     * The foreign key alone would allow this: both rows exist, and nothing in
+     * the database says they belong to the same year. The year page would then
+     * print a heading that is not in its own tier list.
+     */
+    it('refuses a sponsor filed under another year’s tier', async () => {
+      const response = await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsors`))
+        .set(h.auth)
+        .send({ name: 'Beerlao', tierId: lastYearTitle })
+        .expect(400);
+      expect(response.body.message).toContain('from this edition');
+    });
+
+    it('refuses a second tier with the same name in one year', async () => {
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ nameLo: 'ພາດເນີ' })
+        .expect(201);
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ nameLo: 'ພາດເນີ' })
+        .expect(409);
+    });
+
+    it('copies last year’s list and skips the names already here', async () => {
+      // 'ພາດເນີ' is already on 2043 from the test above; the copy must not
+      // fail on it, and must not duplicate it either.
+      await api(h)
+        .post(path(`/admin/editions/${lastYearId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ nameLo: 'ພາດເນີ' })
+        .expect(201);
+
+      const copied = await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers/copy`))
+        .set(h.auth)
+        .send({ fromEditionId: lastYearId })
+        .expect(201);
+      expect(copied.body.data).toEqual({ copied: 2, skipped: 1 });
+
+      const list = await api(h)
+        .get(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .expect(200);
+      // Appended after what was here, in last year's order — not interleaved.
+      expect(list.body.data.map((tier: { nameLo: string }) => tier.nameLo)).toEqual([
+        'ພາດເນີ',
+        'ຜູ້ສະໜັບສະໜູນຫຼັກ',
+        'ລະດັບຄຳ',
+      ]);
+
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers/copy`))
+        .set(h.auth)
+        .send({ fromEditionId: editionId })
+        .expect(400);
+    });
+
+    /**
+     * The point of the whole change: the heading a visitor reads comes out of
+     * the database, and a rename in the back office reaches the page.
+     */
+    it('prints the tier names on the year page, in the order the team sets', async () => {
+      const tiers = (
+        await api(h).get(path(`/admin/editions/${editionId}/sponsor-tiers`)).set(h.auth).expect(200)
+      ).body.data as { id: string; nameLo: string }[];
+      const gold = tiers.find((tier) => tier.nameLo === 'ລະດັບຄຳ')!;
+      const partner = tiers.find((tier) => tier.nameLo === 'ພາດເນີ')!;
+
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsors`))
+        .set(h.auth)
+        .send({ name: 'Lao Telecom', tierId: gold.id })
+        .expect(201);
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsors`))
+        .set(h.auth)
+        .send({ name: 'LNR', tierId: partner.id })
+        .expect(201);
+
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ slug: 'main', nameLo: 'ສາຂາຫຼັກ' })
+        .expect(201);
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+
+      const shown = async () =>
+        (await api(h).get(path('/editions/2043')).expect(200)).body.data.sponsors as {
+          name: string;
+          tier: { nameLo: string };
+        }[];
+
+      // Gold sits above partner in the tier list, so its logos come first.
+      expect((await shown()).map((sponsor) => [sponsor.tier.nameLo, sponsor.name])).toEqual([
+        ['ພາດເນີ', 'LNR'],
+        ['ລະດັບຄຳ', 'Lao Telecom'],
+      ]);
+
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers/reorder`))
+        .set(h.auth)
+        .send({ items: [{ id: gold.id, sortOrder: 0 }, { id: partner.id, sortOrder: 1 }] })
+        .expect(200);
+      expect((await shown()).map((sponsor) => sponsor.name)).toEqual(['Lao Telecom', 'LNR']);
+
+      // A rename is copy editing, not a migration: same rows, new heading.
+      await api(h)
+        .patch(path(`/admin/sponsor-tiers/${gold.id}`))
+        .set(h.auth)
+        .send({ nameLo: 'ລະດັບຄຳ 2043' })
+        .expect(200);
+      expect((await shown())[0].tier.nameLo).toBe('ລະດັບຄຳ 2043');
+    });
+
+    it('refuses to delete a tier that still holds logos, and allows it once empty', async () => {
+      const tiers = (
+        await api(h).get(path(`/admin/editions/${editionId}/sponsor-tiers`)).set(h.auth).expect(200)
+      ).body.data as { id: string; nameLo: string; _count: { sponsors: number } }[];
+      const held = tiers.find((tier) => tier._count.sponsors > 0)!;
+
+      const refused = await api(h)
+        .delete(path(`/admin/sponsor-tiers/${held.id}`))
+        .set(h.auth)
+        .expect(400);
+      expect(refused.body.message).toContain('Move the 1 sponsor(s)');
+
+      const sponsors = (
+        await api(h).get(path(`/admin/editions/${editionId}/sponsors`)).set(h.auth).expect(200)
+      ).body.data as { id: string; tierId: string }[];
+      const inTheWay = sponsors.find((sponsor) => sponsor.tierId === held.id)!;
+      await api(h).delete(path(`/admin/sponsors/${inTheWay.id}`)).set(h.auth).expect(204);
+
+      await api(h).delete(path(`/admin/sponsor-tiers/${held.id}`)).set(h.auth).expect(204);
     });
   });
 

@@ -90,7 +90,8 @@ export class PublicSiteService {
       }),
       this.prisma.editionSponsor.findMany({
         where: { editionId: edition.id },
-        orderBy: [{ tier: 'asc' }, { sortOrder: 'asc' }],
+        orderBy: [{ tier: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
+        include: { tier: { select: { id: true, nameLo: true } } },
       }),
     ]);
 
@@ -118,12 +119,14 @@ export class PublicSiteService {
         bioLo: assignment.judge.bioLo,
         avatarKey: assignment.judge.avatarKey,
       })),
+      // The tier travels as its name, not a code the page has to know a word
+      // for: the heading over each group of logos is the team's text now.
       sponsors: sponsors.map((sponsor) => ({
         id: sponsor.id,
         name: sponsor.name,
         logoKey: sponsor.logoKey,
         websiteUrl: sponsor.websiteUrl,
-        tier: sponsor.tier,
+        tier: { id: sponsor.tier.id, nameLo: sponsor.tier.nameLo },
       })),
     };
   }
