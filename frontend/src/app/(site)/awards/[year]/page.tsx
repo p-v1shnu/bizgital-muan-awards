@@ -10,7 +10,7 @@ import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrDraft, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
-import type { Edition, SponsorTier } from '@/types/api';
+import type { Edition } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
 import { formatDate, formatDateTime } from '@/lib/dates';
 
@@ -44,15 +44,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 /** How many winner rows show before the rest fold away (PRD §7.6). */
 const WINNER_ROWS = 12;
-
-const TIER_LABEL: Record<SponsorTier, string> = {
-  TITLE: 'ຜູ້ສະໜັບສະໜູນຫຼັກ',
-  GOLD: 'ລະດັບຄຳ',
-  SILVER: 'ລະດັບເງິນ',
-  SUPPORTER: 'ຜູ້ສະໜັບສະໜູນ',
-  PARTNER: 'ພາດເນີ',
-  MEDIA: 'ສື່ມວນຊົນ',
-};
 
 interface WinnerRowData {
   category: { id: string; slug: string; nameLo: string };
@@ -428,15 +419,18 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 7 — sponsors, grouped by tier */}
       {edition.sponsors.length > 0 && (
         <Section eyebrow="ຜູ້ສະໜັບສະໜູນ" title="ຂອບໃຈຜູ້ສະໜັບສະໜູນປີນີ້" className="bg-panel-2/50">
+          {/* Grouped by the group's id and headed with the name the team gave it —
+              the API returns the logos in group order, then in order inside the
+              group, and Object.entries keeps that. */}
           {Object.entries(
             edition.sponsors.reduce<Record<string, typeof edition.sponsors>>((groups, sponsor) => {
-              (groups[sponsor.tier] ??= []).push(sponsor);
+              (groups[sponsor.tierId] ??= []).push(sponsor);
               return groups;
             }, {}),
-          ).map(([tier, sponsors]) => (
-            <div key={tier} className="mb-8 last:mb-0">
+          ).map(([tierId, sponsors]) => (
+            <div key={tierId} className="mb-8 last:mb-0">
               <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
-                {TIER_LABEL[tier as SponsorTier]}
+                {sponsors[0].tierNameLo}
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 {sponsors.map((sponsor) => {

@@ -156,13 +156,17 @@ test.describe('the edition page', () => {
     await expect(rows.first()).toBeDisabled();
   });
 
-  test('sponsors can be reordered inside their tier', async ({ page }) => {
+  test('sponsors sit in groups the team named, and move inside them', async ({ page }) => {
     const url = page.url().split('?')[0];
     await page.goto(`${url}?tab=sponsors`);
 
+    // The group heading is data now, not one of six labels in the code.
+    await expect(page.getByText('ຜູ້ສະໜັບສະໜູນຫຼັກ')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'ເພີ່ມໝວດ' })).toBeVisible();
+
     const up = page.locator('[aria-label^="ຍ້າຍ"][aria-label$="ຂຶ້ນ"]');
     await expect(up.first()).toBeVisible();
-    await expect(up.first(), 'the top of a tier has nowhere to go').toBeDisabled();
+    await expect(up.first(), 'the top of a group has nowhere to go').toBeDisabled();
   });
 
   /**

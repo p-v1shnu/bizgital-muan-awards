@@ -3,7 +3,6 @@
 export type EditionPhase = 'DRAFT' | 'PUBLISHED' | 'NOMINEES_ANNOUNCED' | 'WINNERS_ANNOUNCED';
 export type AdminRole = 'SUPER_ADMIN' | 'ADMIN';
 export type JudgeRole = 'CHAIR' | 'MEMBER';
-export type SponsorTier = 'TITLE' | 'GOLD' | 'SILVER' | 'SUPPORTER' | 'PARTNER' | 'MEDIA';
 export type SubmissionStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'MERGED';
 
 export interface Edition {
@@ -78,13 +77,23 @@ export interface EditionJudge {
   judge: Judge;
 }
 
+/** A sponsor group of one year — named by the team, not a fixed list. */
+export interface SponsorTier {
+  id: string;
+  editionId: string;
+  nameLo: string;
+  nameEn: string | null;
+  sortOrder: number;
+  _count?: { sponsors: number };
+}
+
 export interface Sponsor {
   id: string;
   editionId: string;
+  tierId: string;
   name: string;
   logoKey: string | null;
   websiteUrl: string | null;
-  tier: SponsorTier;
   sortOrder: number;
 }
 

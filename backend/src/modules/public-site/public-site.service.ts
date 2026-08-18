@@ -90,7 +90,8 @@ export class PublicSiteService {
       }),
       this.prisma.editionSponsor.findMany({
         where: { editionId: edition.id },
-        orderBy: [{ tier: 'asc' }, { sortOrder: 'asc' }],
+        orderBy: [{ tier: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
+        include: { tier: { select: { id: true, nameLo: true } } },
       }),
     ]);
 
@@ -118,12 +119,15 @@ export class PublicSiteService {
         bioLo: assignment.judge.bioLo,
         avatarKey: assignment.judge.avatarKey,
       })),
+      // The group's id as well as its name: two groups of one year may end up
+      // with the same name, and grouping the page by the name would merge them.
       sponsors: sponsors.map((sponsor) => ({
         id: sponsor.id,
         name: sponsor.name,
         logoKey: sponsor.logoKey,
         websiteUrl: sponsor.websiteUrl,
-        tier: sponsor.tier,
+        tierId: sponsor.tier.id,
+        tierNameLo: sponsor.tier.nameLo,
       })),
     };
   }

@@ -237,12 +237,20 @@ describe('edition lifecycle', () => {
     });
 
     it('reorders sponsors within one edition', async () => {
+      const tierId = (
+        await api(h)
+          .post(path(`/admin/editions/${hostId}/sponsor-tiers`))
+          .set(h.auth)
+          .send({ nameLo: 'ລະດັບຄຳ' })
+          .expect(201)
+      ).body.data.id;
+
       const added = await Promise.all(
         ['Beerlao', 'Lao Telecom'].map((name) =>
           api(h)
             .post(path(`/admin/editions/${hostId}/sponsors`))
             .set(h.auth)
-            .send({ name, tier: 'GOLD' })
+            .send({ name, tierId })
             .expect(201),
         ),
       );
@@ -266,6 +274,109 @@ describe('edition lifecycle', () => {
    * The forms used to send `undefined` for a cleared box, which JSON drops
    * entirely and Prisma reads as "leave this column alone".
    */
+  /**
+   * Sponsor groups are the year's own rows, named by the team. The rules worth
+   * holding are the ones that protect a paying sponsor: a logo cannot end up in
+   * another year's group, and deleting a group cannot take its logos with it.
+   */
+  describe('sponsor groups are the year\'s own', () => {
+    let yearId: string;
+    let otherYearId: string;
+
+    beforeAll(async () => {
+      yearId = (await createEdition({ year: 2043, slug: '2043', titleLo: 'ງານ 2043' })).body.data.id;
+      otherYearId = (await createEdition({ year: 2044, slug: '2044', titleLo: 'ງານ 2044' })).body.data.id;
+    });
+
+    const addTier = (editionId: string, nameLo: string) =>
+      api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ nameLo })
+        .expect(201);
+
+    it('names its own groups and keeps them in the order they were arranged', async () => {
+      const gold = (await addTier(yearId, 'ລະດັບຄຳ')).body.data;
+      const media = (await addTier(yearId, 'ສື່ມວນຊົນ')).body.data;
+
+      const reordered = await api(h)
+        .post(path(`/admin/editions/${yearId}/sponsor-tiers/reorder`))
+        .set(h.auth)
+        .send({ items: [{ id: media.id, sortOrder: 0 }, { id: gold.id, sortOrder: 1 }] })
+        .expect(200);
+      expect(reordered.body.data.map((row: { nameLo: string }) => row.nameLo)).toEqual([
+        'ສື່ມວນຊົນ',
+        'ລະດັບຄຳ',
+      ]);
+    });
+
+    it('refuses a logo pointed at another year\'s group', async () => {
+      const theirs = (await addTier(otherYearId, 'ລະດັບຄຳ')).body.data;
+
+      await api(h)
+        .post(path(`/admin/editions/${yearId}/sponsors`))
+        .set(h.auth)
+        .send({ name: 'Beerlao', tierId: theirs.id })
+        .expect(400);
+    });
+
+    it('will not delete a group out from under the logos in it', async () => {
+      const tier = (await addTier(yearId, 'ພາດເນີ')).body.data;
+      const spare = (await addTier(yearId, 'ຜູ້ສະໜັບສະໜູນ')).body.data;
+      const sponsor = (
+        await api(h)
+          .post(path(`/admin/editions/${yearId}/sponsors`))
+          .set(h.auth)
+          .send({ name: 'Lao Telecom', tierId: tier.id })
+          .expect(201)
+      ).body.data;
+
+      // No answer to "where do they go" — refused rather than taking the logo.
+      await api(h).delete(path(`/admin/sponsor-tiers/${tier.id}`)).set(h.auth).expect(400);
+
+      // Another year's group is not an answer either.
+      const theirs = (await addTier(otherYearId, 'ພາດເນີ')).body.data;
+      await api(h)
+        .delete(path(`/admin/sponsor-tiers/${tier.id}?moveToTierId=${theirs.id}`))
+        .set(h.auth)
+        .expect(400);
+
+      await api(h)
+        .delete(path(`/admin/sponsor-tiers/${tier.id}?moveToTierId=${spare.id}`))
+        .set(h.auth)
+        .expect(204);
+
+      const left = await api(h)
+        .get(path(`/admin/editions/${yearId}/sponsors`))
+        .set(h.auth)
+        .expect(200);
+      const moved = left.body.data.find((row: { id: string }) => row.id === sponsor.id);
+      expect(moved.tierId).toBe(spare.id);
+    });
+
+    it('copies last year\'s groups and the logos in them, once', async () => {
+      const fresh = (await createEdition({ year: 2045, slug: '2045', titleLo: 'ງານ 2045' })).body.data
+        .id;
+
+      const copied = await api(h)
+        .post(path(`/admin/editions/${fresh}/sponsor-tiers/copy-from-previous`))
+        .set(h.auth)
+        .expect(200);
+      // 2044 is the year before it, and it has the two groups added above.
+      expect(copied.body.data.map((row: { nameLo: string }) => row.nameLo)).toEqual([
+        'ລະດັບຄຳ',
+        'ພາດເນີ',
+      ]);
+
+      // Refused the second time: this is a starting point, not a merge into
+      // something the team has already begun arranging.
+      await api(h)
+        .post(path(`/admin/editions/${fresh}/sponsor-tiers/copy-from-previous`))
+        .set(h.auth)
+        .expect(400);
+    });
+  });
+
   describe('clearing a field that was filled in', () => {
     let editionId: string;
 

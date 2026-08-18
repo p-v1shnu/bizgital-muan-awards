@@ -1,10 +1,8 @@
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { SponsorTier } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
-  IsEnum,
   IsInt,
   IsOptional,
   IsString,
@@ -32,10 +30,10 @@ export class CreateSponsorDto {
   @IsUrl({ require_protocol: true })
   websiteUrl?: string | null;
 
-  @ApiPropertyOptional({ enum: SponsorTier, default: SponsorTier.SUPPORTER })
-  @IsOptional()
-  @IsEnum(SponsorTier)
-  tier?: SponsorTier;
+  @ApiProperty({ description: 'The sponsor group of this year that the logo goes in' })
+  @IsString()
+  @MinLength(1)
+  tierId!: string;
 
   @ApiPropertyOptional()
   @IsOptional()

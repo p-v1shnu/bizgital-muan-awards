@@ -1,5 +1,5 @@
 /** Shapes returned by the public read API (backend PublicSiteService). */
-import type { EditionPhase, JudgeRole, SponsorTier } from './api';
+import type { EditionPhase, JudgeRole } from './api';
 
 export interface PublicCreator {
   id: string;
@@ -72,7 +72,9 @@ export interface PublicEdition extends PublicEditionSummary {
     name: string;
     logoKey: string | null;
     websiteUrl: string | null;
-    tier: SponsorTier;
+    /** The group's id as well as its name: two groups may share a name. */
+    tierId: string;
+    tierNameLo: string;
   }[];
 }
 

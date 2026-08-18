@@ -14,13 +14,26 @@ export class SponsorsService {
   listByEdition(editionId: string) {
     return this.prisma.editionSponsor.findMany({
       where: { editionId },
-      orderBy: [{ tier: 'asc' }, { sortOrder: 'asc' }],
+      orderBy: [{ tier: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
     });
+  }
+
+  /**
+   * A logo may only go in a group of its own year. Without this a request could
+   * hang 2026's sponsor under one of 2025's groups, and the year page would draw
+   * it on neither.
+   */
+  private async assertTierBelongs(editionId: string, tierId: string) {
+    const tier = await this.prisma.editionSponsorTier.findUnique({ where: { id: tierId } });
+    if (!tier || tier.editionId !== editionId) {
+      throw new BadRequestException('The sponsor group must belong to this edition');
+    }
   }
 
   async create(editionId: string, dto: CreateSponsorDto, actorId: string, ipAddress?: string) {
     const edition = await this.prisma.edition.findUnique({ where: { id: editionId } });
     if (!edition) throw new NotFoundException('Edition not found');
+    await this.assertTierBelongs(editionId, dto.tierId);
 
     const last = await this.prisma.editionSponsor.findFirst({
       where: { editionId },
@@ -36,7 +49,7 @@ export class SponsorsService {
       action: 'sponsor.created',
       targetType: 'Edition',
       targetId: editionId,
-      after: { name: sponsor.name, tier: sponsor.tier },
+      after: { name: sponsor.name, tierId: sponsor.tierId },
       ipAddress,
     });
     return sponsor;
@@ -75,6 +88,7 @@ export class SponsorsService {
   async update(id: string, dto: UpdateSponsorDto, actorId: string, ipAddress?: string) {
     const before = await this.prisma.editionSponsor.findUnique({ where: { id } });
     if (!before) throw new NotFoundException('Sponsor not found');
+    if (dto.tierId) await this.assertTierBelongs(before.editionId, dto.tierId);
 
     const after = await this.prisma.editionSponsor.update({ where: { id }, data: dto });
     await this.audit.log({
@@ -99,7 +113,7 @@ export class SponsorsService {
       action: 'sponsor.deleted',
       targetType: 'Edition',
       targetId: sponsor.editionId,
-      before: { name: sponsor.name, tier: sponsor.tier },
+      before: { name: sponsor.name, tierId: sponsor.tierId },
       ipAddress,
     });
   }

@@ -507,6 +507,21 @@ test('the page title and description come from the back office', async ({ page }
   await expect(page).toHaveTitle('ທຳນຽບຜູ້ຊະນະ · ມ່ວນ ອະວອດ');
 });
 
+/**
+ * Sponsor groups were an enum of six with their names written into the year page.
+ * They are the year's own rows now, so the heading above a logo has to be the name
+ * the team typed — the seed names one group and puts Beerlao in it.
+ */
+test('a sponsor group is headed with the name the team gave it', async ({ page }) => {
+  await page.goto('/awards/2026');
+  const wall = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'ຂອບໃຈຜູ້ສະໜັບສະໜູນປີນີ້' }) });
+
+  await expect(wall.getByText('ຜູ້ສະໜັບສະໜູນຫຼັກ')).toBeVisible();
+  await expect(wall.getByText('Beerlao')).toBeVisible();
+});
+
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
   // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
   // all here — a test run must never report into the real property.

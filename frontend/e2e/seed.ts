@@ -243,9 +243,15 @@ export default async function seed() {
       headers: auth,
       data: { judgeId, role: 'CHAIR' },
     });
+    // Sponsor groups are the year's own rows now, named by the team, so the seed
+    // makes one and puts the logo in it — the same two steps the back office does.
+    const tier = await api.post(`admin/editions/${editionId}/sponsor-tiers`, {
+      headers: auth,
+      data: { nameLo: 'ຜູ້ສະໜັບສະໜູນຫຼັກ' },
+    });
     await api.post(`admin/editions/${editionId}/sponsors`, {
       headers: auth,
-      data: { name: 'Beerlao', tier: 'TITLE' },
+      data: { name: 'Beerlao', tierId: (await tier.json()).data.id },
     });
 
     for (const phase of ['PUBLISHED', 'NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED']) {
