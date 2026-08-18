@@ -384,6 +384,22 @@ model SiteSetting {
   /// fifth is a design decision the team can see the result of. Nullable, and
   /// the four steps the pages used to hold are seeded as the starting set.
   judgingSteps Json?
+  /// The copy on the two cards under the homepage hero, keyed by what the site
+  /// is currently able to say: `{ noYear|draft|published|nominees|winners
+  /// |entriesOpen: { titleLo, bodyLo }, hallOfWinners: { bodyLo } }`.
+  ///
+  /// A keyed object rather than a list, unlike faq and judgingSteps: the states
+  /// are the system's, not the team's — there is no phase for the team to invent
+  /// — so what it owns here is the wording of each, and a missing or blank value
+  /// falls back to the page's own words rather than leaving a card empty.
+  ///
+  /// hallOfWinners carries no title on purpose: that card's heading is the name
+  /// of the page it leads to, and the nav and footer say it too. Editable there
+  /// and fixed in the chrome is an inconsistency the team could not then fix.
+  homeCards Json?
+  /// What happens after someone sends a name in, listed on /submit. One item per
+  /// line, same convention as Edition.activitiesLo.
+  submitAfterLo String? @db.Text
 
   updatedAt DateTime @updatedAt
 

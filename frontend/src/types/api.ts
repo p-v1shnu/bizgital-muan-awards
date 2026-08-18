@@ -134,6 +134,21 @@ export interface JudgingStep {
   bodyLo: string;
 }
 
+/**
+ * Copy for the cards under the homepage hero, keyed by what the site can say
+ * right now. Any key or field left out falls back to the page's own wording.
+ */
+export interface HomeCards {
+  noYear?: { titleLo?: string; bodyLo?: string };
+  draft?: { titleLo?: string; bodyLo?: string };
+  published?: { titleLo?: string; bodyLo?: string };
+  nominees?: { titleLo?: string; bodyLo?: string };
+  winners?: { titleLo?: string; bodyLo?: string };
+  entriesOpen?: { titleLo?: string; bodyLo?: string };
+  /** No title: that card's heading is the name of the page it leads to. */
+  hallOfWinners?: { bodyLo?: string };
+}
+
 export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
@@ -151,6 +166,8 @@ export interface SiteSettings {
   contactPhone: string | null;
   faq: FaqItem[] | null;
   judgingSteps: JudgingStep[] | null;
+  homeCards: HomeCards | null;
+  submitAfterLo: string | null;
   updatedAt: string;
 }
 

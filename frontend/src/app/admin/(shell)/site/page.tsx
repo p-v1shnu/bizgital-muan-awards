@@ -11,7 +11,7 @@ import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { FaqItem, JudgingStep, SiteSettings } from '@/types/api';
+import type { FaqItem, HomeCards, JudgingStep, SiteSettings } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -34,12 +34,14 @@ export default function SitePage() {
     heroCaptionLo: '',
     contactEmail: '',
     contactPhone: '',
+    submitAfterLo: '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
   const [socials, setSocials] = useState<Record<string, string>>({});
   const [faq, setFaq] = useState<FaqItem[]>([]);
   const [steps, setSteps] = useState<JudgingStep[]>([]);
+  const [cards, setCards] = useState<HomeCards>({});
   const [saved, setSaved] = useState(false);
 
   // Seed the form once the settings arrive.
@@ -56,12 +58,14 @@ export default function SitePage() {
       heroCaptionLo: data.heroCaptionLo ?? '',
       contactEmail: data.contactEmail ?? '',
       contactPhone: data.contactPhone ?? '',
+      submitAfterLo: data.submitAfterLo ?? '',
     });
     setHeroImageKey(data.heroImageKey);
     setGallery(data.galleryImageKeys ?? []);
     setSocials(data.socialLinks ?? {});
     setFaq(data.faq ?? []);
     setSteps(data.judgingSteps ?? []);
+    setCards(data.homeCards ?? {});
   }, [data]);
 
   // The two the page has always been asked and the team alone can answer. They
@@ -111,6 +115,8 @@ export default function SitePage() {
                 // than refused, so a stray empty row cannot block a save.
                 faq: faq.filter((item) => item.questionLo.trim() && item.answerLo.trim()),
                 judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
+                homeCards: cards,
+                submitAfterLo: emptyToNull(form.submitAfterLo),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
@@ -221,6 +227,82 @@ export default function SitePage() {
                   ]}
                 />
               </div>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="ຂໍ້ຄວາມການ໌ດໃຕ້ hero ໜ້າແຮກ" />
+            <CardBody>
+              <Note>
+                ການ໌ດຊ້າຍປ່ຽນຂໍ້ຄວາມຕາມ<b>ສະຖານະຂອງງານປີປັດຈຸບັນ</b> — ໃສ່ຂໍ້ຄວາມຂອງແຕ່ລະສະຖານະໄວ້
+                ລະບົບເລືອກໃຫ້ເອງ · ຊ່ອງໃດເວັ້ນວ່າງ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ ບໍ່ແມ່ນຫວ່າງເປົ່າ ·
+                ຄຳວ່າ “ງານປີນີ້” ກັບເລກປີ ລະບົບເຕີມໃຫ້ເອງ
+              </Note>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {(
+                  [
+                    ['entriesOpen', 'ຕອນເປີດຮັບເສີນຊື່ (ສຳຄັນສຸດ — ທັບສະຖານະອື່ນ)'],
+                    ['published', 'ຕອນເຜີຍແຜ່ປີແລ້ວ ແຕ່ຍັງບໍ່ເປີດຮັບ'],
+                    ['nominees', 'ຕອນປະກາດນອມິນີແລ້ວ'],
+                    ['winners', 'ຕອນປະກາດຜູ້ຊະນະແລ້ວ'],
+                    ['draft', 'ຕອນປີຍັງເປັນຮ່າງ'],
+                    ['noYear', 'ຕອນຍັງບໍ່ມີປີໃດເຜີຍແຜ່ເລີຍ'],
+                  ] as const
+                ).map(([key, label]) => (
+                  <div key={key} className="rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2/40 p-3">
+                    <p className="mb-2 text-[11px] font-semibold text-ink-3">{label}</p>
+                    <Field label="ຫົວຂໍ້">
+                      <Input
+                        value={cards[key]?.titleLo ?? ''}
+                        onChange={(event) =>
+                          setCards({ ...cards, [key]: { ...cards[key], titleLo: event.target.value } })
+                        }
+                      />
+                    </Field>
+                    <Field label="ຄຳອະທິບາຍ">
+                      <Textarea
+                        value={cards[key]?.bodyLo ?? ''}
+                        onChange={(event) =>
+                          setCards({ ...cards, [key]: { ...cards[key], bodyLo: event.target.value } })
+                        }
+                      />
+                    </Field>
+                  </div>
+                ))}
+
+                <div className="rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2/40 p-3">
+                  <p className="mb-2 text-[11px] font-semibold text-ink-3">
+                    ການ໌ດຂວາ · ທຳນຽບຜູ້ຊະນະ
+                  </p>
+                  <Field
+                    label="ຄຳອະທິບາຍ"
+                    help="ຫົວຂໍ້ຂອງການ໌ດນີ້ແກ້ບໍ່ໄດ້ ເພາະເປັນຊື່ໜ້າທີ່ມັນພາໄປ ແລະ ເມນູກັບ footer ກໍໃຊ້ຊື່ນັ້ນ"
+                  >
+                    <Textarea
+                      value={cards.hallOfWinners?.bodyLo ?? ''}
+                      onChange={(event) =>
+                        setCards({ ...cards, hallOfWinners: { bodyLo: event.target.value } })
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="“ຫຼັງຈາກສົ່ງແລ້ວ” (ໜ້າ /submit)" />
+            <CardBody>
+              <Field
+                label="ລາຍການ"
+                help="ໜຶ່ງແຖວ = ໜຶ່ງຂໍ້ · ຖ້າເວັ້ນວ່າງທັງໝົດ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ"
+              >
+                <Textarea
+                  className="min-h-28"
+                  value={form.submitAfterLo}
+                  onChange={(event) => setForm({ ...form, submitAfterLo: event.target.value })}
+                />
+              </Field>
             </CardBody>
           </Card>
 

@@ -467,6 +467,26 @@ test('both pages describe judging in the same words', async ({ page }) => {
   expect(normalise(onAbout)[1]).toContain('ທີມງານກວດຄຸນສົມບັດ');
 });
 
+/**
+ * The cards under the hero and the list on /submit read their words from
+ * /admin/site now. Both had them written into the page, so what is worth holding
+ * is that the database's wording is what actually reaches the browser.
+ */
+test('the card copy and the submit list come from the back office', async ({ page }) => {
+  await page.goto('/');
+  const main = page.getByRole('main');
+  // 2026 is published with entries open, so the entriesOpen card wins.
+  await expect(main.getByText('ເປີດຮັບເສີນຊື່ແລ້ວ')).toBeVisible();
+  await expect(main.getByText('ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ')).toBeVisible();
+
+  await page.goto('/submit');
+  const after = page.getByRole('list').filter({ hasText: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື' });
+  await expect(after.getByRole('listitem')).toHaveText([
+    'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
+    'ຜົນຕັດສິນມາຈາກຄະນະກຳມະການ',
+  ]);
+});
+
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
   // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
   // all here — a test run must never report into the real property.

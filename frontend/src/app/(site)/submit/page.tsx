@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { ActionLink, Section } from '@/components/site/primitives';
 import { SubmitForm } from './submit-form';
 import { getPublic } from '@/lib/api/server';
+import type { SiteSettings } from '@/types/api';
 import type { SubmissionForm } from '@/types/public';
 import { formatDate } from '@/lib/dates';
 
@@ -17,7 +18,23 @@ export const metadata: Metadata = {
 export const revalidate = 30;
 
 export default async function SubmitPage() {
-  const form = await getPublic<SubmissionForm | null>('/submission-form', { revalidate: 30 });
+  const [form, site] = await Promise.all([
+    getPublic<SubmissionForm | null>('/submission-form', { revalidate: 30 }),
+    getPublic<SiteSettings>('/site'),
+  ]);
+
+  // What the team says happens next, one item per line. Falls back to the words
+  // the page used to hold, so an emptied field never leaves the box headed but
+  // empty.
+  const afterSending = (site?.submitAfterLo ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const steps = afterSending.length > 0 ? afterSending : [
+    'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
+    'ຊື່ທີ່ຖືກສົ່ງຫຼາຍຄັ້ງຈະຖືກລວມເປັນລາຍການດຽວ ບໍ່ນັບເປັນຄະແນນ',
+    'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກເສີນ',
+  ];
 
   // Someone who arrives the day after the deadline is not in the same position
   // as someone who arrives before anything has opened, and telling both to wait
@@ -81,9 +98,9 @@ export default async function SubmitPage() {
             ຫຼັງຈາກສົ່ງແລ້ວ
           </p>
           <ol className="mt-3 space-y-2.5">
-            <li>ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື</li>
-            <li>ຊື່ທີ່ຖືກສົ່ງຫຼາຍຄັ້ງຈະຖືກລວມເປັນລາຍການດຽວ ບໍ່ນັບເປັນຄະແນນ</li>
-            <li>ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກເສີນ</li>
+            {steps.map((step, index) => (
+              <li key={index}>{step}</li>
+            ))}
           </ol>
           {form.closesAt && (
             <p className="mt-4 border-t border-rule pt-4">

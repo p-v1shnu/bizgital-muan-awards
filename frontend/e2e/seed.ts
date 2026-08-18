@@ -57,6 +57,25 @@ export default async function seed() {
       contactEmail: 'info@muanawards.la',
       contactPhone: '020 5555 5555',
       socialLinks: { facebook: 'https://facebook.com/muanawards' },
+      // Every card state a fresh install comes up with (backend/prisma/seed.ts),
+      // so the browser and any screenshot taken from it show what the team will
+      // actually see rather than a half-filled stand-in.
+      homeCards: {
+        noYear: { titleLo: 'ງານປີຕໍ່ໄປ', bodyLo: 'ຈະປະກາດໃນໄວໆນີ້' },
+        draft: { titleLo: 'ກຳລັງກຽມ' },
+        published: { titleLo: 'ເປີດແລ້ວ', bodyLo: 'ເບິ່ງສາຂາ ແລະ ລາຍລະອຽດຂອງງານປີນີ້' },
+        nominees: { titleLo: 'ປະກາດນອມິນີແລ້ວ', bodyLo: 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊິງທຸກສາຂາ' },
+        winners: { titleLo: 'ປະກາດຜົນແລ້ວ', bodyLo: 'ເບິ່ງຜູ້ຊະນະທຸກສາຂາຂອງປີນີ້' },
+        entriesOpen: {
+          titleLo: 'ເປີດຮັບເສີນຊື່ແລ້ວ',
+          bodyLo: 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
+        },
+        hallOfWinners: { bodyLo: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ' },
+      },
+      // Deliberately not the page's own three lines: the spec asserts these two
+      // exactly, which is what proves the list is read from here and not from
+      // the fallback still sitting in the page.
+      submitAfterLo: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື\nຜົນຕັດສິນມາຈາກຄະນະກຳມະການ',
       // The judging steps, which the homepage band and /about both render — the
       // spec reads them off both pages and compares.
       judgingSteps: [

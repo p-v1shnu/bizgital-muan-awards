@@ -50,6 +50,75 @@ export class JudgingStepDto {
   bodyLo!: string;
 }
 
+/**
+ * One homepage card's words. Both fields are optional: a blank one falls back to
+ * the page's own wording, so the team can reword the states it cares about and
+ * leave the rest alone.
+ */
+export class HomeCardDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  titleLo?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  bodyLo?: string;
+}
+
+/**
+ * The cards under the homepage hero, keyed by what the site can currently say.
+ * The keys are fixed because the states are the system's — a year is a draft, or
+ * published, or taking entries — and `hallOfWinners` takes only a body, since its
+ * heading is the name of the page it leads to and the nav says it too.
+ */
+export class HomeCardsDto {
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  noYear?: HomeCardDto;
+
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  draft?: HomeCardDto;
+
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  published?: HomeCardDto;
+
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  nominees?: HomeCardDto;
+
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  winners?: HomeCardDto;
+
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  entriesOpen?: HomeCardDto;
+
+  @ApiPropertyOptional({ type: HomeCardDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardDto)
+  hallOfWinners?: HomeCardDto;
+}
+
 /** Evergreen, site-level content — nothing here may name a year (PRD §6.1.1). */
 export class UpdateSiteSettingsDto {
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
@@ -175,4 +244,16 @@ export class UpdateSiteSettingsDto {
   @ValidateNested({ each: true })
   @Type(() => JudgingStepDto)
   judgingSteps?: JudgingStepDto[];
+
+  @ApiPropertyOptional({ type: HomeCardsDto, description: 'Copy on the two cards under the homepage hero' })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => HomeCardsDto)
+  homeCards?: HomeCardsDto;
+
+  @ApiPropertyOptional({ description: 'What happens after a name is sent in, listed on /submit — one item per line' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1200)
+  submitAfterLo?: string | null;
 }

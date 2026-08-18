@@ -478,6 +478,45 @@ describe('public site', () => {
     });
   });
 
+  /**
+   * The homepage cards and /submit's "what happens next" list. The keys here are
+   * the system's states rather than anything the team invents, so what has to
+   * hold is that an unknown one cannot be stored and a blank one is not either —
+   * blank is how the page falls back to its own wording instead of going empty.
+   */
+  describe('the homepage card copy', () => {
+    it('keeps the states it knows, trimmed', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          homeCards: {
+            entriesOpen: { titleLo: '  ເປີດຮັບແລ້ວ  ', bodyLo: 'ສົ່ງຊື່ໄດ້ເລີຍ' },
+            draft: { titleLo: 'ກຳລັງກຽມ', bodyLo: '   ' },
+          },
+          submitAfterLo: 'ຂໍ້ໜຶ່ງ\nຂໍ້ສອງ',
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.homeCards).toEqual({
+        entriesOpen: { titleLo: 'ເປີດຮັບແລ້ວ', bodyLo: 'ສົ່ງຊື່ໄດ້ເລີຍ' },
+        // The blank body is dropped, not stored — that is what lets the page
+        // fall back rather than render an empty line.
+        draft: { titleLo: 'ກຳລັງກຽມ' },
+      });
+      expect(response.body.data.submitAfterLo).toBe('ຂໍ້ໜຶ່ງ\nຂໍ້ສອງ');
+    });
+
+    it('refuses a state the system does not have', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ homeCards: { someInventedPhase: { titleLo: 'ຫຍັງກໍບໍ່ຮູ້' } } })
+        .expect(400);
+    });
+  });
+
   describe('the sitemap feed', () => {
     it('lists public years and their categories, and no drafts', async () => {
       const response = await api(h).get(path('/sitemap-entries')).expect(200);

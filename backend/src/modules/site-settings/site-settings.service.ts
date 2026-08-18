@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { AuditService } from '../audit/audit.service';
 import { cleanEntries } from '../../common/utils/entries';
 import { cleanFaq } from '../../common/utils/faq';
+import { cleanHomeCards } from '../../common/utils/home-cards';
 import { cleanSocialLinks } from '../../common/utils/social-links';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateSiteSettingsDto } from './dto/site-settings.dto';
@@ -38,6 +39,7 @@ export class SiteSettingsService {
         faq: dto.faq === undefined ? undefined : cleanFaq(dto.faq),
         judgingSteps:
           dto.judgingSteps === undefined ? undefined : cleanEntries(dto.judgingSteps),
+        homeCards: dto.homeCards === undefined ? undefined : cleanHomeCards(dto.homeCards),
       },
     });
 

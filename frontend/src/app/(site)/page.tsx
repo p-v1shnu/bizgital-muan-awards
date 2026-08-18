@@ -8,7 +8,7 @@ import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
 import { safeHttpUrl } from '@/lib/utils';
 import { imageKeyList } from '@/lib/images';
-import type { Edition, SiteSettings } from '@/types/api';
+import type { Edition, HomeCards, SiteSettings } from '@/types/api';
 
 /** One address per page, so /awards/latest cannot read as a rival copy. */
 export const metadata: Metadata = { alternates: { canonical: '/' } };
@@ -57,6 +57,9 @@ export default async function HomePage() {
   const heroKey = site?.heroImageKey ?? null;
   // The same list /about renders, in the order the team put it in.
   const judgingSteps = site?.judgingSteps ?? [];
+  // Card copy the team writes in /admin/site; every read below falls back to the
+  // wording the page used to hold, so a blank field never blanks a card.
+  const cards = site?.homeCards ?? {};
   const gallery = imageKeyList(site?.galleryImageKeys);
   const latestWinners = winnerYears?.[0];
   const featuredWinners = (latestWinners?.categories ?? [])
@@ -112,6 +115,7 @@ export default async function HomePage() {
             <CurrentEditionCard
               edition={current}
               accepting={Boolean(current && openEdition && openEdition.id === current.id)}
+              cards={cards}
             />
             <Link
               href="/winners"
@@ -123,7 +127,7 @@ export default async function HomePage() {
                 </p>
                 <p className="mt-2 font-serif text-2xl text-ink">ທຳນຽບຜູ້ຊະນະ</p>
                 <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">
-                  ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ
+                  {cards.hallOfWinners?.bodyLo || 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ'}
                 </p>
               </div>
               <span className="mt-5 inline-flex items-center gap-2 text-[13px] font-semibold text-brand-deep">
@@ -381,32 +385,46 @@ function Stat({ value, label }: { value: number; label: string }) {
 function CurrentEditionCard({
   edition,
   accepting,
+  cards,
 }: {
   edition: Edition | null;
   accepting: boolean;
+  cards: HomeCards;
 }) {
   if (!edition) {
     return (
       <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-6">
-        <p className="font-serif text-2xl text-ink">ງານປີຕໍ່ໄປ</p>
-        <p className="mt-2 text-[13.5px] text-ink-2">ຈະປະກາດໃນໄວໆນີ້</p>
+        <p className="font-serif text-2xl text-ink">{cards.noYear?.titleLo || 'ງານປີຕໍ່ໄປ'}</p>
+        <p className="mt-2 text-[13.5px] text-ink-2">
+          {cards.noYear?.bodyLo || 'ຈະປະກາດໃນໄວໆນີ້'}
+        </p>
       </div>
     );
   }
 
+  // The eyebrow stays in the page: it is a label on a state, not a sentence
+  // about the awards, and the year beside it is the data talking.
   const copy = {
-    PUBLISHED: { eyebrow: 'ງານປີນີ້', title: 'ເປີດແລ້ວ', body: 'ເບິ່ງສາຂາ ແລະ ລາຍລະອຽດຂອງງານປີນີ້' },
+    PUBLISHED: {
+      eyebrow: 'ງານປີນີ້',
+      title: cards.published?.titleLo || 'ເປີດແລ້ວ',
+      body: cards.published?.bodyLo || 'ເບິ່ງສາຂາ ແລະ ລາຍລະອຽດຂອງງານປີນີ້',
+    },
     NOMINEES_ANNOUNCED: {
       eyebrow: 'ງານປີນີ້',
-      title: 'ປະກາດນອມິນີແລ້ວ',
-      body: 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊິງທຸກສາຂາ',
+      title: cards.nominees?.titleLo || 'ປະກາດນອມິນີແລ້ວ',
+      body: cards.nominees?.bodyLo || 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊິງທຸກສາຂາ',
     },
     WINNERS_ANNOUNCED: {
       eyebrow: 'ງານປີນີ້',
-      title: 'ປະກາດຜົນແລ້ວ',
-      body: 'ເບິ່ງຜູ້ຊະນະທຸກສາຂາຂອງປີນີ້',
+      title: cards.winners?.titleLo || 'ປະກາດຜົນແລ້ວ',
+      body: cards.winners?.bodyLo || 'ເບິ່ງຜູ້ຊະນະທຸກສາຂາຂອງປີນີ້',
     },
-    DRAFT: { eyebrow: 'ງານປີນີ້', title: 'ກຳລັງກຽມ', body: '' },
+    DRAFT: {
+      eyebrow: 'ງານປີນີ້',
+      title: cards.draft?.titleLo || 'ກຳລັງກຽມ',
+      body: cards.draft?.bodyLo ?? '',
+    },
   }[edition.phase];
 
   /**
@@ -419,8 +437,8 @@ function CurrentEditionCard({
   const open = accepting
     ? {
         eyebrow: 'ງານປີນີ້',
-        title: 'ເປີດຮັບເສີນຊື່ແລ້ວ',
-        body: 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
+        title: cards.entriesOpen?.titleLo || 'ເປີດຮັບເສີນຊື່ແລ້ວ',
+        body: cards.entriesOpen?.bodyLo || 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
       }
     : null;
   const shown = open ?? copy;

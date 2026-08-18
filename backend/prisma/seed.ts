@@ -65,6 +65,30 @@ const STARTING_JUDGING_STEPS = [
   { titleLo: 'ປະກາດຜົນ', bodyLo: 'ປະກາດນອມິນີກ່ອນ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
 ];
 
+/**
+ * The two cards under the homepage hero, and what /submit says happens next.
+ * Both were written into the pages; these are the same words, now as a starting
+ * point the team can edit. A key left out falls back to the page's own wording.
+ */
+const STARTING_HOME_CARDS = {
+  noYear: { titleLo: 'ງານປີຕໍ່ໄປ', bodyLo: 'ຈະປະກາດໃນໄວໆນີ້' },
+  draft: { titleLo: 'ກຳລັງກຽມ' },
+  published: { titleLo: 'ເປີດແລ້ວ', bodyLo: 'ເບິ່ງສາຂາ ແລະ ລາຍລະອຽດຂອງງານປີນີ້' },
+  nominees: { titleLo: 'ປະກາດນອມິນີແລ້ວ', bodyLo: 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊິງທຸກສາຂາ' },
+  winners: { titleLo: 'ປະກາດຜົນແລ້ວ', bodyLo: 'ເບິ່ງຜູ້ຊະນະທຸກສາຂາຂອງປີນີ້' },
+  entriesOpen: {
+    titleLo: 'ເປີດຮັບເສີນຊື່ແລ້ວ',
+    bodyLo: 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
+  },
+  hallOfWinners: { bodyLo: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ' },
+};
+
+const STARTING_SUBMIT_AFTER = [
+  'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
+  'ຊື່ທີ່ຖືກສົ່ງຫຼາຍຄັ້ງຈະຖືກລວມເປັນລາຍການດຽວ ບໍ່ນັບເປັນຄະແນນ',
+  'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກເສີນ',
+].join('\n');
+
 async function main() {
   // The homepage reads its evergreen copy from here (PRD §6.1.1), so the row
   // has to exist before anything renders.
@@ -78,6 +102,8 @@ async function main() {
         'ມ່ວນ ອະວອດ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັນລາວ ໃນທຸກຮູບແບບ.',
       faq: STARTING_FAQ,
       judgingSteps: STARTING_JUDGING_STEPS,
+      homeCards: STARTING_HOME_CARDS,
+      submitAfterLo: STARTING_SUBMIT_AFTER,
     },
   });
 
