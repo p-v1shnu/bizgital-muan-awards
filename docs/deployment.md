@@ -389,6 +389,18 @@ curl -s https://muanawards.com/admin/login | grep -c googletagmanager
 > **ใส่ `BACKUP_HEARTBEAT_URL` ด้วย** ไม่งั้นวันที่ backup พังจะไม่มีใครรู้ — วิธีตั้งอยู่ใน
 > [`docs/monitoring.md`](monitoring.md) ข้อ 8
 
+**ตั้ง cron ตัวที่สองด้วย: เฝ้าดิสก์** — ดิสก์เต็มคือสาเหตุที่พบบ่อยที่สุดของการล่มเงียบบนเครื่องเล็ก
+และ MySQL ต้องมีที่ว่างแม้แต่จะสตาร์ท
+
+```bash
+*/30 * * * *  cd /srv/muan && DISK_HEARTBEAT_URL='https://uptime.betterstack.com/api/v1/heartbeat/yyyy' \
+              ./scripts/watch-disk.sh >> /var/log/muan-disk.log 2>&1
+```
+
+สคริปต์ **ยิง heartbeat เฉพาะเมื่อดิสก์ยังไม่เต็ม** — เงียบคือผิด เหมือนกับ backup · ตอนเต็มมันพิมพ์
+`du` 6 อันดับแรกลง log ให้ด้วย · รายละเอียดและค่าที่ปรับได้อยู่ใน
+[`docs/monitoring.md`](monitoring.md) ข้อ 13
+
 `scripts/backup.sh` ไม่ได้แค่ dump — **ตรวจไฟล์ที่เพิ่ง dump ทุกครั้ง** (gzip อ่านได้ไหม
 และมีตาราง `editions` จริงไหม) ถ้าไม่ผ่านจะ exit 1 เพื่อให้ cron ส่งเมลแจ้ง
 ไฟล์เก่ากว่า 30 วันถูกลบอัตโนมัติ
