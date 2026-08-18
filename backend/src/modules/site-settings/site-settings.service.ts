@@ -4,6 +4,7 @@ import { AuditService } from '../audit/audit.service';
 import { cleanEntries } from '../../common/utils/entries';
 import { cleanFaq } from '../../common/utils/faq';
 import { cleanHomeCards } from '../../common/utils/home-cards';
+import { cleanPageSeo } from '../../common/utils/page-seo';
 import { cleanSocialLinks } from '../../common/utils/social-links';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateSiteSettingsDto } from './dto/site-settings.dto';
@@ -40,6 +41,7 @@ export class SiteSettingsService {
         judgingSteps:
           dto.judgingSteps === undefined ? undefined : cleanEntries(dto.judgingSteps),
         homeCards: dto.homeCards === undefined ? undefined : cleanHomeCards(dto.homeCards),
+        pageSeo: dto.pageSeo === undefined ? undefined : cleanPageSeo(dto.pageSeo),
       },
     });
 

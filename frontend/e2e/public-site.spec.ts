@@ -487,6 +487,26 @@ test('the card copy and the submit list come from the back office', async ({ pag
   ]);
 });
 
+/**
+ * The tab title and the description a search engine prints. Both were written
+ * into the pages; /about's are seeded with different words, so this fails if the
+ * page stops reading them from the back office — and the untouched pages prove
+ * the fallback still holds.
+ */
+test('the page title and description come from the back office', async ({ page }) => {
+  await page.goto('/about');
+  await expect(page).toHaveTitle('ກ່ຽວກັບງານ ມ່ວນ ອະວອດ · ມ່ວນ ອະວອດ');
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    'ທີ່ມາຂອງງານ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
+  );
+
+  // /winners has nothing set, so it must still carry the page's own words
+  // rather than an empty title.
+  await page.goto('/winners');
+  await expect(page).toHaveTitle('ທຳນຽບຜູ້ຊະນະ · ມ່ວນ ອະວອດ');
+});
+
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
   // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
   // all here — a test run must never report into the real property.

@@ -149,6 +149,12 @@ export interface HomeCards {
   hallOfWinners?: { bodyLo?: string };
 }
 
+/** Tab title and search-result description, for the pages that have no record. */
+export interface PageSeo {
+  titleLo?: string;
+  descriptionLo?: string;
+}
+
 export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
@@ -168,6 +174,8 @@ export interface SiteSettings {
   judgingSteps: JudgingStep[] | null;
   homeCards: HomeCards | null;
   submitAfterLo: string | null;
+  pageSeo: Partial<Record<'home' | 'about' | 'submit' | 'winners', PageSeo>> | null;
+  footerLocationLo: string | null;
   updatedAt: string;
 }
 

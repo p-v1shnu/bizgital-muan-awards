@@ -400,6 +400,18 @@ model SiteSetting {
   /// What happens after someone sends a name in, listed on /submit. One item per
   /// line, same convention as Edition.activitiesLo.
   submitAfterLo String? @db.Text
+  /// The browser-tab title and search-result description of the pages that have
+  /// no year or person of their own: `{ home|about|submit|winners: { titleLo,
+  /// descriptionLo } }`. A year, a category and a creator build theirs from their
+  /// own record and are not here.
+  ///
+  /// Keyed like homeCards and for the same reason — the set of pages is the
+  /// site's, the words are the team's — and blank falls back to the page's own,
+  /// because a page whose title Google reads must never be able to go empty.
+  pageSeo Json?
+  /// The line beside the copyright in the footer. Where the organisation is,
+  /// which is the kind of fact that changes without a developer being involved.
+  footerLocationLo String?
 
   updatedAt DateTime @updatedAt
 

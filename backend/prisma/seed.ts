@@ -89,6 +89,30 @@ const STARTING_SUBMIT_AFTER = [
   'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກເສີນ',
 ].join('\n');
 
+/**
+ * What the browser tab and a search result say for the pages that have no year
+ * or person behind them. The same words the pages carried in code, so a fresh
+ * install reads the way it always did — and the team can change them.
+ */
+const STARTING_PAGE_SEO = {
+  home: {
+    titleLo: 'ມ່ວນ ອະວອດ · Muan Awards',
+    descriptionLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ',
+  },
+  about: {
+    titleLo: 'ກ່ຽວກັບງານ',
+    descriptionLo: 'ທີ່ມາຂອງມ່ວນ ອະວອດ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
+  },
+  submit: {
+    titleLo: 'ສົ່ງລາຍຊື່',
+    descriptionLo: 'ເສີນຊື່ຜູ້ສ້າງສັນຄອນເທັນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
+  },
+  winners: {
+    titleLo: 'ທຳນຽບຜູ້ຊະນະ',
+    descriptionLo: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ຂອງມ່ວນ ອະວອດ',
+  },
+};
+
 async function main() {
   // The homepage reads its evergreen copy from here (PRD §6.1.1), so the row
   // has to exist before anything renders.
@@ -104,6 +128,8 @@ async function main() {
       judgingSteps: STARTING_JUDGING_STEPS,
       homeCards: STARTING_HOME_CARDS,
       submitAfterLo: STARTING_SUBMIT_AFTER,
+      pageSeo: STARTING_PAGE_SEO,
+      footerLocationLo: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ',
     },
   });
 

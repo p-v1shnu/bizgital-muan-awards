@@ -4,13 +4,16 @@ import { Mail, Phone } from 'lucide-react';
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { cn } from '@/lib/utils';
 import { getPublic } from '@/lib/api/server';
+import { pageSeo } from '@/lib/page-seo';
 import type { SiteSettings } from '@/types/api';
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/about' },
-  title: 'ກ່ຽວກັບງານ',
-  description: 'ທີ່ມາຂອງມ່ວນ ອະວອດ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await pageSeo('about', {
+    title: 'ກ່ຽວກັບງານ',
+    description: 'ທີ່ມາຂອງມ່ວນ ອະວອດ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
+  });
+  return { alternates: { canonical: '/about' }, title, description };
+}
 
 /**
  * The one page whose copy is written rather than entered in the back office.

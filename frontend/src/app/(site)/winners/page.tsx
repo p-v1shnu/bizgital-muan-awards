@@ -4,14 +4,17 @@ import type { Metadata } from 'next';
 import { ActionLink, Avatar, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
 import { getPublic } from '@/lib/api/server';
+import { pageSeo } from '@/lib/page-seo';
 import { JsonLd, winnersArchiveJsonLd } from '@/lib/structured-data';
 import type { WinnersYear } from '@/types/public';
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/winners' },
-  title: 'ທຳນຽບຜູ້ຊະນະ',
-  description: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ຂອງມ່ວນ ອະວອດ',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await pageSeo('winners', {
+    title: 'ທຳນຽບຜູ້ຊະນະ',
+    description: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ຂອງມ່ວນ ອະວອດ',
+  });
+  return { alternates: { canonical: '/winners' }, title, description };
+}
 
 /**
  * One row per year, newest first. Years still in progress are absent — the

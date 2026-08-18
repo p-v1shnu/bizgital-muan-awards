@@ -119,6 +119,51 @@ export class HomeCardsDto {
   hallOfWinners?: HomeCardDto;
 }
 
+/** One page's tab title and search-result description. */
+export class PageSeoDto {
+  @ApiPropertyOptional({ description: 'Around 60 characters before Google truncates it' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  titleLo?: string;
+
+  @ApiPropertyOptional({ description: 'Around 155 characters before Google truncates it' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(320)
+  descriptionLo?: string;
+}
+
+/**
+ * The pages with no record behind them. A year, a category and a creator build
+ * their own from their own data and are deliberately absent.
+ */
+export class PageSeoMapDto {
+  @ApiPropertyOptional({ type: PageSeoDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PageSeoDto)
+  home?: PageSeoDto;
+
+  @ApiPropertyOptional({ type: PageSeoDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PageSeoDto)
+  about?: PageSeoDto;
+
+  @ApiPropertyOptional({ type: PageSeoDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PageSeoDto)
+  submit?: PageSeoDto;
+
+  @ApiPropertyOptional({ type: PageSeoDto })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PageSeoDto)
+  winners?: PageSeoDto;
+}
+
 /** Evergreen, site-level content — nothing here may name a year (PRD §6.1.1). */
 export class UpdateSiteSettingsDto {
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
@@ -256,4 +301,16 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(1200)
   submitAfterLo?: string | null;
+
+  @ApiPropertyOptional({ type: PageSeoMapDto, description: 'Tab title and search-result description per page' })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PageSeoMapDto)
+  pageSeo?: PageSeoMapDto;
+
+  @ApiPropertyOptional({ example: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ', description: 'The line beside the copyright in the footer' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  footerLocationLo?: string | null;
 }

@@ -3,15 +3,18 @@ import type { Metadata } from 'next';
 import { ActionLink, Section } from '@/components/site/primitives';
 import { SubmitForm } from './submit-form';
 import { getPublic } from '@/lib/api/server';
+import { pageSeo } from '@/lib/page-seo';
 import type { SiteSettings } from '@/types/api';
 import type { SubmissionForm } from '@/types/public';
 import { formatDate } from '@/lib/dates';
 
-export const metadata: Metadata = {
-  alternates: { canonical: '/submit' },
-  title: 'ສົ່ງລາຍຊື່',
-  description: 'ເສີນຊື່ຜູ້ສ້າງສັນຄອນເທັນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await pageSeo('submit', {
+    title: 'ສົ່ງລາຍຊື່',
+    description: 'ເສີນຊື່ຜູ້ສ້າງສັນຄອນເທັນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
+  });
+  return { alternates: { canonical: '/submit' }, title, description };
+}
 
 // Whether the form is open can change at any moment from the back office, so
 // this page is checked often rather than cached for long.

@@ -57,6 +57,15 @@ export default async function seed() {
       contactEmail: 'info@muanawards.la',
       contactPhone: '020 5555 5555',
       socialLinks: { facebook: 'https://facebook.com/muanawards' },
+      // What Google reads. Deliberately not the pages' own fallbacks, so the spec
+      // can tell which of the two reached the browser.
+      pageSeo: {
+        about: {
+          titleLo: 'ກ່ຽວກັບງານ ມ່ວນ ອະວອດ',
+          descriptionLo: 'ທີ່ມາຂອງງານ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
+        },
+      },
+      footerLocationLo: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ',
       // Every card state a fresh install comes up with (backend/prisma/seed.ts),
       // so the browser and any screenshot taken from it show what the team will
       // actually see rather than a half-filled stand-in.

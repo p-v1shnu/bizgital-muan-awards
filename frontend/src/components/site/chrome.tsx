@@ -201,7 +201,7 @@ export async function SiteFooter() {
 
         <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#3a322c] pt-6 text-[11.5px] text-[#a89c8e]">
           <span>© {new Date().getFullYear()} Muan Awards</span>
-          <span>ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ</span>
+          <span>{site?.footerLocationLo?.trim() || 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ'}</span>
           <a href="#top" className="ml-auto inline-flex items-center gap-1 hover:text-white">
             ຂຶ້ນເທິງສຸດ <ArrowUpRight className="size-3.5" />
           </a>

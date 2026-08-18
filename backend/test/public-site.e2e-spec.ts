@@ -517,6 +517,43 @@ describe('public site', () => {
     });
   });
 
+  /**
+   * What Google prints for the pages that have no record of their own. The stakes
+   * are why blank is dropped rather than stored: an empty title is not a gap on a
+   * page, it is what a search engine shows for the site, so the page has to be
+   * able to fall back to its own words.
+   */
+  describe('the page titles and descriptions', () => {
+    it('keeps the pages it knows, and drops a blank field', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          pageSeo: {
+            about: { titleLo: '  ກ່ຽວກັບພວກເຮົາ  ', descriptionLo: 'ທີ່ມາຂອງງານ' },
+            winners: { titleLo: 'ທຳນຽບ', descriptionLo: '  ' },
+          },
+          footerLocationLo: '  ວຽງຈັນ  ',
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.pageSeo).toEqual({
+        about: { titleLo: 'ກ່ຽວກັບພວກເຮົາ', descriptionLo: 'ທີ່ມາຂອງງານ' },
+        winners: { titleLo: 'ທຳນຽບ' },
+      });
+      expect(response.body.data.footerLocationLo).toBe('  ວຽງຈັນ  ');
+    });
+
+    it('refuses a page the site does not have', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ pageSeo: { pricing: { titleLo: 'ລາຄາ' } } })
+        .expect(400);
+    });
+  });
+
   describe('the sitemap feed', () => {
     it('lists public years and their categories, and no drafts', async () => {
       const response = await api(h).get(path('/sitemap-entries')).expect(200);

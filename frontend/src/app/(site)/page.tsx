@@ -6,12 +6,21 @@ import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
+import { pageSeo } from '@/lib/page-seo';
 import { safeHttpUrl } from '@/lib/utils';
 import { imageKeyList } from '@/lib/images';
 import type { Edition, HomeCards, SiteSettings } from '@/types/api';
 
 /** One address per page, so /awards/latest cannot read as a rival copy. */
-export const metadata: Metadata = { alternates: { canonical: '/' } };
+export async function generateMetadata(): Promise<Metadata> {
+  const { title, description } = await pageSeo('home', {
+    title: 'ມ່ວນ ອະວອດ · Muan Awards',
+    description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ',
+  });
+  // Absolute: the root layout appends "· ມ່ວນ ອະວອດ" to every other page's
+  // title, and the homepage's already is the site's name.
+  return { alternates: { canonical: '/' }, title: { absolute: title }, description };
+}
 
 interface WinnersYear {
   id: string;

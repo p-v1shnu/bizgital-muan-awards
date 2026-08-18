@@ -11,7 +11,7 @@ import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { FaqItem, HomeCards, JudgingStep, SiteSettings } from '@/types/api';
+import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -35,6 +35,7 @@ export default function SitePage() {
     contactEmail: '',
     contactPhone: '',
     submitAfterLo: '',
+    footerLocationLo: '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
   const [gallery, setGallery] = useState<string[]>([]);
@@ -42,6 +43,7 @@ export default function SitePage() {
   const [faq, setFaq] = useState<FaqItem[]>([]);
   const [steps, setSteps] = useState<JudgingStep[]>([]);
   const [cards, setCards] = useState<HomeCards>({});
+  const [seo, setSeo] = useState<Record<string, PageSeo>>({});
   const [saved, setSaved] = useState(false);
 
   // Seed the form once the settings arrive.
@@ -59,6 +61,7 @@ export default function SitePage() {
       contactEmail: data.contactEmail ?? '',
       contactPhone: data.contactPhone ?? '',
       submitAfterLo: data.submitAfterLo ?? '',
+      footerLocationLo: data.footerLocationLo ?? '',
     });
     setHeroImageKey(data.heroImageKey);
     setGallery(data.galleryImageKeys ?? []);
@@ -66,6 +69,7 @@ export default function SitePage() {
     setFaq(data.faq ?? []);
     setSteps(data.judgingSteps ?? []);
     setCards(data.homeCards ?? {});
+    setSeo(data.pageSeo ?? {});
   }, [data]);
 
   // The two the page has always been asked and the team alone can answer. They
@@ -117,6 +121,8 @@ export default function SitePage() {
                 judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
                 homeCards: cards,
                 submitAfterLo: emptyToNull(form.submitAfterLo),
+                pageSeo: seo,
+                footerLocationLo: emptyToNull(form.footerLocationLo),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
@@ -400,6 +406,84 @@ export default function SitePage() {
               <Note>
                 ຮູບນີ້ຢູ່ຖາວອນ — ເລືອກຮູບທີ່ໃຊ້ໄດ້ຂ້າມປີ ບໍ່ແມ່ນຮູບງານປີໃດປີໜຶ່ງໂດຍສະເພາະ
               </Note>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="ຫົວຂໍ້ ແລະ ຄຳອະທິບາຍໃນ Google (SEO)" />
+            <CardBody>
+              <Note>
+                ນີ້ຄືຂໍ້ຄວາມທີ່ຂຶ້ນໃນ<b>ຜົນຄົ້ນຫາຂອງ Google</b> ແລະ ໃນແທັບຂອງເບົາເຊີ ·
+                ຫົວຂໍ້ຢ່າໃຫ້ເກີນ 60 ຕົວ ຄຳອະທິບາຍຢ່າໃຫ້ເກີນ 155 ຕົວ ເກີນກວ່ານັ້ນ Google ຈະຕັດ ·
+                ຊ່ອງໃດເວັ້ນວ່າງ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງໜ້ານັ້ນແທນ — ບໍ່ມີວັນຫວ່າງເປົ່າ ·
+                ໜ້າຂອງແຕ່ລະປີ, ສາຂາ ແລະ ຄຣີເອເຕີ ສ້າງເອງຈາກຂໍ້ມູນຂອງມັນ ຈຶ່ງບໍ່ມີຢູ່ນີ້
+              </Note>
+              <div className="mt-4 grid gap-4 md:grid-cols-2">
+                {(
+                  [
+                    ['home', 'ໜ້າແຮກ (/)'],
+                    ['about', 'ໜ້າ ກ່ຽວກັບງານ (/about)'],
+                    ['submit', 'ໜ້າ ສົ່ງລາຍຊື່ (/submit)'],
+                    ['winners', 'ໜ້າ ທຳນຽບຜູ້ຊະນະ (/winners)'],
+                  ] as const
+                ).map(([key, label]) => {
+                  const title = seo[key]?.titleLo ?? '';
+                  const description = seo[key]?.descriptionLo ?? '';
+                  return (
+                    <div
+                      key={key}
+                      className="rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2/40 p-3"
+                    >
+                      <p className="mb-2 text-[11px] font-semibold text-ink-3">{label}</p>
+                      <Field
+                        label="ຫົວຂໍ້"
+                        hint={title.length > 60 ? `— ${title.length}/60 ຍາວເກີນ` : `— ${title.length}/60`}
+                      >
+                        <Input
+                          value={title}
+                          onChange={(event) =>
+                            setSeo({ ...seo, [key]: { ...seo[key], titleLo: event.target.value } })
+                          }
+                        />
+                      </Field>
+                      <Field
+                        label="ຄຳອະທິບາຍ"
+                        hint={
+                          description.length > 155
+                            ? `— ${description.length}/155 ຍາວເກີນ`
+                            : `— ${description.length}/155`
+                        }
+                      >
+                        <Textarea
+                          value={description}
+                          onChange={(event) =>
+                            setSeo({
+                              ...seo,
+                              [key]: { ...seo[key], descriptionLo: event.target.value },
+                            })
+                          }
+                        />
+                      </Field>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
+            <CardHeader title="ແຖບລຸ່ມສຸດຂອງທຸກໜ້າ (footer)" />
+            <CardBody>
+              <Field
+                label="ທີ່ຢູ່ / ສະຖານທີ່"
+                hint="— ບໍ່ບັງຄັບ"
+                help="ຂຶ້ນຢູ່ຂ້າງ © ໃນທຸກໜ້າ · ຖ້າເວັ້ນວ່າງ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານແທນ"
+              >
+                <Input
+                  value={form.footerLocationLo}
+                  onChange={(event) => setForm({ ...form, footerLocationLo: event.target.value })}
+                />
+              </Field>
             </CardBody>
           </Card>
 
