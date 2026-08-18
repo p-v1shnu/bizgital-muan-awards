@@ -169,6 +169,16 @@ export interface PageSeo {
   descriptionLo?: string;
 }
 
+/**
+ * One block of the privacy section on /about. `bodyLo` is plain text: a blank
+ * line starts a paragraph, a line beginning "- " is a bullet, and *stars* mark
+ * emphasis — rendered by PolicyText, never as HTML.
+ */
+export interface PrivacyBlock {
+  titleLo: string;
+  bodyLo: string;
+}
+
 export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
@@ -190,6 +200,7 @@ export interface SiteSettings {
   submitAfterLo: string | null;
   pageSeo: Partial<Record<'home' | 'about' | 'submit' | 'winners', PageSeo>> | null;
   footerLocationLo: string | null;
+  privacyBlocks: PrivacyBlock[] | null;
   updatedAt: string;
 }
 

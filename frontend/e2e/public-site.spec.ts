@@ -378,20 +378,37 @@ test('each page names one address, and says what it is to a machine', async ({ p
   expect(person.award?.length, 'a win belongs in the record a search engine reads').toBeGreaterThan(0);
 });
 
+/**
+ * The privacy section is policy, and policy is the team's — so what this checks
+ * is that the words on the page are the ones in the database, not the ones the
+ * page falls back to. The seed sets the retention period to eighteen months
+ * where the fallback says twelve, and that single digit is the whole assertion:
+ * the page could not print it from its own copy.
+ */
 test('the site says what it does with what people type in', async ({ page }) => {
   await page.goto('/submit');
-  await expect(page.getByRole('link', { name: 'ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ' })).toBeVisible();
+  // The form no longer restates the retention period — it points at the policy
+  // that holds it, so the two cannot drift apart.
+  await expect(page.getByRole('link', { name: 'ໜ້າຂໍ້ມູນສ່ວນຕົວ' })).toBeVisible();
+  await expect(page.getByText('12 ເດືອນ'), 'the number belongs to the policy alone').toHaveCount(0);
 
   await page.goto('/about#privacy');
   const privacy = page.locator('#privacy');
   await expect(privacy.getByText('ເກັບໄວ້ດົນປານໃດ')).toBeVisible();
-  await expect(privacy.getByText('12 ເດືອນ')).toBeVisible();
+  await expect(privacy.getByText('18 ເດືອນ'), 'from the database, not the fallback').toBeVisible();
+
+  // The three conventions the team writes with: bullets, paragraphs, *emphasis*.
+  await expect(privacy.locator('li')).toHaveCount(3);
+  await expect(privacy.locator('b', { hasText: 'ບໍ່ບັງຄັບ' })).toBeVisible();
 
   // The page has to describe the analytics that actually runs: it starts with
   // the page, so it must not claim to wait for permission.
   await expect(privacy.getByText('Google Analytics', { exact: true })).toBeVisible();
   await expect(privacy.getByText('ຕັ້ງແຕ່ທ່ານເປີດໜ້າ')).toBeVisible();
-  await expect(privacy.getByRole('link', { name: /ປິດ Google Analytics/ })).toBeVisible();
+
+  // And the opt-out link is code, not policy: it is only true while analytics is
+  // configured, so it is absent here — the suite runs without NEXT_PUBLIC_GA_ID.
+  await expect(privacy.getByRole('link', { name: /ປິດ Google Analytics/ })).toHaveCount(0);
 });
 
 /**

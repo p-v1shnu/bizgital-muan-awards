@@ -66,6 +66,33 @@ export default async function seed() {
         },
       },
       footerLocationLo: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ',
+      // The privacy policy the team owns. The retention period here is
+      // deliberately not the page's fallback wording — 18 months rather than 12 —
+      // so the spec can tell which of the two reached the browser. The first
+      // block keeps its bullets and its *emphasis* so the rendering conventions
+      // are exercised by something the database sent, not by a constant.
+      privacyBlocks: [
+        {
+          titleLo: 'ຕອນສົ່ງລາຍຊື່ ເຮົາເກັບຫຍັງແດ່',
+          bodyLo: [
+            '- *ຊື່ຜູ້ສ້າງສັນ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ* ທີ່ທ່ານພິມມາ',
+            '- *ຊື່ ແລະ ອີເມວຂອງທ່ານ* — *ບໍ່ບັງຄັບ*',
+            '- *ຮ່ອງຮອຍທາງເທັກນິກ* ເພື່ອກັນສະແປມ',
+          ].join('\n'),
+        },
+        {
+          titleLo: 'ເກັບໄວ້ດົນປານໃດ',
+          bodyLo: 'ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ *ພາຍໃນ 18 ເດືອນ* ຫຼັງງານປີນັ້ນຈົບ',
+        },
+        {
+          titleLo: 'ສະຖິຕິການເຂົ້າຊົມ',
+          bodyLo: 'ເວັບໃຊ້ *Google Analytics* ນັບຈຳນວນຜູ້ເຂົ້າຊົມ · ເລີ່ມນັບ *ຕັ້ງແຕ່ທ່ານເປີດໜ້າ*',
+        },
+        {
+          titleLo: 'ຢາກໃຫ້ລຶບຂໍ້ມູນ',
+          bodyLo: 'ຂຽນມາຫາທີມງານຕາມຊ່ອງທາງຂ້າງລຸ່ມ ພ້ອມບອກຊື່ທີ່ທ່ານສົ່ງເຂົ້າມາ',
+        },
+      ],
       // Every card state a fresh install comes up with (backend/prisma/seed.ts),
       // so the browser and any screenshot taken from it show what the team will
       // actually see rather than a half-filled stand-in.

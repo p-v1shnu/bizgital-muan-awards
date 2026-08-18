@@ -304,8 +304,8 @@ model PublicSubmission {
   /// this holds what was actually typed, because §7.2 also says nothing sent
   /// in is ever thrown away.
   originalNameRaw String?
-  creatorLink    String?
-  reason         String? @db.Text
+  creatorLink     String?
+  reason          String? @db.Text
 
   submitterName  String?
   submitterEmail String?
@@ -368,12 +368,12 @@ model SiteSetting {
   /// The organisation's own accounts, shown as icon links in the footer —
   /// separate from a Creator's or Judge's own socialLinks. { facebook, tiktok,
   /// youtube, instagram }; a platform with no value here shows no icon.
-  socialLinks Json?
+  socialLinks      Json?
   /// The "where this came from and what it's for" paragraphs on /about,
   /// written by the team rather than typed at launch — nullable rather than
   /// defaulted, since /about shows an explicit placeholder until this is
   /// filled in. One paragraph per line, same convention as Edition.activitiesLo.
-  aboutHistoryLo String? @db.Text
+  aboutHistoryLo   String? @db.Text
   /// How to reach the team, shown in /about's contact box. Two promises on that
   /// page already depend on it: the privacy section tells a submitter to write
   /// in to have their name removed, and the FAQ answers where to ask about
@@ -383,8 +383,8 @@ model SiteSetting {
   /// An address and a number, and deliberately no third column for the team's
   /// Facebook page: socialLinks above already puts it in the footer of every
   /// page, so a second copy here would only be one more thing to keep in step.
-  contactEmail String?
-  contactPhone String?
+  contactEmail     String?
+  contactPhone     String?
   /// The whole FAQ on /about, in display order: `[{ questionLo, answerLo }]`.
   /// The team writes the questions as well as the answers and can add or remove
   /// entries, so a question nobody anticipated does not need a migration — which
@@ -394,7 +394,7 @@ model SiteSetting {
   /// An answer holds one paragraph per line, same convention as aboutHistoryLo.
   /// Nullable: /about shows a placeholder rather than an empty accordion, and
   /// the five entries the page used to hard-code are seeded as the starting set.
-  faq Json?
+  faq              Json?
   /// How the awards are judged, in order: `[{ titleLo, bodyLo }]`. Two pages
   /// describe this — the homepage's "how this is judged" band and /about's own
   /// steps — and each carried its own copy of the words, which had already
@@ -403,7 +403,7 @@ model SiteSetting {
   /// Any number of steps: the homepage lays them out in a row of cards, so a
   /// fifth is a design decision the team can see the result of. Nullable, and
   /// the four steps the pages used to hold are seeded as the starting set.
-  judgingSteps Json?
+  judgingSteps     Json?
   /// The copy on the two cards under the homepage hero, keyed by what the site
   /// is currently able to say: `{ noYear|draft|published|nominees|winners
   /// |entriesOpen: { titleLo, bodyLo }, hallOfWinners: { bodyLo } }`.
@@ -416,10 +416,10 @@ model SiteSetting {
   /// hallOfWinners carries no title on purpose: that card's heading is the name
   /// of the page it leads to, and the nav and footer say it too. Editable there
   /// and fixed in the chrome is an inconsistency the team could not then fix.
-  homeCards Json?
+  homeCards        Json?
   /// What happens after someone sends a name in, listed on /submit. One item per
   /// line, same convention as Edition.activitiesLo.
-  submitAfterLo String? @db.Text
+  submitAfterLo    String? @db.Text
   /// The browser-tab title and search-result description of the pages that have
   /// no year or person of their own: `{ home|about|submit|winners: { titleLo,
   /// descriptionLo } }`. A year, a category and a creator build theirs from their
@@ -428,10 +428,23 @@ model SiteSetting {
   /// Keyed like homeCards and for the same reason — the set of pages is the
   /// site's, the words are the team's — and blank falls back to the page's own,
   /// because a page whose title Google reads must never be able to go empty.
-  pageSeo Json?
+  pageSeo          Json?
   /// The line beside the copyright in the footer. Where the organisation is,
   /// which is the kind of fact that changes without a developer being involved.
   footerLocationLo String?
+
+  /// The privacy section of /about: `[{ titleLo, bodyLo }]` in the order shown.
+  ///
+  /// This is policy — what is collected, how long it is kept, what is never done
+  /// with it — so the team has to own the words. It sat in the page instead,
+  /// which meant "we delete submitter details within 12 months" could only be
+  /// made true or false by a developer, and the same twelve months was written
+  /// in a second place (the entry form) with nothing keeping the two in step.
+  ///
+  /// `bodyLo` is plain text with two conventions the back office explains: a
+  /// blank line starts a paragraph, a line beginning "- " is a bullet, and
+  /// *stars* mark emphasis. No HTML is stored or rendered.
+  privacyBlocks Json?
 
   updatedAt DateTime @updatedAt
 

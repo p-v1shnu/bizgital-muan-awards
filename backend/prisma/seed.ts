@@ -113,6 +113,47 @@ const STARTING_PAGE_SEO = {
   },
 };
 
+/**
+ * The privacy section of /about. Policy, so the team owns the words — a fresh
+ * install starts from what the site has always said rather than an empty page,
+ * and the blocks are edited (or deleted, if one stops being true) in
+ * /admin/site. Plain text: blank line = paragraph, "- " = bullet, *stars* =
+ * emphasis.
+ */
+const STARTING_PRIVACY_BLOCKS = [
+  {
+    titleLo: 'ຕອນສົ່ງລາຍຊື່ ເຮົາເກັບຫຍັງແດ່',
+    bodyLo: [
+      '- *ຊື່ຜູ້ສ້າງສັນ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ* ທີ່ທ່ານພິມມາ — ທີມງານໃຊ້ຄັດເລືອກນອມິນີ',
+      '- *ຊື່ ແລະ ອີເມວຂອງທ່ານ* — *ບໍ່ບັງຄັບ* ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບເທົ່ານັ້ນ',
+      '- *ຮ່ອງຮອຍທາງເທັກນິກ* ເພື່ອກັນສະແປມ — ທີ່ຢູ່ IP ຖືກ *ປ່ຽນເປັນລະຫັດຫຍໍ້* ກ່ອນບັນທຶກ ຈຶ່ງອ່ານກັບເປັນເລກເດີມບໍ່ໄດ້',
+    ].join('\n'),
+  },
+  {
+    titleLo: 'ເກັບໄວ້ດົນປານໃດ',
+    bodyLo:
+      'ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ *ພາຍໃນ 12 ເດືອນ* ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຜູ້ສ້າງສັນ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງເກັບຖາວອນ',
+  },
+  {
+    titleLo: 'ເຮົາບໍ່ເຮັດຫຍັງກັບຂໍ້ມູນຂອງທ່ານ',
+    bodyLo:
+      'ບໍ່ຂາຍ ບໍ່ແລກປ່ຽນ ແລະ ບໍ່ສົ່ງອີເມວໂຄສະນາ · ຄົນທີ່ເຫັນຂໍ້ມູນຜູ້ສົ່ງມີສະເພາະທີມງານທີ່ມີບັນຊີຫຼັງບ້ານ ແລະ ທຸກຄັ້ງທີ່ມີການແກ້ໄຂຖືກບັນທຶກໄວ້',
+  },
+  {
+    titleLo: 'ສະຖິຕິການເຂົ້າຊົມ',
+    bodyLo: [
+      'ເວັບໃຊ້ *Google Analytics* ນັບຈຳນວນຜູ້ເຂົ້າຊົມ ແລະ ເບິ່ງວ່າໜ້າໃດຖືກເປີດຫຼາຍ · ເລີ່ມນັບ *ຕັ້ງແຕ່ທ່ານເປີດໜ້າ*',
+      '',
+      'ສິ່ງທີ່ຖືກນັບແມ່ນ *ໜ້າທີ່ເປີດ, ຊະນິດອຸປະກອນ, ພາສາ ແລະ ປະເທດໂດຍປະມານ* — *ບໍ່ແມ່ນຊື່ ຫຼື ອີເມວຂອງທ່ານ* ແລະ Google ບໍ່ໄດ້ບັນທຶກທີ່ຢູ່ IP ໄວ້ໃນລາຍງານ',
+    ].join('\n'),
+  },
+  {
+    titleLo: 'ຢາກໃຫ້ລຶບຂໍ້ມູນ',
+    bodyLo:
+      'ຂຽນມາຫາທີມງານຕາມຊ່ອງທາງຂ້າງລຸ່ມ ພ້ອມບອກຊື່ທີ່ທ່ານສົ່ງເຂົ້າມາ — ເຮົາຈະລຶບຂໍ້ມູນຜູ້ສົ່ງອອກໃຫ້',
+  },
+];
+
 async function main() {
   // The homepage reads its evergreen copy from here (PRD §6.1.1), so the row
   // has to exist before anything renders.
@@ -129,6 +170,7 @@ async function main() {
       homeCards: STARTING_HOME_CARDS,
       submitAfterLo: STARTING_SUBMIT_AFTER,
       pageSeo: STARTING_PAGE_SEO,
+      privacyBlocks: STARTING_PRIVACY_BLOCKS,
       footerLocationLo: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ',
     },
   });

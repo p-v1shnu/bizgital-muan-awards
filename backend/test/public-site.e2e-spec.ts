@@ -479,6 +479,56 @@ describe('public site', () => {
   });
 
   /**
+   * The privacy section of /about. This one is policy rather than decoration —
+   * what is collected, how long submitter details are kept — so the team has to
+   * be able to change it, and a half-written block must not reach a page that
+   * makes promises.
+   */
+  describe('the privacy policy', () => {
+    it('keeps the blocks in order, trimmed, and drops one left half-written', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          privacyBlocks: [
+            { titleLo: ' ເກັບຫຍັງແດ່ ', bodyLo: '- *ຊື່* ທີ່ທ່ານພິມມາ\n- ອີເມວ' },
+            { titleLo: 'ເກັບໄວ້ດົນປານໃດ', bodyLo: 'ລຶບ *ພາຍໃນ 18 ເດືອນ*' },
+            { titleLo: 'ຫົວຂໍ້ທີ່ຍັງບໍ່ໄດ້ຂຽນ', bodyLo: '  ' },
+          ],
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      // The markers travel as written — the page turns them into elements, and
+      // nothing here is HTML, so there is nothing to escape on the way through.
+      expect(response.body.data.privacyBlocks).toEqual([
+        { titleLo: 'ເກັບຫຍັງແດ່', bodyLo: '- *ຊື່* ທີ່ທ່ານພິມມາ\n- ອີເມວ' },
+        { titleLo: 'ເກັບໄວ້ດົນປານໃດ', bodyLo: 'ລຶບ *ພາຍໃນ 18 ເດືອນ*' },
+      ]);
+    });
+
+    it('refuses a heading with nothing under it', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ privacyBlocks: [{ titleLo: 'ຫົວຂໍ້ລອຍໆ' }] })
+        .expect(400);
+    });
+
+    /**
+     * Deleting the last block is how a team that stops doing something says so —
+     * the page then falls back to the words it has always carried rather than
+     * showing a heading with nothing under it.
+     */
+    it('lets the whole section be emptied', async () => {
+      await api(h).put(path('/admin/site')).set(h.auth).send({ privacyBlocks: [] }).expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.privacyBlocks).toEqual([]);
+    });
+  });
+
+  /**
    * The homepage cards and /submit's "what happens next" list. The keys here are
    * the system's states rather than anything the team invents, so what has to
    * hold is that an unknown one cannot be stored and a blank one is not either —

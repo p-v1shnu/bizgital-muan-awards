@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import { Mail, Phone } from 'lucide-react';
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
+import { PolicyText } from '@/components/site/policy-text';
 import { cn } from '@/lib/utils';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
-import type { SiteSettings } from '@/types/api';
+import type { PrivacyBlock, SiteSettings } from '@/types/api';
 
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('about', {
@@ -16,15 +17,59 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * The one page whose copy is written rather than entered in the back office.
- * Anything still marked as a placeholder is waiting on the content team; the
- * markers are meant to be obvious so none of them reaches production unnoticed.
+ * Every sentence on this page is the team's to change from /admin/site — the
+ * summary, the history, the judging steps, the FAQ, the privacy policy and the
+ * contact details. What is left in code here is the page's furniture: section
+ * headings, the labels beside an e-mail and a phone number, and the note about
+ * turning analytics off, which is about how the site behaves rather than what
+ * the team promises.
  *
- * The sponsorship answer is the exception: it was only ever waiting on the
- * contact channels, which the team now enters in /admin/site, so it resolves by
- * itself rather than sitting there as a placeholder above a filled-in contact
- * box saying the opposite.
+ * The placeholders that remain mark fields nobody has filled in yet, and say
+ * where to fill them.
  */
+
+/**
+ * The words the privacy section carried before it became a field, kept as the
+ * fallback so an emptied list never leaves the section headed and blank. Every
+ * database that existed before migration 21 was given exactly these, and a
+ * fresh install is seeded with them.
+ */
+const FALLBACK_PRIVACY: PrivacyBlock[] = [
+  {
+    titleLo: 'ຕອນສົ່ງລາຍຊື່ ເຮົາເກັບຫຍັງແດ່',
+    bodyLo: [
+      '- *ຊື່ຜູ້ສ້າງສັນ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ* ທີ່ທ່ານພິມມາ — ທີມງານໃຊ້ຄັດເລືອກນອມິນີ',
+      '- *ຊື່ ແລະ ອີເມວຂອງທ່ານ* — *ບໍ່ບັງຄັບ* ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບເທົ່ານັ້ນ',
+      '- *ຮ່ອງຮອຍທາງເທັກນິກ* ເພື່ອກັນສະແປມ — ທີ່ຢູ່ IP ຖືກ *ປ່ຽນເປັນລະຫັດຫຍໍ້* ກ່ອນບັນທຶກ ຈຶ່ງອ່ານກັບເປັນເລກເດີມບໍ່ໄດ້',
+    ].join('\n'),
+  },
+  {
+    titleLo: 'ເກັບໄວ້ດົນປານໃດ',
+    bodyLo:
+      'ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ *ພາຍໃນ 12 ເດືອນ* ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຜູ້ສ້າງສັນ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງເກັບຖາວອນ',
+  },
+  {
+    titleLo: 'ເຮົາບໍ່ເຮັດຫຍັງກັບຂໍ້ມູນຂອງທ່ານ',
+    bodyLo:
+      'ບໍ່ຂາຍ ບໍ່ແລກປ່ຽນ ແລະ ບໍ່ສົ່ງອີເມວໂຄສະນາ · ຄົນທີ່ເຫັນຂໍ້ມູນຜູ້ສົ່ງມີສະເພາະທີມງານທີ່ມີບັນຊີຫຼັງບ້ານ ແລະ ທຸກຄັ້ງທີ່ມີການແກ້ໄຂຖືກບັນທຶກໄວ້',
+  },
+  {
+    titleLo: 'ສະຖິຕິການເຂົ້າຊົມ',
+    bodyLo: [
+      'ເວັບໃຊ້ *Google Analytics* ນັບຈຳນວນຜູ້ເຂົ້າຊົມ ແລະ ເບິ່ງວ່າໜ້າໃດຖືກເປີດຫຼາຍ · ເລີ່ມນັບ *ຕັ້ງແຕ່ທ່ານເປີດໜ້າ*',
+      '',
+      'ສິ່ງທີ່ຖືກນັບແມ່ນ *ໜ້າທີ່ເປີດ, ຊະນິດອຸປະກອນ, ພາສາ ແລະ ປະເທດໂດຍປະມານ* — *ບໍ່ແມ່ນຊື່ ຫຼື ອີເມວຂອງທ່ານ* ແລະ Google ບໍ່ໄດ້ບັນທຶກທີ່ຢູ່ IP ໄວ້ໃນລາຍງານ',
+    ].join('\n'),
+  },
+  {
+    titleLo: 'ຢາກໃຫ້ລຶບຂໍ້ມູນ',
+    bodyLo:
+      'ຂຽນມາຫາທີມງານຕາມຊ່ອງທາງຂ້າງລຸ່ມ ພ້ອມບອກຊື່ທີ່ທ່ານສົ່ງເຂົ້າມາ — ເຮົາຈະລຶບຂໍ້ມູນຜູ້ສົ່ງອອກໃຫ້',
+  },
+];
+
+/** Set only where analytics is actually configured — see the note it guards. */
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
 
 /**
  * One way to reach the team. Same shape as the entry cards under the homepage
@@ -86,6 +131,9 @@ function paragraphs(value: string | null | undefined) {
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
   const history = paragraphs(site?.aboutHistoryLo);
+  // An emptied list falls back to the words this section has always carried,
+  // rather than to a heading with nothing under it.
+  const privacy = site?.privacyBlocks?.length ? site.privacyBlocks : FALLBACK_PRIVACY;
 
   // How to reach the team: an address and a number. The team's Facebook page is
   // not repeated here — the footer already carries it on every page.
@@ -168,59 +216,27 @@ export default async function AboutPage() {
         )}
       </Section>
 
-      {/* The form asks for a name and an email, so the page has to say what
-          happens to them. Written as plainly as the rest of the site. */}
+      {/*
+        Policy, so the team owns the words: SiteSetting.privacyBlocks. What is
+        collected, how long submitter details are kept and what is never done
+        with them all used to be written here, which made "deleted within 12
+        months" a promise only a deploy could change.
+
+        The opt-out line below is not policy — it is an instruction about how
+        this site behaves, and it only makes sense while analytics is running,
+        so it is in code and appears only when GA is configured.
+      */}
       <Section id="privacy" eyebrow="ຄວາມເປັນສ່ວນຕົວ" title="ຂໍ້ມູນຂອງທ່ານ" className="bg-panel-2/50">
         <div className="max-w-3xl space-y-6 text-[14.5px] leading-[1.85] text-ink-2">
-          <div>
-            <h3 className="font-serif text-[19px] text-ink">ຕອນສົ່ງລາຍຊື່ ເຮົາເກັບຫຍັງແດ່</h3>
-            <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>
-                <b className="text-ink">ຊື່ຜູ້ສ້າງສັນ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ</b> ທີ່ທ່ານພິມມາ —
-                ທີມງານໃຊ້ຄັດເລືອກນອມິນີ
-              </li>
-              <li>
-                <b className="text-ink">ຊື່ ແລະ ອີເມວຂອງທ່ານ</b> —{' '}
-                <b className="text-ink">ບໍ່ບັງຄັບ</b> ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ
-                ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບເທົ່ານັ້ນ
-              </li>
-              <li>
-                <b className="text-ink">ຮ່ອງຮອຍທາງເທັກນິກ</b> ເພື່ອກັນສະແປມ —
-                ທີ່ຢູ່ IP ຖືກ<b className="text-ink">ປ່ຽນເປັນລະຫັດຫຍໍ້</b> ກ່ອນບັນທຶກ
-                ຈຶ່ງອ່ານກັບເປັນເລກເດີມບໍ່ໄດ້
-              </li>
-            </ul>
-          </div>
+          {privacy.map((block) => (
+            <div key={block.titleLo}>
+              <h3 className="font-serif text-[19px] text-ink">{block.titleLo}</h3>
+              <PolicyText body={block.bodyLo} />
+            </div>
+          ))}
 
-          <div>
-            <h3 className="font-serif text-[19px] text-ink">ເກັບໄວ້ດົນປານໃດ</h3>
-            <p className="mt-2">
-              ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ <b className="text-ink">ພາຍໃນ 12 ເດືອນ</b>{' '}
-              ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຜູ້ສ້າງສັນ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງເກັບຖາວອນ
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-serif text-[19px] text-ink">ເຮົາບໍ່ເຮັດຫຍັງກັບຂໍ້ມູນຂອງທ່ານ</h3>
-            <p className="mt-2">
-              ບໍ່ຂາຍ ບໍ່ແລກປ່ຽນ ແລະ ບໍ່ສົ່ງອີເມວໂຄສະນາ ·
-              ຄົນທີ່ເຫັນຂໍ້ມູນຜູ້ສົ່ງມີສະເພາະທີມງານທີ່ມີບັນຊີຫຼັງບ້ານ
-              ແລະ ທຸກຄັ້ງທີ່ມີການແກ້ໄຂຖືກບັນທຶກໄວ້
-            </p>
-          </div>
-
-          <div>
-            <h3 className="font-serif text-[19px] text-ink">ສະຖິຕິການເຂົ້າຊົມ</h3>
-            <p className="mt-2">
-              ເວັບໃຊ້ <b className="text-ink">Google Analytics</b> ນັບຈຳນວນຜູ້ເຂົ້າຊົມ
-              ແລະ ເບິ່ງວ່າໜ້າໃດຖືກເປີດຫຼາຍ · ເລີ່ມນັບ<b className="text-ink">ຕັ້ງແຕ່ທ່ານເປີດໜ້າ</b>
-            </p>
-            <p className="mt-2">
-              ສິ່ງທີ່ຖືກນັບແມ່ນ <b className="text-ink">ໜ້າທີ່ເປີດ, ຊະນິດອຸປະກອນ, ພາສາ ແລະ
-              ປະເທດໂດຍປະມານ</b> — <b className="text-ink">ບໍ່ແມ່ນຊື່ ຫຼື ອີເມວຂອງທ່ານ</b>{' '}
-              ແລະ Google ບໍ່ໄດ້ບັນທຶກທີ່ຢູ່ IP ໄວ້ໃນລາຍງານ
-            </p>
-            <p className="mt-2">
+          {GA_ID && (
+            <p className="text-[13.5px] text-ink-3">
               ບໍ່ຢາກຖືກນັບ: ເປີດໂໝດ “ບໍ່ຕິດຕາມ” ຫຼື ບລັອກຄຸກກີໃນເບົາເຊີ ຫຼື ຕິດຕັ້ງ{' '}
               <a
                 href="https://tools.google.com/dlpage/gaoptout"
@@ -232,15 +248,7 @@ export default async function AboutPage() {
               </a>{' '}
               — ເວັບຍັງໃຊ້ໄດ້ຄົບທຸກຢ່າງ
             </p>
-          </div>
-
-          <div>
-            <h3 className="font-serif text-[19px] text-ink">ຢາກໃຫ້ລຶບຂໍ້ມູນ</h3>
-            <p className="mt-2">
-              ຂຽນມາຫາທີມງານຕາມຊ່ອງທາງຂ້າງລຸ່ມ ພ້ອມບອກຊື່ທີ່ທ່ານສົ່ງເຂົ້າມາ —
-              ເຮົາຈະລຶບຂໍ້ມູນຜູ້ສົ່ງອອກໃຫ້
-            </p>
-          </div>
+          )}
         </div>
       </Section>
 

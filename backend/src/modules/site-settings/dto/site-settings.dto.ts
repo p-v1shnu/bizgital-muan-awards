@@ -51,6 +51,32 @@ export class JudgingStepDto {
 }
 
 /**
+ * One block of the privacy section on /about — a heading and what sits under it.
+ *
+ * A list rather than a fixed set of fields, for the reason the FAQ is one: the
+ * questions people ask about their data are not fixed either. If the team stops
+ * using Google Analytics, that block is deleted rather than left saying
+ * something untrue.
+ */
+export class PrivacyBlockDto {
+  @ApiProperty({ example: 'ເກັບໄວ້ດົນປານໃດ' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(80)
+  titleLo!: string;
+
+  @ApiProperty({
+    description:
+      'Plain text. A blank line starts a paragraph, a line beginning "- " is a bullet, ' +
+      'and *stars* mark emphasis. Never HTML.',
+  })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
+  bodyLo!: string;
+}
+
+/**
  * One homepage card's words. Both fields are optional: a blank one falls back to
  * the page's own wording, so the team can reword the states it cares about and
  * leave the rest alone.
@@ -289,6 +315,17 @@ export class UpdateSiteSettingsDto {
   @ValidateNested({ each: true })
   @Type(() => JudgingStepDto)
   judgingSteps?: JudgingStepDto[];
+
+  @ApiPropertyOptional({
+    type: [PrivacyBlockDto],
+    description: 'The privacy section of /about, in the order shown',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @ValidateNested({ each: true })
+  @Type(() => PrivacyBlockDto)
+  privacyBlocks?: PrivacyBlockDto[];
 
   @ApiPropertyOptional({ type: HomeCardsDto, description: 'Copy on the two cards under the homepage hero' })
   @IsOptional()

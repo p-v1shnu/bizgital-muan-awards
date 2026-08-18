@@ -206,11 +206,17 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
 
       <fieldset className="mt-6 border-t border-hairline pt-5">
         <legend className="sr-only">ຂໍ້ມູນຜູ້ສົ່ງ</legend>
+        {/*
+          This line used to repeat "deleted within 12 months". That period is the
+          team's to set and it lives in the privacy policy they now edit, so this
+          points at the policy instead of restating it — which is how the two
+          stop being able to disagree with each other.
+        */}
         <p className="mb-4 text-[12.5px] text-ink-3">
           ສອງຊ່ອງລຸ່ມນີ້ <b className="text-ink-2">ບໍ່ບັງຄັບ</b> — ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ ·
-          ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບ ແລະ ລຶບພາຍໃນ 12 ເດືອນ{' '}
+          ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບ ແລະ ຖືກລຶບຕາມກຳນົດທີ່ບອກໄວ້ໃນ{' '}
           <a href="/about#privacy" className="text-brand-deep underline">
-            ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ
+            ໜ້າຂໍ້ມູນສ່ວນຕົວ
           </a>
         </p>
         <div className="grid gap-4 sm:grid-cols-2">

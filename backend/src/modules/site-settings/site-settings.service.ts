@@ -40,6 +40,8 @@ export class SiteSettingsService {
         faq: dto.faq === undefined ? undefined : cleanFaq(dto.faq),
         judgingSteps:
           dto.judgingSteps === undefined ? undefined : cleanEntries(dto.judgingSteps),
+        privacyBlocks:
+          dto.privacyBlocks === undefined ? undefined : cleanEntries(dto.privacyBlocks),
         homeCards: dto.homeCards === undefined ? undefined : cleanHomeCards(dto.homeCards),
         pageSeo: dto.pageSeo === undefined ? undefined : cleanPageSeo(dto.pageSeo),
       },

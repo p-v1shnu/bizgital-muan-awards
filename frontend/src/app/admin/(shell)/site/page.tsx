@@ -11,7 +11,14 @@ import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
+import type {
+  FaqItem,
+  HomeCards,
+  JudgingStep,
+  PageSeo,
+  PrivacyBlock,
+  SiteSettings,
+} from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -101,6 +108,7 @@ function SettingsForm({
   const [steps, setSteps] = useState<JudgingStep[]>(initial?.judgingSteps ?? []);
   const [cards, setCards] = useState<HomeCards>(initial?.homeCards ?? {});
   const [seo, setSeo] = useState<Record<string, PageSeo>>(initial?.pageSeo ?? {});
+  const [privacy, setPrivacy] = useState<PrivacyBlock[]>(initial?.privacyBlocks ?? []);
   const [saved, setSaved] = useState(false);
 
   // The two the page has always been asked and the team alone can answer. They
@@ -163,6 +171,9 @@ function SettingsForm({
                 // than refused, so a stray empty row cannot block a save.
                 faq: faq.filter((item) => item.questionLo.trim() && item.answerLo.trim()),
                 judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
+                privacyBlocks: privacy.filter(
+                  (block) => block.titleLo.trim() && block.bodyLo.trim(),
+                ),
                 homeCards: cards,
                 submitAfterLo: emptyToNull(form.submitAfterLo),
                 pageSeo: seo,
@@ -404,6 +415,43 @@ function SettingsForm({
                         label: 'ຄຳຕອບ',
                         multiline: true,
                         help: 'ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່',
+                      },
+                    ]}
+                  />
+                </div>
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader
+                title="ຄວາມເປັນສ່ວນຕົວ (ໜ້າ /about)"
+                aside={`${privacy.length} ຫົວຂໍ້`}
+              />
+              <CardBody>
+                <Note tone="brand">
+                  ນີ້ຄື<b>ຄຳສັນຍາຂອງທີມງານ</b> ບໍ່ແມ່ນຂໍ້ຄວາມປະດັບ — ບອກວ່າເກັບຫຍັງ, ເກັບດົນປານໃດ
+                  ແລະ ບໍ່ເຮັດຫຍັງກັບຂໍ້ມູນ · ຖ້າວິທີເຮັດວຽກປ່ຽນ (ເຊັ່ນ ເລີກໃຊ້ Google Analytics)
+                  ຕ້ອງມາແກ້ບ່ອນນີ້ ຫຼື ລຶບຫົວຂໍ້ນັ້ນອອກ ບໍ່ດັ່ງນັ້ນໜ້າເວັບຈະບອກສິ່ງທີ່ບໍ່ຈິງ
+                </Note>
+                <Note>
+                  ໃນຊ່ອງ “ເນື້ອຫາ” ໃຊ້ໄດ້ 3 ຢ່າງ: ຂຶ້ນແຖວໃໝ່ເວັ້ນ 1 ແຖວ = ຫຍໍ້ໜ້າໃໝ່ ·
+                  ແຖວທີ່ເລີ່ມດ້ວຍ <b>- </b> = ຂໍ້ຍ່ອຍ · ຄຳໃນ <b>*ດາວ*</b> = ຕົວໜາ ·
+                  ໃສ່ HTML ບໍ່ໄດ້ (ຈະຂຶ້ນເປັນຕົວອັກສອນເສີຍໆ)
+                </Note>
+                <div className="mt-4">
+                  <EntryListEditor
+                    items={privacy}
+                    onChange={setPrivacy}
+                    blank={{ titleLo: '', bodyLo: '' }}
+                    entryLabel={(position) => `ຫົວຂໍ້ ${position}`}
+                    addLabel="ເພີ່ມຫົວຂໍ້"
+                    removeLabel="ລຶບຫົວຂໍ້ນີ້"
+                    fields={[
+                      { key: 'titleLo', label: 'ຫົວຂໍ້', placeholder: 'ເກັບໄວ້ດົນປານໃດ' },
+                      {
+                        key: 'bodyLo',
+                        label: 'ເນື້ອຫາ',
+                        multiline: true,
+                        help: 'ຂຶ້ນແຖວໃໝ່ = ຫຍໍ້ໜ້າ · “- ” = ຂໍ້ຍ່ອຍ · *ດາວ* = ຕົວໜາ',
                       },
                     ]}
                   />
