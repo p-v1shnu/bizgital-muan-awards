@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Star, Trash2 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -18,20 +18,6 @@ import type { Category, Edition, Nomination } from '@/types/api';
 export function NomineesTab({ edition }: { edition: Edition }) {
   const categoriesPath = `/admin/editions/${edition.id}/categories`;
   const { data: categories, isLoading } = useApi<Category[]>(categoriesPath);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  // Open on the first category that still needs work, since that is why the
-  // team came to this tab.
-  useEffect(() => {
-    if (selectedId || !categories?.length) return;
-    const needsWork = categories.find((category) => (category._count?.nominations ?? 0) === 0);
-    setSelectedId((needsWork ?? categories[0]).id);
-  }, [categories, selectedId]);
-
-  const selected = useMemo(
-    () => categories?.find((category) => category.id === selectedId) ?? null,
-    [categories, selectedId],
-  );
 
   if (isLoading) return <LoadingBlock />;
   if (!categories?.length) {
@@ -41,6 +27,38 @@ export function NomineesTab({ edition }: { edition: Edition }) {
       </Card>
     );
   }
+
+  // Only mounted once the list is here, which is what lets the panel choose the
+  // category it opens on without an effect — see the comment below.
+  return <CategoryPanel categories={categories} categoriesPath={categoriesPath} />;
+}
+
+function CategoryPanel({
+  categories,
+  categoriesPath,
+}: {
+  categories: Category[];
+  categoriesPath: string;
+}) {
+  /**
+   * Opens on the first category that still needs work, since that is why the
+   * team came to this tab — and stays wherever they put it after that.
+   *
+   * Worked out in the initializer, which runs once for this list: an effect
+   * seeding it rendered a frame with nothing selected and the panel beside it
+   * blank, and deriving it on every render would be worse still — adding the
+   * first nominee stops that category needing work, so the panel would jump to
+   * another one while the team was still typing in this one.
+   */
+  const [selectedId, setSelectedId] = useState<string>(() => {
+    const needsWork = categories.find((category) => (category._count?.nominations ?? 0) === 0);
+    return (needsWork ?? categories[0]).id;
+  });
+
+  const selected = useMemo(
+    () => categories.find((category) => category.id === selectedId) ?? null,
+    [categories, selectedId],
+  );
 
   return (
     <Card className="overflow-hidden p-0">

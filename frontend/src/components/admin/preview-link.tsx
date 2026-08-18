@@ -20,7 +20,7 @@ interface Minted {
  * Opens an unpublished year (PRD §4.3.2). A signed-in admin can just follow
  * the link; the token is what lets them send it to someone who cannot log in.
  */
-export function PreviewLink({ editionId, slug }: { editionId: string; slug: string }) {
+export function PreviewLink({ editionId }: { editionId: string }) {
   const [open, setOpen] = useState(false);
   const [minted, setMinted] = useState<Minted | null>(null);
   const [copied, setCopied] = useState(false);

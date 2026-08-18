@@ -395,10 +395,6 @@ export class SubmissionsService {
 
 type QueueCategory = Prisma.CategoryGetPayload<{ include: { edition: true } }>;
 
-type QueueRow = Prisma.PublicSubmissionGetPayload<{
-  include: { category: { include: { edition: true } } };
-}>;
-
 /**
  * One name in one category, however many times it was sent in. `count` is the
  * true number; `entries` carries only the most recent few, since the reasons

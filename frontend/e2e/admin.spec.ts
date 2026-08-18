@@ -279,6 +279,46 @@ test('a preview link opens a draft for someone who cannot sign in', async ({ pag
   await request.delete(`${api}/admin/editions/${draftId}`, { headers: auth });
 });
 
+/**
+ * The page whose entire job is copy the team owns, and the one place a form is
+ * filled from the server rather than typed from scratch — so what needs proving
+ * is that the values arrive, that saving keeps them, and that a reload agrees.
+ *
+ * Nothing here asserted any of that before: the specs read these words off the
+ * public pages, where the seed had put them through the API, so the form itself
+ * could have been broken without a single test noticing.
+ */
+test('the site content form arrives filled, and a save survives a reload', async ({ page }) => {
+  await page.goto('/admin/site');
+
+  // Seeded through the API, so a blank box here means the form never read it.
+  const brand = page.getByRole('textbox', { name: /ຂໍ້ຄວາມແບຣນ/ });
+  expect((await brand.inputValue()).trim(), 'the form starts from what the server holds').not.toBe(
+    '',
+  );
+
+  // The caption is the one field the seed leaves alone, so writing to it cannot
+  // change what another spec reads off a public page.
+  const caption = page.getByRole('textbox', { name: /ຄຳບັນຍາຍໃຕ້ຮູບ/ });
+  const original = await caption.inputValue();
+  try {
+    await caption.fill('ຄຳບັນຍາຍທົດສອບ');
+    await page.getByRole('button', { name: 'ບັນທຶກ' }).first().click();
+    await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
+
+    await page.reload();
+    await expect(page.getByRole('textbox', { name: /ຄຳບັນຍາຍໃຕ້ຮູບ/ })).toHaveValue(
+      'ຄຳບັນຍາຍທົດສອບ',
+    );
+  } finally {
+    // Put the year back as it was found, cleared box included.
+    const after = page.getByRole('textbox', { name: /ຄຳບັນຍາຍໃຕ້ຮູບ/ });
+    await after.fill(original);
+    await page.getByRole('button', { name: 'ບັນທຶກ' }).first().click();
+    await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
+  }
+});
+
 test('only a super admin reaches users and the audit trail', async ({ page }) => {
   await page.goto('/admin/users');
   await expect(page.getByText('ບັນຊີທີມງານ')).toBeVisible();

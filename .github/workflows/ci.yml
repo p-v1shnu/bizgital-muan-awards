@@ -53,6 +53,10 @@ jobs:
 
       - run: npm ci
       - run: npx prisma generate
+      # The lint scripts named a linter neither project had installed, so this
+      # step is what keeps that from happening again: a config nobody runs is
+      # how the last one rotted.
+      - run: npm run lint
       - run: npx prisma migrate deploy
       - run: npm run build
       - run: npm test
@@ -78,6 +82,7 @@ jobs:
 
       - run: npm ci
       - run: npm run typecheck
+      - run: npm run lint
       - run: npm run build
       - run: npm audit --audit-level=high
 

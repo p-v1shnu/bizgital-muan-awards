@@ -80,6 +80,25 @@ per category, one year accepting entries at a time. It boots the actual
 application with the same pipes, filters and guards as `main.ts`, so a test
 cannot pass on a route production would reject.
 
+### Linting
+
+```bash
+npm run lint        # in either project — CI runs this too
+npm run lint:fix    # applies what is fixable
+```
+
+ESLint flat config on both sides: the frontend takes the rule sets Next ships
+(`core-web-vitals` plus typescript-eslint's recommended), the backend takes
+typescript-eslint's untyped `recommended`. The type-aware rules are off on
+purpose — with Prisma's generated types they bury a first run in hundreds of
+`no-unsafe-*` findings, and a linter nobody can get to zero is a linter nobody
+runs.
+
+Two rules are switched off inline, each with the reason next to it, rather than
+disabled across the project: the plain `<a>` in `app/error.tsx` (that page
+renders when the router is the thing that broke) and the full navigation after
+the first admin is created (`AuthProvider` has to re-read the session).
+
 ### First admin account
 
 There is no seeded admin — the first one is created through the app so the

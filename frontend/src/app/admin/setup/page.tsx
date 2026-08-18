@@ -44,6 +44,9 @@ export default function SetupPage() {
       });
       setAccessToken(session.accessToken);
       // A full navigation, so AuthProvider re-reads the session it just gained.
+      // router.push() would keep the provider that mounted without one, and the
+      // first admin would land on a back office that thinks nobody is signed in.
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.assign('/admin');
     } catch (caught) {
       setError(caught);

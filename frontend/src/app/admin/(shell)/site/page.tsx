@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
@@ -57,54 +57,51 @@ const SECTIONS = [
 export default function SitePage() {
   const { data, isLoading, error } = useApi<SiteSettings>('/admin/site');
 
-  const [form, setForm] = useState({
-    heroTitleLo: '',
-    brandStatementLo: '',
-    aboutTitleLo: '',
-    aboutSummaryLo: '',
-    aboutHistoryLo: '',
-    ctaTitleLo: '',
-    ctaBodyLo: '',
-    heroCaptionLo: '',
-    contactEmail: '',
-    contactPhone: '',
-    submitAfterLo: '',
-    footerLocationLo: '',
-  });
-  const [heroImageKey, setHeroImageKey] = useState<string | null>(null);
-  const [gallery, setGallery] = useState<string[]>([]);
-  const [socials, setSocials] = useState<Record<string, string>>({});
-  const [faq, setFaq] = useState<FaqItem[]>([]);
-  const [steps, setSteps] = useState<JudgingStep[]>([]);
-  const [cards, setCards] = useState<HomeCards>({});
-  const [seo, setSeo] = useState<Record<string, PageSeo>>({});
-  const [saved, setSaved] = useState(false);
+  if (isLoading) return <LoadingBlock />;
 
-  // Seed the form once the settings arrive.
-  useEffect(() => {
-    if (!data) return;
-    setForm({
-      heroTitleLo: data.heroTitleLo ?? '',
-      brandStatementLo: data.brandStatementLo ?? '',
-      aboutTitleLo: data.aboutTitleLo ?? '',
-      aboutSummaryLo: data.aboutSummaryLo ?? '',
-      aboutHistoryLo: data.aboutHistoryLo ?? '',
-      ctaTitleLo: data.ctaTitleLo ?? '',
-      ctaBodyLo: data.ctaBodyLo ?? '',
-      heroCaptionLo: data.heroCaptionLo ?? '',
-      contactEmail: data.contactEmail ?? '',
-      contactPhone: data.contactPhone ?? '',
-      submitAfterLo: data.submitAfterLo ?? '',
-      footerLocationLo: data.footerLocationLo ?? '',
-    });
-    setHeroImageKey(data.heroImageKey);
-    setGallery(data.galleryImageKeys ?? []);
-    setSocials(data.socialLinks ?? {});
-    setFaq(data.faq ?? []);
-    setSteps(data.judgingSteps ?? []);
-    setCards(data.homeCards ?? {});
-    setSeo(data.pageSeo ?? {});
-  }, [data]);
+  /**
+   * The form is re-created when the settings arrive rather than patched into
+   * place afterwards — `key` is what makes React do that, and it lets every
+   * field below start from the value the server sent instead of from a blank
+   * that an effect then overwrites.
+   *
+   * It also settles a question the effect answered badly: a refetch while
+   * someone is typing (another admin saved, or the window regained focus) used
+   * to wipe the box under the cursor. Now the words the person is writing stay
+   * until they save them.
+   */
+  return <SettingsForm key={data ? 'loaded' : 'empty'} initial={data} loadError={error} />;
+}
+
+function SettingsForm({
+  initial,
+  loadError,
+}: {
+  initial: SiteSettings | undefined;
+  loadError: unknown;
+}) {
+  const [form, setForm] = useState({
+    heroTitleLo: initial?.heroTitleLo ?? '',
+    brandStatementLo: initial?.brandStatementLo ?? '',
+    aboutTitleLo: initial?.aboutTitleLo ?? '',
+    aboutSummaryLo: initial?.aboutSummaryLo ?? '',
+    aboutHistoryLo: initial?.aboutHistoryLo ?? '',
+    ctaTitleLo: initial?.ctaTitleLo ?? '',
+    ctaBodyLo: initial?.ctaBodyLo ?? '',
+    heroCaptionLo: initial?.heroCaptionLo ?? '',
+    contactEmail: initial?.contactEmail ?? '',
+    contactPhone: initial?.contactPhone ?? '',
+    submitAfterLo: initial?.submitAfterLo ?? '',
+    footerLocationLo: initial?.footerLocationLo ?? '',
+  });
+  const [heroImageKey, setHeroImageKey] = useState<string | null>(initial?.heroImageKey ?? null);
+  const [gallery, setGallery] = useState<string[]>(initial?.galleryImageKeys ?? []);
+  const [socials, setSocials] = useState<Record<string, string>>(initial?.socialLinks ?? {});
+  const [faq, setFaq] = useState<FaqItem[]>(initial?.faq ?? []);
+  const [steps, setSteps] = useState<JudgingStep[]>(initial?.judgingSteps ?? []);
+  const [cards, setCards] = useState<HomeCards>(initial?.homeCards ?? {});
+  const [seo, setSeo] = useState<Record<string, PageSeo>>(initial?.pageSeo ?? {});
+  const [saved, setSaved] = useState(false);
 
   // The two the page has always been asked and the team alone can answer. They
   // ship as answers now, so this only speaks up if someone removes one.
@@ -117,14 +114,12 @@ export default function SitePage() {
 
   const save = useApiMutation<Record<string, unknown>>('/admin/site', 'PUT', ['/admin/site', '/site']);
 
-  if (isLoading) return <LoadingBlock />;
-
   return (
     <>
       <PageHeader crumbs={[{ label: 'ເນື້ອຫາເວັບສ່ວນກາງ' }]} />
 
       <PageBody>
-        {error != null && <ErrorNote error={error} />}
+        {loadError != null && <ErrorNote error={loadError} />}
 
         <Note tone="brand">
           ສ່ວນນີ້ຄື<b>ເນື້ອຫາທີ່ບໍ່ຜູກກັບປີໃດ</b> — ຖ້າບໍ່ມີໃຜແຕະເວັບເລີຍ 18 ເດືອນ
