@@ -93,6 +93,7 @@ export default async function AboutPage() {
   const dialable = phone != null && /^[\d\s+\-().]+$/.test(phone);
   // Questions and answers both, in the order the team put them in.
   const faq = site?.faq ?? [];
+  const judgingSteps = site?.judgingSteps ?? [];
 
   return (
     <>
@@ -115,23 +116,27 @@ export default async function AboutPage() {
         )}
       </Section>
 
+      {/* The homepage renders this same list — one set of words for the two
+          pages, which is how they stop describing the process differently. */}
       <Section id="judging" eyebrow="ວິທີການຕັດສິນ" title="ຂັ້ນຕອນ" className="bg-panel-2/50">
-        <ol className="grid gap-4 md:grid-cols-2">
-          {[
-            { title: 'ເສີນຊື່', body: 'ເປີດໃຫ້ທຸກຄົນສົ່ງຊື່ຜ່ານໜ້າ “ສົ່ງລາຍຊື່”' },
-            { title: 'ຄັດກອງ', body: 'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີ ແລ້ວສະຫຼຸບເປັນລາຍຊື່ນອມິນີ' },
-            { title: 'ກຳມະການລົງຄະແນນ', body: 'ຄະນະກຳມະການຂອງປີນັ້ນລົງຄະແນນເປັນເອກະລາດ' },
-            { title: 'ປະກາດຜົນ', body: 'ປະກາດນອມິນີກ່ອນ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
-          ].map((step, index) => (
-            <li key={step.title} className="rounded-[var(--radius-box)] border border-rule bg-panel p-5">
-              <p className="font-serif text-xl text-ink">
-                <span className="mr-2 text-ink-3">{index + 1}.</span>
-                {step.title}
-              </p>
-              <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{step.body}</p>
-            </li>
-          ))}
-        </ol>
+        {judgingSteps.length > 0 ? (
+          <ol className="grid gap-4 md:grid-cols-2">
+            {judgingSteps.map((step, index) => (
+              <li
+                key={`${index}-${step.titleLo}`}
+                className="rounded-[var(--radius-box)] border border-rule bg-panel p-5"
+              >
+                <p className="font-serif text-xl text-ink">
+                  <span className="mr-2 text-ink-3">{index + 1}.</span>
+                  {step.titleLo}
+                </p>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <Placeholder>ຂັ້ນຕອນການຕັດສິນ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+        )}
       </Section>
 
       <Section id="faq" eyebrow="ຄຳຖາມທີ່ພົບເລື້ອຍ" title="FAQ">

@@ -31,6 +31,25 @@ export class FaqItemDto {
   answerLo!: string;
 }
 
+/**
+ * One step in "how this is judged". The homepage and /about both render the
+ * same list, so a step edited here changes on both — which is the point: they
+ * used to hold separate copies and had already drifted apart.
+ */
+export class JudgingStepDto {
+  @ApiProperty({ example: 'ຄັດກອງ' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(60)
+  titleLo!: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  bodyLo!: string;
+}
+
 /** Evergreen, site-level content — nothing here may name a year (PRD §6.1.1). */
 export class UpdateSiteSettingsDto {
   @ApiPropertyOptional({ description: 'Object storage key, never a full URL' })
@@ -145,4 +164,15 @@ export class UpdateSiteSettingsDto {
   @ValidateNested({ each: true })
   @Type(() => FaqItemDto)
   faq?: FaqItemDto[];
+
+  @ApiPropertyOptional({
+    type: [JudgingStepDto],
+    description: 'How the awards are judged, in order — rendered by the homepage and by /about',
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @ValidateNested({ each: true })
+  @Type(() => JudgingStepDto)
+  judgingSteps?: JudgingStepDto[];
 }

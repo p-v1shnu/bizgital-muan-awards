@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
+import { cleanEntries } from '../../common/utils/entries';
 import { cleanFaq } from '../../common/utils/faq';
 import { cleanSocialLinks } from '../../common/utils/social-links';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -35,6 +36,8 @@ export class SiteSettingsService {
         ...dto,
         socialLinks: dto.socialLinks === undefined ? undefined : cleanSocialLinks(dto.socialLinks),
         faq: dto.faq === undefined ? undefined : cleanFaq(dto.faq),
+        judgingSteps:
+          dto.judgingSteps === undefined ? undefined : cleanEntries(dto.judgingSteps),
       },
     });
 

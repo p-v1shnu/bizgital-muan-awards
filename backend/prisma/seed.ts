@@ -50,6 +50,21 @@ const STARTING_FAQ = [
   },
 ];
 
+/**
+ * How the awards are judged, as the homepage band and /about both render it.
+ * One list for the two pages — they used to hold a copy each, and the copies had
+ * already drifted apart in three of the four steps.
+ */
+const STARTING_JUDGING_STEPS = [
+  { titleLo: 'ເສີນຊື່', bodyLo: 'ເປີດໃຫ້ທຸກຄົນສົ່ງຊື່ຜ່ານໜ້າ “ສົ່ງລາຍຊື່”' },
+  {
+    titleLo: 'ຄັດກອງ',
+    bodyLo: 'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີ ແລ້ວສະຫຼຸບເປັນລາຍຊື່ນອມິນີ',
+  },
+  { titleLo: 'ກຳມະການລົງຄະແນນ', bodyLo: 'ຄະນະກຳມະການຂອງປີນັ້ນລົງຄະແນນເປັນເອກະລາດ' },
+  { titleLo: 'ປະກາດຜົນ', bodyLo: 'ປະກາດນອມິນີກ່ອນ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
+];
+
 async function main() {
   // The homepage reads its evergreen copy from here (PRD §6.1.1), so the row
   // has to exist before anything renders.
@@ -62,6 +77,7 @@ async function main() {
       aboutSummaryLo:
         'ມ່ວນ ອະວອດ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັນລາວ ໃນທຸກຮູບແບບ.',
       faq: STARTING_FAQ,
+      judgingSteps: STARTING_JUDGING_STEPS,
     },
   });
 

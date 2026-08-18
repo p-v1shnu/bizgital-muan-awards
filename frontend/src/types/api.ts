@@ -128,6 +128,12 @@ export interface FaqItem {
   answerLo: string;
 }
 
+/** One step of "how this is judged", shown on the homepage and on /about. */
+export interface JudgingStep {
+  titleLo: string;
+  bodyLo: string;
+}
+
 export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
@@ -144,6 +150,7 @@ export interface SiteSettings {
   contactEmail: string | null;
   contactPhone: string | null;
   faq: FaqItem[] | null;
+  judgingSteps: JudgingStep[] | null;
   updatedAt: string;
 }
 

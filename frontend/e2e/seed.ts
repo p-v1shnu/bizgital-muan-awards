@@ -57,6 +57,14 @@ export default async function seed() {
       contactEmail: 'info@muanawards.la',
       contactPhone: '020 5555 5555',
       socialLinks: { facebook: 'https://facebook.com/muanawards' },
+      // The judging steps, which the homepage band and /about both render — the
+      // spec reads them off both pages and compares.
+      judgingSteps: [
+        { titleLo: 'ເສີນຊື່', bodyLo: 'ເປີດໃຫ້ທຸກຄົນສົ່ງຊື່ຜ່ານໜ້າ “ສົ່ງລາຍຊື່”' },
+        { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີ' },
+        { titleLo: 'ກຳມະການລົງຄະແນນ', bodyLo: 'ຄະນະກຳມະການລົງຄະແນນເປັນເອກະລາດ' },
+        { titleLo: 'ປະກາດຜົນ', bodyLo: 'ປະກາດນອມິນີກ່ອນ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
+      ],
       // The FAQ, questions and all — the same five entries a fresh install comes
       // up with (backend/prisma/seed.ts), so the browser reads what the team
       // will actually see rather than a stand-in list. The third answer has two

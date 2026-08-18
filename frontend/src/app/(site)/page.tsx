@@ -34,6 +34,13 @@ interface WinnersYear {
  * That is why sponsors, judges and this year's category list are absent —
  * they belong to a year, and they live on the year page (PRD §6.1.1).
  */
+/**
+ * The icon each judging step is drawn with, by position. The steps themselves
+ * are the team's and live in /admin/site; these belong to the page, so a list
+ * the team makes longer simply runs past the end of them.
+ */
+const STEP_ICONS = [ClipboardList, Megaphone, Gavel, Trophy];
+
 export default async function HomePage() {
   const [site, current, winnerYears, editions, stats, openEdition] = await Promise.all([
     getPublic<SiteSettings>('/site'),
@@ -48,6 +55,8 @@ export default async function HomePage() {
   ]);
 
   const heroKey = site?.heroImageKey ?? null;
+  // The same list /about renders, in the order the team put it in.
+  const judgingSteps = site?.judgingSteps ?? [];
   const gallery = imageKeyList(site?.galleryImageKeys);
   const latestWinners = winnerYears?.[0];
   const featuredWinners = (latestWinners?.categories ?? [])
@@ -235,30 +244,38 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* 6 — how it is judged, which stands in for a per-year judge list */}
+      {/* 6 — how it is judged, which stands in for a per-year judge list. The
+          steps come from /admin/site, and /about renders the same list: the two
+          pages used to hold a copy each and had already drifted apart. */}
       <Section eyebrow="ຄວາມໂປ່ງໃສ" title="ລາງວັນນີ້ຕັດສິນແນວໃດ">
-        <ol className="grid gap-4 md:grid-cols-4">
-          {[
-            { icon: ClipboardList, title: 'ເສີນຊື່', body: 'ເປີດໃຫ້ທຸກຄົນສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ຄູ່ຄວນ' },
-            { icon: Megaphone, title: 'ຄັດກອງ', body: 'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີ' },
-            { icon: Gavel, title: 'ກຳມະການລົງຄະແນນ', body: 'ຄະນະກຳມະການຂອງປີນັ້ນລົງຄະແນນເປັນເອກະລາດ' },
-            { icon: Trophy, title: 'ປະກາດຜົນ', body: 'ປະກາດນອມິນີ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
-          ].map((step, index) => (
-            <li
-              key={step.title}
-              className="rounded-[var(--radius-box)] border border-rule bg-panel p-5"
-            >
-              <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
-                <step.icon className="size-4.5" />
-              </span>
-              <p className="mt-3 font-serif text-lg text-ink">
-                <span className="mr-1.5 text-ink-3">{index + 1}.</span>
-                {step.title}
-              </p>
-              <p className="mt-1 text-[13px] leading-relaxed text-ink-2">{step.body}</p>
-            </li>
-          ))}
-        </ol>
+        {judgingSteps.length > 0 ? (
+          <ol className="grid gap-4 md:grid-cols-4">
+            {judgingSteps.map((step, index) => {
+              // The icons are the page's, not the team's — a step past the
+              // fourth is numbered and framed the same, just without one.
+              const Icon = STEP_ICONS[index];
+              return (
+                <li
+                  key={`${index}-${step.titleLo}`}
+                  className="rounded-[var(--radius-box)] border border-rule bg-panel p-5"
+                >
+                  {Icon && (
+                    <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
+                      <Icon className="size-4.5" />
+                    </span>
+                  )}
+                  <p className="mt-3 font-serif text-lg text-ink">
+                    <span className="mr-1.5 text-ink-3">{index + 1}.</span>
+                    {step.titleLo}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <Placeholder>ຂັ້ນຕອນການຕັດສິນ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+        )}
       </Section>
 
       {/* 7 — the timeline, which grows on its own every year */}

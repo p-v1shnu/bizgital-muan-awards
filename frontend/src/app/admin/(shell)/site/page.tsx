@@ -6,12 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
 import { ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
 import { Field, Input, Textarea } from '@/components/ui/field';
-import { FaqEditor } from '@/components/admin/faq-editor';
+import { EntryListEditor } from '@/components/admin/entry-list-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { FaqItem, SiteSettings } from '@/types/api';
+import type { FaqItem, JudgingStep, SiteSettings } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -39,6 +39,7 @@ export default function SitePage() {
   const [gallery, setGallery] = useState<string[]>([]);
   const [socials, setSocials] = useState<Record<string, string>>({});
   const [faq, setFaq] = useState<FaqItem[]>([]);
+  const [steps, setSteps] = useState<JudgingStep[]>([]);
   const [saved, setSaved] = useState(false);
 
   // Seed the form once the settings arrive.
@@ -60,6 +61,7 @@ export default function SitePage() {
     setGallery(data.galleryImageKeys ?? []);
     setSocials(data.socialLinks ?? {});
     setFaq(data.faq ?? []);
+    setSteps(data.judgingSteps ?? []);
   }, [data]);
 
   // The two the page has always been asked and the team alone can answer. They
@@ -108,6 +110,7 @@ export default function SitePage() {
                 // An entry the team started and left blank is dropped rather
                 // than refused, so a stray empty row cannot block a save.
                 faq: faq.filter((item) => item.questionLo.trim() && item.answerLo.trim()),
+                judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
@@ -192,6 +195,36 @@ export default function SitePage() {
           </Card>
 
           <Card className="xl:col-span-2">
+            <CardHeader title="ຂັ້ນຕອນການຕັດສິນ (ໜ້າແຮກ + /about)" aside={`${steps.length} ຂັ້ນ`} />
+            <CardBody>
+              <Note>
+                ລາຍການນີ້ຂຶ້ນ<b>ສອງບ່ອນ</b> — ແຖບ “ລາງວັນນີ້ຕັດສິນແນວໃດ” ໃນໜ້າແຮກ ແລະ ຫົວຂໍ້
+                “ຂັ້ນຕອນ” ໃນໜ້າ /about · ແກ້ບ່ອນນີ້ບ່ອນດຽວ ປ່ຽນທັງສອງໜ້າພ້ອມກັນ ·
+                ໜ້າແຮກມີໄອຄອນໃຫ້ 4 ຂັ້ນທຳອິດ ຂັ້ນທີ່ເພີ່ມມາຈະມີແຕ່ເລກລຳດັບ
+              </Note>
+              <div className="mt-4">
+                <EntryListEditor
+                  items={steps}
+                  onChange={setSteps}
+                  blank={{ titleLo: '', bodyLo: '' }}
+                  entryLabel={(position) => `ຂັ້ນ ${position}`}
+                  addLabel="ເພີ່ມຂັ້ນຕອນ"
+                  removeLabel="ລຶບຂັ້ນຕອນນີ້"
+                  fields={[
+                    { key: 'titleLo', label: 'ຊື່ຂັ້ນຕອນ', placeholder: 'ຄັດກອງ' },
+                    {
+                      key: 'bodyLo',
+                      label: 'ຄຳອະທິບາຍ',
+                      multiline: true,
+                      help: 'ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າແຮກວາງເປັນກາດແຄບ',
+                    },
+                  ]}
+                />
+              </div>
+            </CardBody>
+          </Card>
+
+          <Card className="xl:col-span-2">
             <CardHeader title="ຄຳຖາມທີ່ພົບເລື້ອຍ (ໜ້າ /about)" aside={`${faq.length} ຂໍ້`} />
             <CardBody>
               <Note>
@@ -210,7 +243,27 @@ export default function SitePage() {
                 </Note>
               )}
               <div className="mt-4">
-                <FaqEditor items={faq} onChange={setFaq} />
+                <EntryListEditor
+                  items={faq}
+                  onChange={setFaq}
+                  blank={{ questionLo: '', answerLo: '' }}
+                  entryLabel={(position) => `ຂໍ້ ${position}`}
+                  addLabel="ເພີ່ມຄຳຖາມ"
+                  removeLabel="ລຶບຄຳຖາມນີ້"
+                  fields={[
+                    {
+                      key: 'questionLo',
+                      label: 'ຄຳຖາມ',
+                      placeholder: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+                    },
+                    {
+                      key: 'answerLo',
+                      label: 'ຄຳຕອບ',
+                      multiline: true,
+                      help: 'ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່',
+                    },
+                  ]}
+                />
               </div>
             </CardBody>
           </Card>

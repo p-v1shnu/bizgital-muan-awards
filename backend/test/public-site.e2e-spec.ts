@@ -443,6 +443,41 @@ describe('public site', () => {
     });
   });
 
+  /**
+   * The homepage and /about render this one list. It used to be a copy each,
+   * which is how they came to describe screening differently, so what matters
+   * here is that there is one thing to read and it survives the trip in order.
+   */
+  describe('the judging steps', () => {
+    it('keeps the steps in order, and drops one left half-written', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          judgingSteps: [
+            { titleLo: ' ເສີນຊື່ ', bodyLo: ' ໃຜກໍສົ່ງໄດ້ ' },
+            { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ' },
+            { titleLo: 'ຂັ້ນທີ່ຍັງບໍ່ໄດ້ຂຽນ', bodyLo: '   ' },
+          ],
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.judgingSteps).toEqual([
+        { titleLo: 'ເສີນຊື່', bodyLo: 'ໃຜກໍສົ່ງໄດ້' },
+        { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ' },
+      ]);
+    });
+
+    it('refuses a step with no description behind it', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ judgingSteps: [{ titleLo: 'ຂັ້ນລອຍໆ' }] })
+        .expect(400);
+    });
+  });
+
   describe('the sitemap feed', () => {
     it('lists public years and their categories, and no drafts', async () => {
       const response = await api(h).get(path('/sitemap-entries')).expect(200);

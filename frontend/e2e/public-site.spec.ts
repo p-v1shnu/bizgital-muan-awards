@@ -447,6 +447,26 @@ test('the FAQ the team wrote reaches the page', async ({ page }) => {
   await expect(faq.getByText('ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ', { exact: false })).toBeVisible();
 });
 
+/**
+ * The homepage band and /about's steps are one list in /admin/site. They were
+ * two copies before, and the copies had drifted apart in three of four steps —
+ * so what is worth testing is not that either page renders, but that they agree.
+ */
+test('both pages describe judging in the same words', async ({ page }) => {
+  await page.goto('/about#judging');
+  const onAbout = await page.locator('#judging li').allInnerTexts();
+
+  await page.goto('/');
+  const band = page
+    .locator('section')
+    .filter({ has: page.getByRole('heading', { name: 'ລາງວັນນີ້ຕັດສິນແນວໃດ' }) });
+  const onHome = await band.locator('li').allInnerTexts();
+
+  const normalise = (rows: string[]) => rows.map((row) => row.replace(/^\d+\.\s*/, '').trim());
+  expect(normalise(onHome)).toEqual(normalise(onAbout));
+  expect(normalise(onAbout)[1]).toContain('ທີມງານກວດຄຸນສົມບັດ');
+});
+
 test('analytics stays out of the back office, and off without an id', async ({ page }) => {
   // The suite builds without NEXT_PUBLIC_GA_ID, so nothing should be loaded at
   // all here — a test run must never report into the real property.
