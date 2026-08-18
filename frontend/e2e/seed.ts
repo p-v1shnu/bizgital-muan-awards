@@ -57,10 +57,19 @@ export default async function seed() {
       contactEmail: 'info@muanawards.la',
       contactPhone: '020 5555 5555',
       socialLinks: { facebook: 'https://facebook.com/muanawards' },
-      // The FAQ, questions and all, in the order the team arranged it. The first
-      // answer has two paragraphs, so the page is read with more than one line
-      // to lay out.
+      // The FAQ, questions and all — the same five entries a fresh install comes
+      // up with (backend/prisma/seed.ts), so the browser reads what the team
+      // will actually see rather than a stand-in list. The third answer has two
+      // paragraphs, which is the page's only multi-paragraph layout to check.
       faq: [
+        {
+          questionLo: 'ໃຜສາມາດເສີນຊື່ໄດ້?',
+          answerLo: 'ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ',
+        },
+        {
+          questionLo: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
+          answerLo: 'ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
+        },
         {
           questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
           answerLo:
@@ -69,6 +78,10 @@ export default async function seed() {
         {
           questionLo: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
           answerLo: 'ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ ຈາກຄົນທຳງານໃນວົງການ',
+        },
+        {
+          questionLo: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
+          answerLo: 'ຕິດຕໍ່ທີມງານຕາມຊ່ອງທາງໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້ານີ້',
         },
       ],
     },

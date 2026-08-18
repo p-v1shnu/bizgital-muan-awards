@@ -425,15 +425,20 @@ test('the FAQ the team wrote reaches the page', async ({ page }) => {
   await page.goto('/about#faq');
   const faq = page.locator('#faq');
 
-  // In the order the seed arranged them, and nothing else in the list.
+  // Every entry the seed gave it, in that order, and nothing the page kept for
+  // itself — the whole list is the team's, questions included.
   await expect(faq.locator('details summary')).toHaveText([
+    'ໃຜສາມາດເສີນຊື່ໄດ້?',
+    'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
     'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
     'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
+    'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
   ]);
 
-  await faq.getByText('ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?').click();
+  const eligibility = faq.locator('details').nth(2);
+  await eligibility.locator('summary').click();
   // Both paragraphs of the answer, as two paragraphs rather than one run-on.
-  await expect(faq.locator('details').first().locator('p')).toHaveText([
+  await expect(eligibility.locator('p')).toHaveText([
     'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ',
     'ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
   ]);
