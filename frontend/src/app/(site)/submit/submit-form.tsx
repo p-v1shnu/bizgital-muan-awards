@@ -290,12 +290,13 @@ function CreatorNameField({
   const [typed, setTyped] = useState('');
   const term = useDebounced(typed, 250);
 
+  const query = term.trim();
+
   useEffect(() => {
-    const query = term.trim();
-    if (query.length < 2) {
-      setSuggestions([]);
-      return;
-    }
+    // Nothing to fetch on a short term, and nothing to clear either: the list
+    // on screen is derived from the term below, so a stale row cannot outlive
+    // the word it was found for.
+    if (query.length < 2) return;
 
     // A slower earlier response must not overwrite a newer one.
     const cancel = new AbortController();
@@ -310,9 +311,10 @@ function CreatorNameField({
       .catch(() => undefined);
 
     return () => cancel.abort();
-  }, [term]);
+  }, [query]);
 
-  const visible = open && suggestions.length > 0;
+  const rows = query.length >= 2 ? suggestions : [];
+  const visible = open && rows.length > 0;
 
   function choose(suggestion: Suggestion) {
     onChange(suggestion.nameLo);
@@ -349,13 +351,13 @@ function CreatorNameField({
             if (!visible) return;
             if (event.key === 'ArrowDown') {
               event.preventDefault();
-              setActive((index) => (index + 1) % suggestions.length);
+              setActive((index) => (index + 1) % rows.length);
             } else if (event.key === 'ArrowUp') {
               event.preventDefault();
-              setActive((index) => (index <= 0 ? suggestions.length - 1 : index - 1));
+              setActive((index) => (index <= 0 ? rows.length - 1 : index - 1));
             } else if (event.key === 'Enter' && active >= 0) {
               event.preventDefault();
-              choose(suggestions[active]);
+              choose(rows[active]);
             } else if (event.key === 'Escape') {
               setOpen(false);
             }
@@ -376,7 +378,7 @@ function CreatorNameField({
           <li className="border-b border-hairline px-3.5 py-2 text-[11.5px] text-ink-3">
             ເຄີຍມີໃນລະບົບ — ເລືອກໄດ້ເພື່ອໃຫ້ຂຽນຄືກັນ
           </li>
-          {suggestions.map((suggestion, index) => (
+          {rows.map((suggestion, index) => (
             <li key={suggestion.slug} role="option" aria-selected={index === active}>
               <button
                 type="button"

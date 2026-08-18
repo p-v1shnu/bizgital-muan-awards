@@ -5,7 +5,7 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { Avatar, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { safeHttpUrl } from '@/lib/utils';
-import { getPublic, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
+import { getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, creatorJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicProfile } from '@/types/public';

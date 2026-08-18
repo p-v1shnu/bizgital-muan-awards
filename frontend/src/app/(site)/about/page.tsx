@@ -114,7 +114,7 @@ export default async function AboutPage() {
           </div>
         ) : (
           <p className="mt-4 max-w-2xl text-[15px] leading-[1.9] text-ink-3">
-            <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ລໍຖ້າຂໍ້ຄວາມຈາກທີມງານ</Placeholder>
+            <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           </p>
         )}
       </Section>
@@ -262,7 +262,7 @@ export default async function AboutPage() {
             </div>
           ) : (
             <p className="text-[14.5px] leading-relaxed text-ink-2">
-              <Placeholder>ອີເມວ / ເບີໂທ — ລໍຖ້າຂໍ້ມູນຈາກທີມງານ</Placeholder>
+              <Placeholder>ອີເມວ / ເບີໂທ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
             </p>
           )}
           <p className="mt-6 text-[14.5px] leading-relaxed text-ink-2">

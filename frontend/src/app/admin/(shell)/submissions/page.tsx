@@ -94,7 +94,7 @@ export default function SubmissionsPage() {
               description={status === 'PENDING' ? 'ຄັດກອງໝົດແລ້ວ' : undefined}
             />
           ) : (
-            data.data.map((group) => <GroupRow key={group.key} group={group} query={query} />)
+            data.data.map((group) => <GroupRow key={group.key} group={group} />)
           )}
 
           {data?.meta && <Pager meta={data.meta} onChange={setPage} />}
@@ -104,7 +104,7 @@ export default function SubmissionsPage() {
   );
 }
 
-function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
+function GroupRow({ group }: { group: SubmissionGroup }) {
   const [expanded, setExpanded] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [rejecting, setRejecting] = useState(false);
@@ -208,7 +208,6 @@ function GroupRow({ group, query }: { group: SubmissionGroup; query: string }) {
             open={accepting}
             group={group}
             entryId={leadEntry.id}
-            query={query}
             onClose={() => setAccepting(false)}
           />
           <ConfirmDialog
@@ -324,13 +323,11 @@ function AcceptDialog({
   open,
   group,
   entryId,
-  query,
   onClose,
 }: {
   open: boolean;
   group: SubmissionGroup;
   entryId: string;
-  query: string;
   onClose: () => void;
 }) {
   const [mode, setMode] = useState<'existing' | 'new'>('new');

@@ -35,6 +35,12 @@ export default function GlobalError({
           >
             Reload
           </button>
+          {/*
+            A plain anchor, not next/link: this page renders when something in
+            the tree threw, so the router is exactly what cannot be trusted to
+            carry someone out of it. A document navigation always works.
+          */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a
             href="/"
             className="rounded-[var(--radius-btn)] border border-rule bg-panel px-5 py-3 text-[14px] font-semibold text-ink-2 hover:bg-panel-2 hover:text-ink"

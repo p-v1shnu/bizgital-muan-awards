@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 
 import { CreatorCard, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
-import { getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
+import { getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, categoryJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';

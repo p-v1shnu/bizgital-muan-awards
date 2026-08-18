@@ -71,7 +71,7 @@ function EditionDetail({ id }: { id: string }) {
           <Info className="size-4 shrink-0" />
           ປີນີ້ຍັງເປັນ<b className="mx-0.5">ຮ່າງ</b>— ຄົນນອກຍັງເຂົ້າບໍ່ໄດ້ ແກ້ໄຂໄດ້ຢ່າງອິດສະລະ
           <span className="ml-auto">
-            <PreviewLink editionId={edition.id} slug={edition.slug} />
+            <PreviewLink editionId={edition.id} />
           </span>
         </div>
       )}
