@@ -15,11 +15,13 @@ const prisma = new PrismaClient();
  * the same five entries migration 15 carries over from the version of the page
  * that had them written into it.
  *
- * Eligibility and how the panel is chosen are missing on purpose. They are the
- * team's own policy and nobody else can write them, and an entry has to carry an
- * answer — so rather than shipping an invented one, /admin/site names the two as
- * worth adding. Nudging the team where it can act beats showing a visitor a box
- * that says the site does not know.
+ * Eligibility and how the panel is chosen were left out at first, as policy
+ * nobody but the team could write. The team asked for them anyway, so they are
+ * drafted here out of what the project has already committed to in writing —
+ * §1 and the judging steps in the PRD, and the criteria on the approved /about
+ * mockup — rather than invented. Both are listed in docs/lao-copy-review.md as
+ * wording the team still has to confirm, because a wrong answer here is a rule
+ * the site appears to be announcing.
  */
 const STARTING_FAQ = [
   {
@@ -29,6 +31,18 @@ const STARTING_FAQ = [
   {
     questionLo: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
     answerLo: 'ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
+  },
+  {
+    questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+    answerLo:
+      'ເປັນຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຜູ້ທີ່ສ້າງຜົນງານເປັນພາສາລາວ ແລະ ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ — ບໍ່ຈຳກັດແພລດຟອມ ແລະ ບໍ່ຕ້ອງສະໝັກເອງ\n' +
+      'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີໃນຂັ້ນຕອນຄັດກອງ · ບາງສາຂາອາດມີເງື່ອນໄຂສະເພາະຂອງຕົນ ເບິ່ງໄດ້ໃນຄຳອະທິບາຍຂອງສາຂານັ້ນໃນໜ້າຂອງແຕ່ລະປີ',
+  },
+  {
+    questionLo: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
+    answerLo:
+      'ທີມງານມ່ວນ ອະວອດ ເປັນຜູ້ເຊີນຄະນະກຳມະການຂອງແຕ່ລະປີ ຈາກຜູ້ມີປະສົບການໃນວົງການສ້າງສັນ ແລະ ສື່ຂອງລາວ · ຄະນະກຳມະການບໍ່ຄືກັນທຸກປີ ລາຍຊື່ ແລະ ຕຳແໜ່ງຂອງປີນັ້ນຂຶ້ນຢູ່ໜ້າຂອງປີ\n' +
+      'ທຸກສາຂາຕັດສິນໂດຍຄະນະກຳມະການ ບໍ່ແມ່ນການໂຫວດຂອງປະຊາຊົນ · ຄະນະກຳມະການພິຈາລະນາຈາກຄຸນນະພາບຂອງຜົນງານ ຄວາມສະໝ່ຳສະເໝີໃນການສ້າງເນື້ອຫາ ແລະ ຜົນກະທົບຕໍ່ຜູ້ຮັບຊົມ',
   },
   {
     questionLo: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',

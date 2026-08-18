@@ -62,6 +62,15 @@ export default function SitePage() {
     setFaq(data.faq ?? []);
   }, [data]);
 
+  // The two the page has always been asked and the team alone can answer. They
+  // ship as answers now, so this only speaks up if someone removes one.
+  const missingStaples = [
+    { keyword: 'ຄຸນສົມບັດ', question: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?' },
+    { keyword: 'ຄະນະກຳມະການເລືອກ', question: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?' },
+  ]
+    .filter(({ keyword }) => !faq.some((item) => item.questionLo.includes(keyword)))
+    .map(({ question }) => question);
+
   const save = useApiMutation<Record<string, unknown>>('/admin/site', 'PUT', ['/admin/site', '/site']);
 
   if (isLoading) return <LoadingBlock />;
@@ -189,11 +198,15 @@ export default function SitePage() {
                 ເພີ່ມ ຫຼື ລຶບຄຳຖາມໄດ້ຕາມໃຈ ແລະ ຈັດລຳດັບດ້ວຍລູກສອນ — ໜ້າ /about ຂຶ້ນຕາມລຳດັບນີ້ ·
                 ຂໍ້ໃດເວັ້ນຄຳຖາມ ຫຼື ຄຳຕອບໄວ້ວ່າງ ຂໍ້ນັ້ນຈະບໍ່ຖືກບັນທຶກ
               </Note>
-              {!faq.some((item) => item.questionLo.includes('ຄຸນສົມບັດ')) && (
+              {missingStaples.length > 0 && (
                 <Note tone="brand">
-                  ສອງຄຳຖາມທີ່ຄົນຖາມເລື້ອຍແຕ່ຍັງບໍ່ມີໃນລາຍການ — ມີແຕ່ທີມງານທີ່ຕອບໄດ້:{' '}
-                  <b>ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?</b> ແລະ{' '}
-                  <b>ຄະນະກຳມະການເລືອກມາແນວໃດ?</b>
+                  ຄຳຖາມທີ່ຄົນຖາມເລື້ອຍແຕ່ຍັງບໍ່ມີໃນລາຍການ — ມີແຕ່ທີມງານທີ່ຕອບໄດ້:{' '}
+                  {missingStaples.map((question, index) => (
+                    <span key={question}>
+                      {index > 0 && ' ແລະ '}
+                      <b>{question}</b>
+                    </span>
+                  ))}
                 </Note>
               )}
               <div className="mt-4">
