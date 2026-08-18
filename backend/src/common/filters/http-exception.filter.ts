@@ -9,6 +9,8 @@ import {
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 
+import { recordServerError } from '../server-errors';
+
 /**
  * Every "is this slug free?" in the codebase is a read followed by a write, and
  * two people saving the same new name in the same second both pass the read.
@@ -107,6 +109,21 @@ export class HttpExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : String(exception),
       );
     }
+
+    // Counted here because every 5xx the API sends passes through this filter,
+    // including the ones nothing in the code meant to send. What reads the count
+    // is /health/errors, which is what an outside watcher can see (monitoring.md
+    // §6): a site that answers every page while every save fails looks healthy
+    // from the outside otherwise.
+    //
+    // The probes are left out of their own measurement, and that is not tidiness:
+    // /health/errors answers 503 once the count passes the threshold, so counting
+    // that would make every check add one and hold the alarm open by itself. The
+    // same goes for /health/storage, whose 503 means images are gone — watched on
+    // purpose as a thing that can wait until morning (monitoring.md §10), and it
+    // must not set off the alarm that wakes someone.
+    const isProbe = /\/health(\/|$)/.test(request.path);
+    if (status >= HttpStatus.INTERNAL_SERVER_ERROR && !isProbe) recordServerError();
 
     response.status(status).json({ statusCode: status, message, error, details });
   }
