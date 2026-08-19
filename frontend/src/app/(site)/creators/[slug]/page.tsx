@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
-import { Avatar, Section } from '@/components/site/primitives';
+import { Avatar, EmptyNote, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { safeHttpUrl } from '@/lib/utils';
 import { getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
@@ -120,9 +120,7 @@ export default async function CreatorPage({ params }: PageProps) {
       </h2>
 
       {profile.appearances.length === 0 ? (
-        <p className="mt-4 rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-10 text-center text-[14px] text-ink-2">
-          ຍັງບໍ່ມີປະຫວັດທີ່ປະກາດແລ້ວ
-        </p>
+        <EmptyNote className="mt-4">ຍັງບໍ່ມີປະຫວັດທີ່ປະກາດແລ້ວ</EmptyNote>
       ) : (
         <ol className="mt-4 overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
           {profile.appearances.map((appearance) => (

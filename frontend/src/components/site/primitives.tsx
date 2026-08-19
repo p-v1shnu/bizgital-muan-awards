@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { Watermark } from './watermark';
 import { imageUrl } from '@/lib/images';
 import type { Creator } from '@/types/api';
 
@@ -28,7 +29,24 @@ export function Section({
   titleAs?: 'h1' | 'h2';
 }) {
   return (
-    <section id={id} className={cn('mx-auto max-w-6xl px-5 py-14 md:py-20', className)}>
+    <section
+      id={id}
+      className={cn(
+        'mx-auto max-w-6xl px-5 py-14 md:py-20',
+        // The mark hangs off the right edge, so the section has to be the frame
+        // it is clipped against.
+        Heading === 'h1' && 'relative overflow-hidden',
+        className,
+      )}
+    >
+      {/* Only the leading section, and only on the pages that lead with words
+          rather than a picture — /about, /submit, /winners. A year, a category
+          and a creator open with a photograph, which is decoration enough, and
+          the homepage opens with the hero. Hidden below md: on a phone the mark
+          would sit under the heading rather than beside it. */}
+      {Heading === 'h1' && (
+        <Watermark className="-top-10 -right-14 hidden size-[260px] opacity-[0.035] md:block" />
+      )}
       {(eyebrow || title) && (
         <header className="mb-8 max-w-2xl">
           {eyebrow && (
@@ -172,6 +190,27 @@ export function CreatorCard({
     </Link>
   ) : (
     body
+  );
+}
+
+/**
+ * "There is nothing here yet" — said in a box rather than a bare line, with the
+ * mark behind it. Most of this site's early life is spent in these states (no
+ * year announced, no nominees published, a creator with no appearances yet), so
+ * they are what a first visitor actually sees; an empty panel with the brand
+ * behind it reads as "not yet" instead of as "broken".
+ */
+export function EmptyNote({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        'relative overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-12 text-center text-[14px] text-ink-2',
+        className,
+      )}
+    >
+      <Watermark className="-right-8 -bottom-10 size-[210px] opacity-[0.04]" />
+      <p className="relative">{children}</p>
+    </div>
   );
 }
 

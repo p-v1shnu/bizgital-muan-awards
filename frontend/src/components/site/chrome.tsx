@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowUpRight, Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { Watermark } from '@/components/site/watermark';
 import { tryGetPublic } from '@/lib/api/server';
 import type { Edition, SiteSettings } from '@/types/api';
 
@@ -132,86 +133,98 @@ export async function SiteFooter() {
   );
 
   return (
-    <footer className="mt-24 bg-ink text-[#e8e1d7]">
-      <div className="foil h-[3px]" aria-hidden />
-      <div className="mx-auto max-w-6xl px-5 py-12">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-          <div>
-            {/* The footer is the one dark ground on the site, which is where
-                the full-colour lockup is meant to sit (PRD §6.0.2). */}
-            <Image
-              src="/brand/horizontal-full-color.png"
-              alt="ມ່ວນອາວອດສ໌"
-              // 1560×563 in the file: the full-colour lockup carries the Lao
-              // strapline above the wordmark, so it is taller in proportion
-              // than the black one in the header. Declaring the drawn size at
-              // the file's own ratio keeps it from being squeezed.
-              width={111}
-              height={40}
-              className="h-10 w-auto"
+    <>
+      {/* The woven divider from the design kit, which had been built and then
+          used in exactly one place. Above the footer it appears on every page,
+          which is what a section divider is for. */}
+      <div className="weave mt-24 h-3 border-y border-rule bg-panel-2" aria-hidden />
+      <footer className="relative overflow-hidden bg-ink text-[#e8e1d7]">
+        <div className="foil h-[3px]" aria-hidden />
+        {/* docs/design/home.html `.mu-foot .wm`: the mark hanging off the bottom
+            right corner at 5%. White art on the ink ground, never a filter. */}
+        <Watermark
+          tone="light"
+          className="-right-16 -bottom-16 hidden size-[300px] opacity-[0.06] md:block"
+        />
+        <div className="relative mx-auto max-w-6xl px-5 py-12">
+          <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+            <div>
+              {/* The footer is the one dark ground on the site, which is where
+                  the full-colour lockup is meant to sit (PRD §6.0.2). */}
+              <Image
+                src="/brand/horizontal-full-color.png"
+                alt="ມ່ວນອາວອດສ໌"
+                // 1560×563 in the file: the full-colour lockup carries the Lao
+                // strapline above the wordmark, so it is taller in proportion
+                // than the black one in the header. Declaring the drawn size at
+                // the file's own ratio keeps it from being squeezed.
+                width={111}
+                height={40}
+                className="h-10 w-auto"
+              />
+              <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">
+                {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ'}
+              </p>
+              {socials.length > 0 && (
+                <div className="mt-5 flex gap-2">
+                  {socials.map(([platform, href]) => {
+                    const { icon: Icon, label } = SOCIAL_ICONS[platform];
+                    return (
+                      <a
+                        key={platform}
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={label}
+                        className="grid size-9 place-items-center rounded-full border border-white/20 text-[#e8e1d7] transition-colors hover:border-white hover:bg-white hover:text-ink"
+                      >
+                        <Icon className="size-4" />
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <FooterColumn
+              title="ລາງວັນ"
+              links={[
+                ...(latest ? [{ href: '/awards/latest', label: 'ງານປີລ່າສຸດ' }] : []),
+                { href: '/winners', label: 'ທຳນຽບຜູ້ຊະນະ' },
+                // Shown on the same condition as the CTA in the nav. It used to
+                // sit here always, so the footer invited people to a form the
+                // header had already stopped offering.
+                ...(openEdition ? [{ href: '/submit', label: 'ສົ່ງລາຍຊື່' }] : []),
+              ]}
             />
-            <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">
-              {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ'}
-            </p>
-            {socials.length > 0 && (
-              <div className="mt-5 flex gap-2">
-                {socials.map(([platform, href]) => {
-                  const { icon: Icon, label } = SOCIAL_ICONS[platform];
-                  return (
-                    <a
-                      key={platform}
-                      href={href}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={label}
-                      className="grid size-9 place-items-center rounded-full border border-white/20 text-[#e8e1d7] transition-colors hover:border-white hover:bg-white hover:text-ink"
-                    >
-                      <Icon className="size-4" />
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            <FooterColumn
+              title="ກ່ຽວກັບ"
+              links={[
+                { href: '/about', label: 'ກ່ຽວກັບງານ' },
+                { href: '/about#judging', label: 'ວິທີການຕັດສິນ' },
+                { href: '/about#faq', label: 'ຄຳຖາມທີ່ພົບເລື້ອຍ' },
+              ]}
+            />
+            <FooterColumn
+              title="ຕິດຕໍ່"
+              links={[
+                { href: '/about#contact', label: 'ຕິດຕໍ່ທີມງານ' },
+                { href: '/about#privacy', label: 'ຂໍ້ມູນສ່ວນຕົວ' },
+                { href: '/about#sponsor', label: 'ຮ່ວມເປັນຜູ້ສະໜັບສະໜູນ' },
+              ]}
+            />
           </div>
 
-          <FooterColumn
-            title="ລາງວັນ"
-            links={[
-              ...(latest ? [{ href: '/awards/latest', label: 'ງານປີລ່າສຸດ' }] : []),
-              { href: '/winners', label: 'ທຳນຽບຜູ້ຊະນະ' },
-              // Shown on the same condition as the CTA in the nav. It used to
-              // sit here always, so the footer invited people to a form the
-              // header had already stopped offering.
-              ...(openEdition ? [{ href: '/submit', label: 'ສົ່ງລາຍຊື່' }] : []),
-            ]}
-          />
-          <FooterColumn
-            title="ກ່ຽວກັບ"
-            links={[
-              { href: '/about', label: 'ກ່ຽວກັບງານ' },
-              { href: '/about#judging', label: 'ວິທີການຕັດສິນ' },
-              { href: '/about#faq', label: 'ຄຳຖາມທີ່ພົບເລື້ອຍ' },
-            ]}
-          />
-          <FooterColumn
-            title="ຕິດຕໍ່"
-            links={[
-              { href: '/about#contact', label: 'ຕິດຕໍ່ທີມງານ' },
-              { href: '/about#privacy', label: 'ຂໍ້ມູນສ່ວນຕົວ' },
-              { href: '/about#sponsor', label: 'ຮ່ວມເປັນຜູ້ສະໜັບສະໜູນ' },
-            ]}
-          />
+          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#3a322c] pt-6 text-[11.5px] text-[#a89c8e]">
+            <span>© {new Date().getFullYear()} Muan Awards</span>
+            <span>{site?.footerLocationLo?.trim() || 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ'}</span>
+            <a href="#top" className="ml-auto inline-flex items-center gap-1 hover:text-white">
+              ຂຶ້ນເທິງສຸດ <ArrowUpRight className="size-3.5" />
+            </a>
+          </div>
         </div>
-
-        <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-[#3a322c] pt-6 text-[11.5px] text-[#a89c8e]">
-          <span>© {new Date().getFullYear()} Muan Awards</span>
-          <span>{site?.footerLocationLo?.trim() || 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ'}</span>
-          <a href="#top" className="ml-auto inline-flex items-center gap-1 hover:text-white">
-            ຂຶ້ນເທິງສຸດ <ArrowUpRight className="size-3.5" />
-          </a>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </>
   );
 }
 

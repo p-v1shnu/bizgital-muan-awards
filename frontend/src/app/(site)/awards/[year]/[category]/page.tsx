@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import { CreatorCard, Section } from '@/components/site/primitives';
+import { CreatorCard, EmptyNote, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, categoryJsonLd } from '@/lib/structured-data';
@@ -95,9 +95,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       )}
 
       {nominees.length === 0 ? (
-        <p className="mt-10 rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-10 text-center text-[14px] text-ink-2">
-          ລາຍຊື່ຜູ້ເຂົ້າຊີງສາຂານີ້ຈະປະກາດພາຍຫຼັງ
-        </p>
+        <EmptyNote className="mt-10">ລາຍຊື່ຜູ້ເຂົ້າຊີງສາຂານີ້ຈະປະກາດພາຍຫຼັງ</EmptyNote>
       ) : (
         <>
           <p className="mt-8 text-[12px] font-bold uppercase tracking-[0.16em] text-ink-3">

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
-import { ActionLink, Avatar, Section } from '@/components/site/primitives';
+import { ActionLink, Avatar, EmptyNote, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
@@ -28,9 +28,7 @@ export default async function WinnersPage() {
     <Section eyebrow="ຕະຫຼອດທຸກປີ" title="ທຳນຽບຜູ້ຊະນະ" titleAs="h1">
       {years && years.length > 0 && <JsonLd data={winnersArchiveJsonLd(years)} />}
       {!years || years.length === 0 ? (
-        <p className="rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-12 text-center text-[14px] text-ink-2">
-          ຍັງບໍ່ມີປີໃດປະກາດຜົນ — ກັບມາເບິ່ງອີກຫຼັງງານທຳອິດ
-        </p>
+        <EmptyNote>ຍັງບໍ່ມີປີໃດປະກາດຜົນ — ກັບມາເບິ່ງອີກຫຼັງງານທຳອິດ</EmptyNote>
       ) : (
         <div className="space-y-6">
           {years.map((year) => {
