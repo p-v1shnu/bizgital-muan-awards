@@ -18,10 +18,11 @@ import { Watermark } from '@/components/site/watermark';
  */
 export function NotFoundBody() {
   return (
-    <Section className="relative overflow-hidden py-24">
+    <Section className="relative py-24">
       {/* A 404 is the emptiest page on the site; the mark keeps it from reading
-          as a broken page rather than a missing one. */}
-      <Watermark className="-top-16 -right-20 hidden size-[340px] opacity-[0.04] md:block" />
+          as a broken page rather than a missing one. Flush to the viewport edge
+          and whole, for the reason Section's own watermark is. */}
+      <Watermark className="top-8 right-[calc(50%-50vw)] hidden h-[300px] w-[385px] opacity-[0.045] md:block" />
       <div className="foil mb-6 h-[3px] w-16 rounded-sm" aria-hidden />
       {/* All English, message and buttons alike. These buttons exist only to
           offer a way out of a failure — they are not the site's interface,

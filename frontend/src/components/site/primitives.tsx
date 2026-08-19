@@ -33,9 +33,7 @@ export function Section({
       id={id}
       className={cn(
         'mx-auto max-w-6xl px-5 py-14 md:py-20',
-        // The mark hangs off the right edge, so the section has to be the frame
-        // it is clipped against.
-        Heading === 'h1' && 'relative overflow-hidden',
+        Heading === 'h1' && 'relative',
         className,
       )}
     >
@@ -43,9 +41,16 @@ export function Section({
           rather than a picture — /about, /submit, /winners. A year, a category
           and a creator open with a photograph, which is decoration enough, and
           the homepage opens with the hero. Hidden below md: on a phone the mark
-          would sit under the heading rather than beside it. */}
+          would sit under the heading rather than beside it.
+
+          `right-[calc(50%-50vw)]` puts the mark's right edge on the viewport's,
+          not on this centred column's. The first attempt clipped it at the
+          column edge, which is an invisible line with page margin beyond it —
+          the mark read as a picture cropped by mistake. Whole mark, resting
+          against the edge of the screen, is a placement; half a mark cut at
+          nothing is not. */}
       {Heading === 'h1' && (
-        <Watermark className="-top-10 -right-14 hidden size-[260px] opacity-[0.035] md:block" />
+        <Watermark className="top-6 right-[calc(50%-50vw)] hidden h-[234px] w-[300px] opacity-[0.05] md:block" />
       )}
       {(eyebrow || title) && (
         <header className="mb-8 max-w-2xl">
@@ -208,7 +213,7 @@ export function EmptyNote({ children, className }: { children: React.ReactNode; 
         className,
       )}
     >
-      <Watermark className="-right-8 -bottom-10 size-[210px] opacity-[0.04]" />
+      <Watermark className="-right-6 -bottom-8 h-[164px] w-[210px] opacity-[0.04]" />
       <p className="relative">{children}</p>
     </div>
   );
