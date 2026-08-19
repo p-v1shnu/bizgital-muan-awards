@@ -26,7 +26,7 @@ describe('public site', () => {
       await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
         .set(h.auth)
-        .send({ slug: 'creator-of-the-year', nameLo: 'ຜູ້ສ້າງສັນແຫ່ງປີ', isFeatured: true })
+        .send({ slug: 'creator-of-the-year', nameLo: 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ', isFeatured: true })
         .expect(201)
     ).body.data.id;
 

@@ -50,8 +50,8 @@ export default async function seed() {
   await api.put('admin/site', {
     headers: auth,
     data: {
-      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
-      aboutSummaryLo: 'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ໃນທຸກຮູບແບບ',
+      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
+      aboutSummaryLo: 'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນເນື້ອຫາລາວ ໃນທຸກຮູບແບບ',
       // The contact box on /about, and — separately, for the footer's icon row
       // — the organisation's own Facebook page.
       contactEmail: 'info@muanawards.la',
@@ -109,7 +109,7 @@ export default async function seed() {
         {
           questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?',
           answerLo:
-            'ຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
+            'ຜູ້ສ້າງສັນເນື້ອຫາລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
         },
         {
           questionLo: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
@@ -174,9 +174,9 @@ export default async function seed() {
     const editionId = (await edition.json()).data.id;
 
     for (const [slug, nameLo, isFeatured, groupLo] of [
-      ['creator-of-the-year', 'ຜູ້ສ້າງສັນແຫ່ງປີ', true, 'ສາຍຄອນເທັ້ນ'],
-      ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍຄອນເທັ້ນ'],
-      ['food', 'ຄອນເທັ້ນອາຫານ', false, 'ສາຍໄລຟ໌ສະໄຕລ໌'],
+      ['creator-of-the-year', 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ', true, 'ສາຍເນື້ອຫາ'],
+      ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍເນື້ອຫາ'],
+      ['food', 'ເນື້ອຫາອາຫານ', false, 'ສາຍໄລຟ໌ສະໄຕລ໌'],
     ] as const) {
       const category = await api.post(`admin/editions/${editionId}/categories`, {
         headers: auth,

@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     default: 'ມ່ວນອາວອດສ໌ · Muan Awards',
     template: '%s · ມ່ວນອາວອດສ໌',
   },
-  description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ',
+  description: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://muanawards.com'),
   // Most visitors arrive from a Facebook post (PRD §10), and a share with no
   // picture is a share nobody opens. Pages with their own image — a year, a

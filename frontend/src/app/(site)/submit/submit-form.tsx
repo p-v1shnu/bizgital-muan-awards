@@ -327,7 +327,7 @@ function CreatorNameField({
     <div className="relative mb-5">
       <label className="block">
         <span className="mb-1.5 block text-[13px] font-semibold text-ink">
-          ຊື່ຜູ້ສ້າງສັນ<span className="ml-1 text-brand-deep">*</span>
+          ຊື່ຄຣີເອເຕີ<span className="ml-1 text-brand-deep">*</span>
         </span>
         <Input
           required

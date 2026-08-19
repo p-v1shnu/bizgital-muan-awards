@@ -55,7 +55,7 @@ test.describe('homepage', () => {
     // Scoped to main: the brand line also appears in the footer, by design.
     const main = page.getByRole('main');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌');
-    await expect(main.getByText('ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນ')).toBeVisible();
+    await expect(main.getByText('ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ')).toBeVisible();
     await expect(main.getByText('ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ')).toBeVisible();
     await expect(main.getByText('ປີທີ່ຜ່ານມາ')).toBeVisible();
   });
@@ -67,7 +67,7 @@ test.describe('homepage', () => {
     // Each of these belongs to one year and would go stale here.
     expect(body, 'sponsors belong to a year').not.toContain('Beerlao');
     expect(body, 'judges belong to a year').not.toContain('ສົມສັກ');
-    expect(body, 'the category list belongs to a year').not.toContain('ຄອນເທັ້ນອາຫານ');
+    expect(body, 'the category list belongs to a year').not.toContain('ເນື້ອຫາອາຫານ');
   });
 
   test('the entry cards are not painted over by the hero', async ({ page }) => {
@@ -131,7 +131,7 @@ test.describe('a year page follows its phase', () => {
     const main = page.getByRole('main');
 
     // Headings appear only because the seed fills groupLo in (PRD §7.6).
-    await expect(main.getByRole('heading', { name: 'ສາຍຄອນເທັ້ນ' })).toBeVisible();
+    await expect(main.getByRole('heading', { name: 'ສາຍເນື້ອຫາ' })).toBeVisible();
     await expect(main.getByRole('heading', { name: 'ສາຍໄລຟ໌ສະໄຕລ໌' })).toBeVisible();
 
     // 13 winners, so the rows past twelve stay folded until asked for. Scoped
@@ -211,10 +211,10 @@ test.describe('a year page follows its phase', () => {
 test('a category page carries its own share card', async ({ page }) => {
   await page.goto('/awards/2025/creator-of-the-year');
 
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('ຜູ້ສ້າງສັນແຫ່ງປີ');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ');
   await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
     'content',
-    /ຜູ້ສ້າງສັນແຫ່ງປີ/,
+    /ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ/,
   );
 });
 
@@ -245,7 +245,7 @@ test('the submission form accepts an entry', async ({ page }) => {
   await page.selectOption('form select', { index: 1 });
   // By name, not by position: with sixteen categories the form also carries a
   // filter box above the picker, which would otherwise be the first input.
-  await page.getByRole('combobox', { name: /ຊື່ຜູ້ສ້າງສັນ/ }).fill('ນັກສ້າງສັນ ທົດສອບ');
+  await page.getByRole('combobox', { name: /ຊື່ຄຣີເອເຕີ/ }).fill('ນັກສ້າງສັນ ທົດສອບ');
   await page.locator('form textarea').fill('ຜົນງານດີຕະຫຼອດປີ');
   await page.locator('form button[type=submit]').click();
 
@@ -255,7 +255,7 @@ test('the submission form accepts an entry', async ({ page }) => {
 test('the form suggests names already in the library', async ({ page }) => {
   await page.goto('/submit');
 
-  const name = page.getByRole('combobox', { name: /ຊື່ຜູ້ສ້າງສັນ/ });
+  const name = page.getByRole('combobox', { name: /ຊື່ຄຣີເອເຕີ/ });
   await name.fill('ຄຳ');
 
   // Scoped to the suggestion list: the category picker is a <select>, whose
@@ -439,7 +439,7 @@ test('the FAQ the team wrote reaches the page', async ({ page }) => {
   await eligibility.locator('summary').click();
   // Both paragraphs of the answer, as two paragraphs rather than one run-on.
   await expect(eligibility.locator('p')).toHaveText([
-    'ຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ',
+    'ຜູ້ສ້າງສັນເນື້ອຫາລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ',
     'ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
   ]);
 
@@ -635,7 +635,7 @@ test('the pages tell a machine who these people are', async ({ page }) => {
   expect(list, 'a category is a list of the people in it').toBeTruthy();
   expect(list.itemListElement.length, 'every nominee is listed').toBeGreaterThan(1);
   expect(list.mainEntity?.award, 'and the winner is named as the winner').toContain(
-    'ຜູ້ສ້າງສັນແຫ່ງປີ',
+    'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ',
   );
 
   await page.goto('/awards/2025');

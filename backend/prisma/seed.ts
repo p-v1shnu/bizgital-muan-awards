@@ -35,7 +35,7 @@ const STARTING_FAQ = [
   {
     questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?',
     answerLo:
-      'ເປັນຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ຫຼື ຜູ້ທີ່ສ້າງຜົນງານເປັນພາສາລາວ ແລະ ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ — ບໍ່ຈຳກັດແພລດຟອມ ແລະ ບໍ່ຕ້ອງສະໝັກເອງ\n' +
+      'ເປັນຜູ້ສ້າງສັນເນື້ອຫາລາວ ຫຼື ຜູ້ທີ່ສ້າງຜົນງານເປັນພາສາລາວ ແລະ ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ — ບໍ່ຈຳກັດແພລດຟອມ ແລະ ບໍ່ຕ້ອງສະໝັກເອງ\n' +
       'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີໃນຂັ້ນຕອນຄັດກອງ · ບາງສາຂາອາດມີເງື່ອນໄຂສະເພາະຂອງຕົນ ເບິ່ງໄດ້ໃນຄຳອະທິບາຍຂອງສາຂານັ້ນໃນໜ້າຂອງແຕ່ລະປີ',
   },
   {
@@ -97,7 +97,7 @@ const STARTING_SUBMIT_AFTER = [
 const STARTING_PAGE_SEO = {
   home: {
     titleLo: 'ມ່ວນອາວອດສ໌ · Muan Awards',
-    descriptionLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ',
+    descriptionLo: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ',
   },
   about: {
     titleLo: 'ກ່ຽວກັບງານ',
@@ -105,7 +105,7 @@ const STARTING_PAGE_SEO = {
   },
   submit: {
     titleLo: 'ສົ່ງລາຍຊື່',
-    descriptionLo: 'ສະເໜີຊື່ຜູ້ສ້າງສັນຄອນເທັ້ນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
+    descriptionLo: 'ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
   },
   winners: {
     titleLo: 'ທຳນຽບຜູ້ຊະນະ',
@@ -121,9 +121,9 @@ async function main() {
     update: {},
     create: {
       id: 'singleton',
-      brandStatementLo: 'ລາງວັນສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ',
+      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ',
       aboutSummaryLo:
-        'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ໃນທຸກຮູບແບບ.',
+        'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນເນື້ອຫາລາວ ໃນທຸກຮູບແບບ.',
       faq: STARTING_FAQ,
       judgingSteps: STARTING_JUDGING_STEPS,
       homeCards: STARTING_HOME_CARDS,
@@ -148,12 +148,12 @@ async function main() {
   });
 
   const categories = [
-    { slug: 'creator-of-the-year', nameLo: 'ຜູ້ສ້າງສັນແຫ່ງປີ', isFeatured: true },
+    { slug: 'creator-of-the-year', nameLo: 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ', isFeatured: true },
     { slug: 'video-of-the-year', nameLo: 'ວິດີໂອແຫ່ງປີ', isFeatured: true },
     { slug: 'rising-star', nameLo: 'ດາວຮຸ່ງ', isFeatured: true },
-    { slug: 'comedy', nameLo: 'ຄອນເທັ້ນຕະຫຼົກ' },
-    { slug: 'food', nameLo: 'ຄອນເທັ້ນອາຫານ' },
-    { slug: 'travel', nameLo: 'ຄອນເທັ້ນທ່ອງທ່ຽວ' },
+    { slug: 'comedy', nameLo: 'ເນື້ອຫາຕະຫຼົກ' },
+    { slug: 'food', nameLo: 'ເນື້ອຫາອາຫານ' },
+    { slug: 'travel', nameLo: 'ເນື້ອຫາທ່ອງທ່ຽວ' },
   ];
 
   for (const [index, category] of categories.entries()) {

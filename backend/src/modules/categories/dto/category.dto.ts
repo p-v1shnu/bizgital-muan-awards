@@ -20,7 +20,7 @@ export class CreateCategoryDto {
   @MaxLength(60)
   slug!: string;
 
-  @ApiProperty({ example: 'ຜູ້ສ້າງສັນແຫ່ງປີ' })
+  @ApiProperty({ example: 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ' })
   @IsString()
   @MinLength(1)
   @MaxLength(160)

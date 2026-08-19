@@ -15,7 +15,7 @@ import type { Edition, HomeCards, SiteSettings } from '@/types/api';
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('home', {
     title: 'ມ່ວນອາວອດສ໌ · Muan Awards',
-    description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ',
+    description: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ',
   });
   // Absolute: the root layout appends "· ມ່ວນອາວອດສ໌" to every other page's
   // title, and the homepage's already is the site's name.
@@ -252,7 +252,7 @@ export default async function HomePage() {
           <dl className="mx-auto grid max-w-6xl grid-cols-3 gap-7 px-5">
             <Stat value={stats.years} label="ປີທີ່ຈັດງານ" />
             <Stat value={stats.categories} label="ສາຂາລາງວັນ" />
-            <Stat value={stats.creators} label="ຜູ້ສ້າງສັນທີ່ເຂົ້າຊີງ" />
+            <Stat value={stats.creators} label="ຄຣີເອເຕີທີ່ເຂົ້າຊີງ" />
           </dl>
         </section>
       )}

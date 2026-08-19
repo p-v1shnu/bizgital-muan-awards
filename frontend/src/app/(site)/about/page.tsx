@@ -176,7 +176,7 @@ export default async function AboutPage() {
             <h3 className="font-serif text-[19px] text-ink">ຕອນສົ່ງລາຍຊື່ ເຮົາເກັບຫຍັງແດ່</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
-                <b className="text-ink">ຊື່ຜູ້ສ້າງສັນ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ</b> ທີ່ທ່ານພິມມາ —
+                <b className="text-ink">ຊື່ຄຣີເອເຕີ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ</b> ທີ່ທ່ານພິມມາ —
                 ທີມງານໃຊ້ຄັດເລືອກຜູ້ເຂົ້າຊີງ
               </li>
               <li>
@@ -196,7 +196,7 @@ export default async function AboutPage() {
             <h3 className="font-serif text-[19px] text-ink">ເກັບໄວ້ດົນປານໃດ</h3>
             <p className="mt-2">
               ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ <b className="text-ink">ພາຍໃນ 12 ເດືອນ</b>{' '}
-              ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຜູ້ສ້າງສັນ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງເກັບຖາວອນ
+              ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຄຣີເອເຕີ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງເກັບຖາວອນ
             </p>
           </div>
 
@@ -266,7 +266,7 @@ export default async function AboutPage() {
             </p>
           )}
           <p className="mt-6 text-[14.5px] leading-relaxed text-ink-2">
-            ຢາກສະເໜີຊື່ຜູ້ສ້າງສັນ? ບໍ່ຕ້ອງຕິດຕໍ່ທີມງານ ສົ່ງຜ່ານຟອມໄດ້ເລີຍ
+            ຢາກສະເໜີຊື່ຄຣີເອເຕີ? ບໍ່ຕ້ອງຕິດຕໍ່ທີມງານ ສົ່ງຜ່ານຟອມໄດ້ເລີຍ
           </p>
           <div className="mt-4">
             <ActionLink href="/submit" tone="quiet">

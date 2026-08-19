@@ -11,7 +11,7 @@ import { formatDate } from '@/lib/dates';
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('submit', {
     title: 'ສົ່ງລາຍຊື່',
-    description: 'ສະເໜີຊື່ຜູ້ສ້າງສັນຄອນເທັ້ນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
+    description: 'ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
   });
   return { alternates: { canonical: '/submit' }, title, description };
 }
@@ -87,7 +87,7 @@ export default async function SubmitPage() {
   return (
     <Section
       eyebrow={`ງານປີ ${form.edition.year}`}
-      title="ສະເໜີຊື່ຜູ້ສ້າງສັນ"
+      title="ສະເໜີຊື່ຄຣີເອເຕີ"
       titleAs="h1"
       intro="ໃຜກໍສົ່ງໄດ້ ບໍ່ຕ້ອງລົງທະບຽນ · ສົ່ງໄດ້ຫຼາຍຄົນ ຫຼາຍສາຂາ"
     >
