@@ -101,7 +101,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       ) : (
         <>
           <p className="mt-8 text-[12px] font-bold uppercase tracking-[0.16em] text-ink-3">
-            {nominees.length} ຜູ້ເຂົ້າຊີງ
+            ຜູ້ເຂົ້າຊີງ {nominees.length} ຄົນ
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {nominees.map((nominee) => (

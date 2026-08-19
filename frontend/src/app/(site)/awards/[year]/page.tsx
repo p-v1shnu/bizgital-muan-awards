@@ -333,7 +333,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   )}
                   {category.nominees.length > 0 && (
                     <span className="ml-auto shrink-0 text-[12px] text-ink-3">
-                      {category.nominees.length} ຜູ້ເຂົ້າຊີງ
+                      ຜູ້ເຂົ້າຊີງ {category.nominees.length} ຄົນ
                     </span>
                   )}
                 </summary>

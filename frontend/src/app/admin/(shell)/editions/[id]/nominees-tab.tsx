@@ -152,7 +152,7 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
           <>
             {category.isFeatured && <Badge tone="brand">ສາຂາເດັ່ນ</Badge>}
             <span>
-              {data?.length ?? 0} ຜູ້ເຂົ້າຊີງ · ຜູ້ຊະນະ {data?.filter((n) => n.isWinner).length ?? 0}
+              ຜູ້ເຂົ້າຊີງ {data?.length ?? 0} ຄົນ · ຜູ້ຊະນະ {data?.filter((n) => n.isWinner).length ?? 0}
             </span>
           </>
         }

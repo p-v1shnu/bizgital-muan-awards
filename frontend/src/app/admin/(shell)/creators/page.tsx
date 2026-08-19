@@ -106,7 +106,7 @@ export default function CreatorsPage() {
                 </div>
 
                 <div className="ml-auto flex items-center gap-2">
-                  <Badge>{creator._count?.nominations ?? 0} ຜູ້ເຂົ້າຊີງ</Badge>
+                  <Badge>ຜູ້ເຂົ້າຊີງ {creator._count?.nominations ?? 0} ຄົນ</Badge>
                   <Button size="sm" onClick={() => setEditing(creator)}>
                     ແກ້ໄຂ
                   </Button>

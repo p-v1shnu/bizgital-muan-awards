@@ -124,7 +124,7 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
 
               <div className="ml-auto flex items-center gap-2">
                 <Badge tone={(category._count?.nominations ?? 0) === 0 ? 'stop' : 'neutral'}>
-                  {category._count?.nominations ?? 0} ຜູ້ເຂົ້າຊີງ
+                  ຜູ້ເຂົ້າຊີງ {category._count?.nominations ?? 0} ຄົນ
                 </Badge>
                 <Button size="sm" onClick={() => setEditing(category)}>
                   ແກ້ໄຂ
