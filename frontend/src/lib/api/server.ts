@@ -113,6 +113,14 @@ export async function tryGetPublic<T>(path: string, options: Options = {}): Prom
  * /awards/2027 while it is still a draft and sees it.
  */
 export async function getPublicOrDraft<T>(path: string, options: Options = {}): Promise<T | null> {
+  // A URL carrying `preview` is asking to be read as whoever opened it, which
+  // is the only way an admin can see a *published* year's unannounced nominees:
+  // the cached read succeeds for such a year, so without this the cookie would
+  // never be sent and the page would come back exactly as the public sees it.
+  // Reading as the viewer also keeps the answer out of the shared cache, which
+  // is what must happen to a page that depends on who asked.
+  if (options.preview) return getPublic<T>(path, { ...options, asViewer: true });
+
   const published = await getPublic<T>(path, options);
   if (published) return published;
   return getPublic<T>(path, { ...options, asViewer: true });

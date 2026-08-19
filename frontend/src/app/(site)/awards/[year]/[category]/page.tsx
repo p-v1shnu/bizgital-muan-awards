@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Eye } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -80,6 +81,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
           { name: page.nameLo, path: `/awards/${page.edition.slug}/${page.slug}` },
         ])}
       />
+      {/* Same warning as the year page: this page can be reached directly, and a
+          category page is where a winner shows first. */}
+      {page.preview && (
+        <div className="mb-6 rounded-[var(--radius-box)] bg-ink px-4 py-2.5 text-center text-[12.5px] text-[#f0e9df]">
+          <Eye className="mr-2 inline size-4" />
+          {page.preview.aheadOfPublic ? (
+            <>
+              ນີ້ແມ່ນ<b className="mx-1">ພຣີວິວຂອງແອດມິນ</b>— ລາຍຊື່ຜູ້ເຂົ້າຊີງ ຫຼື ຜູ້ຊະນະ ໃນໜ້ານີ້
+              <b className="mx-1">ຄົນທົ່ວໄປຍັງເຫັນບໍ່ໄດ້</b>ຈົນກວ່າຈະປະກາດ
+            </>
+          ) : (
+            <>ນີ້ແມ່ນ<b className="mx-1">ພຣີວິວ</b>— ປີນີ້ຍັງບໍ່ໄດ້ເຜີຍແຜ່ ຄົນທົ່ວໄປຍັງເຫັນບໍ່ໄດ້</>
+          )}
+        </div>
+      )}
+
       <nav className="mb-6 text-[13px] text-ink-3">
         <Link href={`/awards/${page.edition.slug}`} className="hover:text-ink hover:underline">
           {page.edition.titleLo}

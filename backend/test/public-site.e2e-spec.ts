@@ -69,7 +69,7 @@ describe('public site', () => {
 
     it('opens for a signed-in admin, flagged as a preview', async () => {
       const response = await api(h).get(path('/editions/2027')).set(h.auth).expect(200);
-      expect(response.body.data.preview).toEqual({ phase: 'DRAFT' });
+      expect(response.body.data.preview).toEqual({ phase: 'DRAFT', aheadOfPublic: true });
     });
 
     /**
@@ -87,7 +87,7 @@ describe('public site', () => {
       const cookie = login.headers['set-cookie'];
 
       const response = await api(h).get(path('/editions/2027')).set('Cookie', cookie).expect(200);
-      expect(response.body.data.preview).toEqual({ phase: 'DRAFT' });
+      expect(response.body.data.preview).toEqual({ phase: 'DRAFT', aheadOfPublic: true });
 
       // And it stops working the moment that session is signed out.
       await api(h)
@@ -121,9 +121,39 @@ describe('public site', () => {
       await api(h).get(path('/editions/2027?preview=not-a-token')).expect(404);
     });
 
-    it('shows a draft as it will look once published — no nominees yet', async () => {
+    /**
+     * The team has to be able to read its own nominee list before announcing
+     * it: the phase change is forward-only, so "announce and then look" cannot
+     * be undone. The page says so, which is what `aheadOfPublic` is for.
+     */
+    it('lets a signed-in admin read the nominees that are not announced yet', async () => {
       const response = await api(h).get(path('/editions/2027')).set(h.auth).expect(200);
+      expect(response.body.data.categories[0].nominees).toHaveLength(2);
+      expect(response.body.data.preview.aheadOfPublic).toBe(true);
+
+      const category = await api(h)
+        .get(path('/editions/2027/categories/creator-of-the-year'))
+        .set(h.auth)
+        .expect(200);
+      expect(category.body.data.nominees).toHaveLength(2);
+      expect(category.body.data.preview.aheadOfPublic).toBe(true);
+    });
+
+    /**
+     * A preview link is for showing the year to somebody outside the team, so it
+     * stays as blind as the public page. Whoever holds the link sees the year;
+     * they do not see who is on the shortlist.
+     */
+    it('does not show them to a preview-link holder', async () => {
+      const minted = await api(h)
+        .post(path(`/admin/editions/${editionId}/preview-token`))
+        .set(h.auth)
+        .expect(201);
+      const token = minted.body.data.token;
+
+      const response = await api(h).get(path(`/editions/2027?preview=${token}`)).expect(200);
       expect(response.body.data.categories[0].nominees).toEqual([]);
+      expect(response.body.data.preview).toEqual({ phase: 'DRAFT', aheadOfPublic: false });
     });
   });
 
@@ -135,6 +165,16 @@ describe('public site', () => {
       expect(response.body.data.preview).toBeNull();
       expect(response.body.data.categories).toHaveLength(1);
       expect(response.body.data.categories[0].nominees).toEqual([]);
+    });
+
+    it('shows the unannounced nominees to an admin, and not to anyone else', async () => {
+      const asPublic = await api(h).get(path('/editions/2027')).expect(200);
+      expect(asPublic.body.data.categories[0].nominees).toEqual([]);
+      expect(asPublic.body.data.preview).toBeNull();
+
+      const asAdmin = await api(h).get(path('/editions/2027')).set(h.auth).expect(200);
+      expect(asAdmin.body.data.categories[0].nominees).toHaveLength(2);
+      expect(asAdmin.body.data.preview).toEqual({ phase: 'PUBLISHED', aheadOfPublic: true });
     });
 
     it('keeps the creator profile free of an unannounced nomination', async () => {
@@ -196,6 +236,23 @@ describe('public site', () => {
     it('still shows nothing in the hall of winners', async () => {
       const response = await api(h).get(path('/winners')).expect(200);
       expect(response.body.data).toHaveLength(0);
+    });
+
+    /**
+     * The result is the highest-stakes thing on the site and the announcement
+     * cannot be taken back, so the team can read it here first. Everyone else
+     * keeps getting the version above, where every flag is false.
+     */
+    it('shows the decided winner to an admin before it is announced', async () => {
+      const response = await api(h).get(path('/editions/2027')).set(h.auth).expect(200);
+      const flags = response.body.data.categories[0].nominees.map(
+        (n: { isWinner: boolean }) => n.isWinner,
+      );
+      expect(flags).toContain(true);
+      expect(response.body.data.preview).toEqual({
+        phase: 'NOMINEES_ANNOUNCED',
+        aheadOfPublic: true,
+      });
     });
   });
 

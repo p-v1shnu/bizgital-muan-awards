@@ -50,6 +50,31 @@ export interface ViewerContext {
   previewToken?: string;
 }
 
+/**
+ * What this particular viewer may see, which is the phase rule for everyone
+ * except a signed-in admin.
+ *
+ * The team has to be able to read its own year page before announcing it: the
+ * phase change is forward-only (PRD §4.4), so "announce and then look" cannot
+ * be undone, and the nominee list and the results are exactly the two things
+ * worth proofreading. A signed-in admin therefore sees them early.
+ *
+ * A preview *token* holder does not. The token exists to show an unpublished
+ * year to somebody outside the team (PRD §4.3.2) — a sponsor, a photographer —
+ * and the result of an award is the one thing that must not travel that way.
+ * The link stays as honest as the public page.
+ */
+function revealsFor(phase: EditionPhase, viewer: ViewerContext) {
+  const forPublic = reveals(phase);
+  const shown = viewer.isAdmin ? { nominees: true, winners: true } : forPublic;
+  return {
+    ...shown,
+    /** True when this viewer is seeing something the public cannot yet. */
+    aheadOfPublic:
+      (shown.nominees && !forPublic.nominees) || (shown.winners && !forPublic.winners),
+  };
+}
+
 @Injectable()
 export class PublicSiteService {
   constructor(
@@ -73,7 +98,7 @@ export class PublicSiteService {
     // A draft is previewed as it will look once published, which is the
     // question the team is actually asking when they open the link.
     const asPhase = edition.phase === EditionPhase.DRAFT ? EditionPhase.PUBLISHED : edition.phase;
-    const show = reveals(asPhase);
+    const show = revealsFor(asPhase, viewer);
 
     const [categories, judges, sponsors] = await Promise.all([
       // Nominees are always fetched but only ever emitted when the phase
@@ -97,7 +122,13 @@ export class PublicSiteService {
 
     return {
       ...this.editionShape(edition),
-      preview: previewing ? { phase: edition.phase } : null,
+      // Non-null whenever the page in front of this viewer is not the page the
+      // public gets — either because the year is unpublished, or because an
+      // admin is seeing past the phase. The banner depends on knowing which.
+      preview:
+        previewing || show.aheadOfPublic
+          ? { phase: edition.phase, aheadOfPublic: show.aheadOfPublic }
+          : null,
       categories: categories.map((category) => ({
         id: category.id,
         slug: category.slug,
@@ -136,7 +167,7 @@ export class PublicSiteService {
   async category(slug: string, categorySlug: string, viewer: ViewerContext) {
     const edition = await this.prisma.edition.findUnique({ where: { slug } });
     if (!edition) throw new NotFoundException('Edition not found');
-    await this.resolvePreview(edition.id, edition.phase, viewer);
+    const previewing = await this.resolvePreview(edition.id, edition.phase, viewer);
 
     const category = await this.prisma.category.findUnique({
       where: { editionId_slug: { editionId: edition.id, slug: categorySlug } },
@@ -145,10 +176,14 @@ export class PublicSiteService {
     if (!category) throw new NotFoundException('Category not found');
 
     const asPhase = edition.phase === EditionPhase.DRAFT ? EditionPhase.PUBLISHED : edition.phase;
-    const show = reveals(asPhase);
+    const show = revealsFor(asPhase, viewer);
 
     return {
       edition: this.editionShape(edition),
+      preview:
+        previewing || show.aheadOfPublic
+          ? { phase: edition.phase, aheadOfPublic: show.aheadOfPublic }
+          : null,
       id: category.id,
       slug: category.slug,
       nameLo: category.nameLo,

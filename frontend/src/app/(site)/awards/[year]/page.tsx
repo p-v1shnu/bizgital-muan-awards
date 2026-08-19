@@ -151,10 +151,20 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
         />
       )}
 
+      {/* Two different warnings, and showing the wrong one is worse than showing
+          none: a year that is merely unpublished is safe to pass around, while a
+          page holding a result nobody has announced yet is not. */}
       {edition.preview && (
         <div className="bg-ink px-5 py-2.5 text-center text-[12.5px] text-[#f0e9df]">
           <Eye className="mr-2 inline size-4" />
-          ນີ້ແມ່ນ<b className="mx-1">ພຣີວິວ</b>— ປີນີ້ຍັງບໍ່ໄດ້ເຜີຍແຜ່ ຄົນທົ່ວໄປຍັງເຫັນບໍ່ໄດ້
+          {edition.preview.aheadOfPublic ? (
+            <>
+              ນີ້ແມ່ນ<b className="mx-1">ພຣີວິວຂອງແອດມິນ</b>— ລາຍຊື່ຜູ້ເຂົ້າຊີງ ຫຼື ຜູ້ຊະນະ ໃນໜ້ານີ້
+              <b className="mx-1">ຄົນທົ່ວໄປຍັງເຫັນບໍ່ໄດ້</b>ຈົນກວ່າຈະປະກາດ
+            </>
+          ) : (
+            <>ນີ້ແມ່ນ<b className="mx-1">ພຣີວິວ</b>— ປີນີ້ຍັງບໍ່ໄດ້ເຜີຍແຜ່ ຄົນທົ່ວໄປຍັງເຫັນບໍ່ໄດ້</>
+          )}
         </div>
       )}
 

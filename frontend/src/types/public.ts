@@ -54,9 +54,19 @@ export interface PublicCategory {
   nominees: PublicNominee[];
 }
 
+/**
+ * Set whenever the page in front of this viewer is not the page the public
+ * gets: an unpublished year (PRD §4.3.2), or a signed-in admin reading past the
+ * phase to proofread a nominee list or a result before announcing it.
+ */
+export interface PreviewState {
+  phase: EditionPhase;
+  /** True when the nominees or winners on this page are not public yet. */
+  aheadOfPublic: boolean;
+}
+
 export interface PublicEdition extends PublicEditionSummary {
-  /** Set only when the year is visible because of a preview (PRD §4.3.2). */
-  preview: { phase: EditionPhase } | null;
+  preview: PreviewState | null;
   categories: PublicCategory[];
   judges: {
     id: string;
@@ -80,6 +90,7 @@ export interface PublicEdition extends PublicEditionSummary {
 
 export interface PublicCategoryPage extends PublicCategory {
   edition: PublicEditionSummary;
+  preview: PreviewState | null;
 }
 
 export interface WinnersYear extends PublicEditionSummary {

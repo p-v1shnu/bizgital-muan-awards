@@ -59,9 +59,25 @@ function EditionDetail({ id }: { id: string }) {
         status={<PhaseBadge phase={edition.phase} />}
         actions={
           edition.phase !== 'DRAFT' && (
-            <ButtonLink href={`/awards/${edition.slug}`} size="sm" target="_blank">
-              <Eye className="size-3.5" /> ເບິ່ງໜ້າຈິງ
-            </ButtonLink>
+            <>
+              {/* Two different pages, and the difference matters before an
+                  irreversible phase change: the first is what a visitor gets
+                  right now, the second is what they will get once this year
+                  announces. `?preview` makes the read personal, so it carries
+                  the admin session instead of the cached public copy. */}
+              <ButtonLink href={`/awards/${edition.slug}`} size="sm" target="_blank">
+                <Eye className="size-3.5" /> ເບິ່ງໜ້າຈິງ
+              </ButtonLink>
+              {(edition.phase === 'PUBLISHED' || edition.phase === 'NOMINEES_ANNOUNCED') && (
+                <ButtonLink
+                  href={`/awards/${edition.slug}?preview=1`}
+                  size="sm"
+                  target="_blank"
+                >
+                  <Eye className="size-3.5" /> ພຣີວິວກ່ອນປະກາດ
+                </ButtonLink>
+              )}
+            </>
           )
         }
       />
