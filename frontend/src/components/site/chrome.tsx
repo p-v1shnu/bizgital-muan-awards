@@ -142,7 +142,11 @@ export async function SiteFooter() {
             <Image
               src="/brand/horizontal-full-color.png"
               alt="ມ່ວນອາວອດສ໌"
-              width={130}
+              // 1560×563 in the file: the full-colour lockup carries the Lao
+              // strapline above the wordmark, so it is taller in proportion
+              // than the black one in the header. Declaring the drawn size at
+              // the file's own ratio keeps it from being squeezed.
+              width={111}
               height={40}
               className="h-10 w-auto"
             />
