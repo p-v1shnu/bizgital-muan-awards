@@ -173,21 +173,21 @@ export default async function AboutPage() {
       <Section id="privacy" eyebrow="ຄວາມເປັນສ່ວນຕົວ" title="ຂໍ້ມູນຂອງທ່ານ" className="bg-panel-2/50">
         <div className="max-w-3xl space-y-6 text-[14.5px] leading-[1.85] text-ink-2">
           <div>
-            <h3 className="font-serif text-[19px] text-ink">ຕອນສົ່ງລາຍຊື່ ເຮົາເກັບຫຍັງແດ່</h3>
+            <h3 className="font-serif text-[19px] text-ink">ຕອນສົ່ງລາຍຊື່ ພວກເຮົາເກັບຫຍັງແດ່</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
                 <b className="text-ink">ຊື່ຄຣີເອເຕີ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ</b> ທີ່ທ່ານພິມມາ —
-                ທີມງານໃຊ້ຄັດເລືອກຜູ້ເຂົ້າຊີງ
+                ທີມງານໃຊ້ເພື່ອຄັດເລືອກຜູ້ເຂົ້າຊີງ
               </li>
               <li>
                 <b className="text-ink">ຊື່ ແລະ ອີເມວຂອງທ່ານ</b> —{' '}
                 <b className="text-ink">ບໍ່ບັງຄັບ</b> ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ
-                ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບເທົ່ານັ້ນ
+                ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງການສອບຖາມຄືນເທົ່ານັ້ນ
               </li>
               <li>
                 <b className="text-ink">ຮ່ອງຮອຍທາງເທັກນິກ</b> ເພື່ອກັນສະແປມ —
                 ທີ່ຢູ່ IP ຖືກ<b className="text-ink">ປ່ຽນເປັນລະຫັດຫຍໍ້</b> ກ່ອນບັນທຶກ
-                ຈຶ່ງອ່ານກັບເປັນເລກເດີມບໍ່ໄດ້
+                ເພື່ອໃຫ້ອ່ານກັບເປັນເລກເດີມບໍ່ໄດ້
               </li>
             </ul>
           </div>
@@ -196,7 +196,7 @@ export default async function AboutPage() {
             <h3 className="font-serif text-[19px] text-ink">ເກັບໄວ້ດົນປານໃດ</h3>
             <p className="mt-2">
               ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ <b className="text-ink">ພາຍໃນ 12 ເດືອນ</b>{' '}
-              ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຄຣີເອເຕີ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງເກັບຖາວອນ
+              ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຄຣີເອເຕີ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງຈະຖືກເກັບໄວ້ຖາວອນ
             </p>
           </div>
 
@@ -205,7 +205,6 @@ export default async function AboutPage() {
             <p className="mt-2">
               ບໍ່ຂາຍ ບໍ່ແລກປ່ຽນ ແລະ ບໍ່ສົ່ງອີເມວໂຄສະນາ ·
               ຄົນທີ່ເຫັນຂໍ້ມູນຜູ້ສົ່ງມີສະເພາະທີມງານທີ່ມີບັນຊີຫຼັງບ້ານ
-              ແລະ ທຸກຄັ້ງທີ່ມີການແກ້ໄຂຖືກບັນທຶກໄວ້
             </p>
           </div>
 
@@ -217,11 +216,11 @@ export default async function AboutPage() {
             </p>
             <p className="mt-2">
               ສິ່ງທີ່ຖືກນັບແມ່ນ <b className="text-ink">ໜ້າທີ່ເປີດ, ຊະນິດອຸປະກອນ, ພາສາ ແລະ
-              ປະເທດໂດຍປະມານ</b> — <b className="text-ink">ບໍ່ແມ່ນຊື່ ຫຼື ອີເມວຂອງທ່ານ</b>{' '}
+              ປະເທດ</b> — <b className="text-ink">ບໍ່ແມ່ນຊື່ ຫຼື ອີເມວຂອງທ່ານ</b>{' '}
               ແລະ Google ບໍ່ໄດ້ບັນທຶກທີ່ຢູ່ IP ໄວ້ໃນລາຍງານ
             </p>
             <p className="mt-2">
-              ບໍ່ຢາກຖືກນັບ: ເປີດໂໝດ “ບໍ່ຕິດຕາມ” ຫຼື ບລັອກຄຸກກີໃນເບົາເຊີ ຫຼື ຕິດຕັ້ງ{' '}
+              ບໍ່ຢາກຖືກນັບ: ເປີດໂໝດ “ບໍ່ຕິດຕາມ” ຫຼື ບລັອກຄຸກກີໃນບຣາວເຊີ ຫຼື ຕິດຕັ້ງ{' '}
               <a
                 href="https://tools.google.com/dlpage/gaoptout"
                 target="_blank"
