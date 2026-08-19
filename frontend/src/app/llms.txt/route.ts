@@ -23,7 +23,7 @@ export async function GET() {
   const editions = await tryGetPublic<Edition[]>('/editions', { revalidate });
   const years = (editions ?? []).map((edition) => edition.year).sort((a, b) => b - a);
 
-  const body = `# Muan Awards (ມ່ວນ ອະວອດ)
+  const body = `# Muan Awards (ມ່ວນອາວອດສ໌)
 
 > The annual awards for Lao content creators, run by Muan. Each year has its
 > own edition with award categories, nominees, one winner per category, a

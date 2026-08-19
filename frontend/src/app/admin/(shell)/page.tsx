@@ -22,8 +22,8 @@ const TASK_TEXT: Record<string, { title: (count: number) => string; detail: stri
     icon: ListChecks,
   },
   'categories-without-nominees': {
-    title: (count) => `${count} ສາຂາຍັງບໍ່ມີນອມິນີ`,
-    detail: 'ໃສ່ນອມິນີໃຫ້ຄົບກ່ອນປະກາດ',
+    title: (count) => `${count} ສາຂາຍັງບໍ່ມີຜູ້ເຂົ້າຊີງ`,
+    detail: 'ໃສ່ຜູ້ເຂົ້າຊີງໃຫ້ຄົບກ່ອນປະກາດ',
     icon: AlertCircle,
   },
   'categories-without-winner': {
@@ -69,11 +69,11 @@ export default function DashboardPage() {
         {data && !data.edition && (
           <Card>
             <EmptyState
-              title="ຍັງບໍ່ມີປີການປະກວດ"
-              description="ສ້າງປີທຳອິດເພື່ອເລີ່ມໃສ່ສາຂາ ນອມິນີ ແລະ ກຳມະການ"
+              title="ຍັງບໍ່ມີປີທີ່ຈັດງານ"
+              description="ສ້າງປີທຳອິດເພື່ອເລີ່ມໃສ່ສາຂາ ຜູ້ເຂົ້າຊີງ ແລະ ກຳມະການ"
               action={
                 <ButtonLink href="/admin/editions" variant="primary">
-                  ໄປໜ້າປີການປະກວດ
+                  ໄປໜ້າປີທີ່ຈັດງານ
                 </ButtonLink>
               }
             />
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                 label="ສາຂາໃນປີນີ້"
                 meta={`ເດັ່ນ ${data.stats.featuredCategories} ສາຂາ`}
               />
-              <Stat value={data.stats.nominations} label="ນອມິນີທັງໝົດ" />
+              <Stat value={data.stats.nominations} label="ຜູ້ເຂົ້າຊີງທັງໝົດ" />
               <Stat value={data.stats.judges} label="ກຳມະການ" href="/admin/judges" />
             </div>
 
@@ -146,7 +146,7 @@ export default function DashboardPage() {
                     <thead>
                       <Tr>
                         <Th>ສາຂາ</Th>
-                        <Th className="w-24">ນອມິນີ</Th>
+                        <Th className="w-24">ຜູ້ເຂົ້າຊີງ</Th>
                         <Th className="w-44">ຜູ້ຊະນະ</Th>
                         <Th className="w-24">ເດັ່ນ</Th>
                       </Tr>
@@ -222,7 +222,7 @@ const TASK_LINK: Record<string, (editionId: string) => { href: string; label: st
   'no-categories': (id) => ({ href: `/admin/editions/${id}?tab=categories`, label: 'ໃສ່ສາຂາ' }),
   'categories-without-nominees': (id) => ({
     href: `/admin/editions/${id}?tab=nominees`,
-    label: 'ໃສ່ນອມິນີ',
+    label: 'ໃສ່ຜູ້ເຂົ້າຊີງ',
   }),
   'categories-without-winner': (id) => ({
     href: `/admin/editions/${id}?tab=nominees`,

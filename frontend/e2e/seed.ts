@@ -50,8 +50,8 @@ export default async function seed() {
   await api.put('admin/site', {
     headers: auth,
     data: {
-      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
-      aboutSummaryLo: 'ມ່ວນ ອະວອດ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັນລາວ ໃນທຸກຮູບແບບ',
+      brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
+      aboutSummaryLo: 'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ໃນທຸກຮູບແບບ',
       // The contact box on /about, and — separately, for the footer's icon row
       // — the organisation's own Facebook page.
       contactEmail: 'info@muanawards.la',
@@ -61,7 +61,7 @@ export default async function seed() {
       // can tell which of the two reached the browser.
       pageSeo: {
         about: {
-          titleLo: 'ກ່ຽວກັບງານ ມ່ວນ ອະວອດ',
+          titleLo: 'ກ່ຽວກັບງານ ມ່ວນອາວອດສ໌',
           descriptionLo: 'ທີ່ມາຂອງງານ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
         },
       },
@@ -73,10 +73,10 @@ export default async function seed() {
         noYear: { titleLo: 'ງານປີຕໍ່ໄປ', bodyLo: 'ຈະປະກາດໃນໄວໆນີ້' },
         draft: { titleLo: 'ກຳລັງກຽມ' },
         published: { titleLo: 'ເປີດແລ້ວ', bodyLo: 'ເບິ່ງສາຂາ ແລະ ລາຍລະອຽດຂອງງານປີນີ້' },
-        nominees: { titleLo: 'ປະກາດນອມິນີແລ້ວ', bodyLo: 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊິງທຸກສາຂາ' },
+        nominees: { titleLo: 'ປະກາດຜູ້ເຂົ້າຊີງແລ້ວ', bodyLo: 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊີງທຸກສາຂາ' },
         winners: { titleLo: 'ປະກາດຜົນແລ້ວ', bodyLo: 'ເບິ່ງຜູ້ຊະນະທຸກສາຂາຂອງປີນີ້' },
         entriesOpen: {
-          titleLo: 'ເປີດຮັບເສີນຊື່ແລ້ວ',
+          titleLo: 'ເປີດຮັບສະເໜີຊື່ແລ້ວ',
           bodyLo: 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
         },
         hallOfWinners: { bodyLo: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ' },
@@ -88,10 +88,10 @@ export default async function seed() {
       // The judging steps, which the homepage band and /about both render — the
       // spec reads them off both pages and compares.
       judgingSteps: [
-        { titleLo: 'ເສີນຊື່', bodyLo: 'ເປີດໃຫ້ທຸກຄົນສົ່ງຊື່ຜ່ານໜ້າ “ສົ່ງລາຍຊື່”' },
+        { titleLo: 'ສະເໜີຊື່', bodyLo: 'ເປີດໃຫ້ທຸກຄົນສົ່ງຊື່ຜ່ານໜ້າ “ສົ່ງລາຍຊື່”' },
         { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດຄຸນສົມບັດ ແລະ ຜົນງານຕະຫຼອດປີ' },
         { titleLo: 'ກຳມະການລົງຄະແນນ', bodyLo: 'ຄະນະກຳມະການລົງຄະແນນເປັນເອກະລາດ' },
-        { titleLo: 'ປະກາດຜົນ', bodyLo: 'ປະກາດນອມິນີກ່ອນ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
+        { titleLo: 'ປະກາດຜົນ', bodyLo: 'ປະກາດຜູ້ເຂົ້າຊີງກ່ອນ ແລ້ວປະກາດຜູ້ຊະນະໃນງານ' },
       ],
       // The FAQ, questions and all — the same five entries a fresh install comes
       // up with (backend/prisma/seed.ts), so the browser reads what the team
@@ -99,24 +99,24 @@ export default async function seed() {
       // paragraphs, which is the page's only multi-paragraph layout to check.
       faq: [
         {
-          questionLo: 'ໃຜສາມາດເສີນຊື່ໄດ້?',
+          questionLo: 'ໃຜສາມາດສະເໜີຊື່ໄດ້?',
           answerLo: 'ທຸກຄົນ — ບໍ່ຕ້ອງລົງທະບຽນ ແລະ ບໍ່ຕ້ອງບອກຊື່ຜູ້ສົ່ງ',
         },
         {
-          questionLo: 'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
-          answerLo: 'ບໍ່ມີ — ການເສີນຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
+          questionLo: 'ຈຳນວນຄັ້ງທີ່ຖືກສະເໜີ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
+          answerLo: 'ບໍ່ມີ — ການສະເໜີຊື່ຊ່ວຍໃຫ້ທີມງານບໍ່ເບິ່ງຂ້າມໃຜ ແຕ່ຜູ້ຕັດສິນຄືຄະນະກຳມະການ',
         },
         {
-          questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+          questionLo: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?',
           answerLo:
-            'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
+            'ຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ\nມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
         },
         {
           questionLo: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
           answerLo: 'ທີມງານເຊີນຄະນະກຳມະການເອງທຸກປີ ຈາກຄົນທຳງານໃນວົງການ',
         },
         {
-          questionLo: 'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
+          questionLo: 'ຢາກຮ່ວມເປັນຜູ້ສະໜັບສະໜູນ ຕິດຕໍ່ໃສ?',
           answerLo: 'ຕິດຕໍ່ທີມງານຕາມຊ່ອງທາງໃນຫົວຂໍ້ “ຕິດຕໍ່ທີມງານ” ທ້າຍໜ້ານີ້',
         },
       ],
@@ -165,7 +165,7 @@ export default async function seed() {
       data: {
         year,
         slug: String(year),
-        titleLo: `ມ່ວນ ອະວອດ ${year}`,
+        titleLo: `ມ່ວນອາວອດສ໌ ${year}`,
         descriptionLo: `ງານມອບລາງວັນປະຈຳປີ ${year}`,
         venueLo: 'ຫໍປະຊຸມແຫ່ງຊາດ, ນະຄອນຫຼວງວຽງຈັນ',
         activitiesLo: 'ຍ່າງພົມແດງ\nການສະແດງເປີດງານ\nປະກາດຜົນລາງວັນ',
@@ -174,9 +174,9 @@ export default async function seed() {
     const editionId = (await edition.json()).data.id;
 
     for (const [slug, nameLo, isFeatured, groupLo] of [
-      ['creator-of-the-year', 'ຜູ້ສ້າງສັນແຫ່ງປີ', true, 'ສາຍຄອນເທັນ'],
-      ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍຄອນເທັນ'],
-      ['food', 'ຄອນເທັນອາຫານ', false, 'ສາຍໄລຟ໌ສະໄຕລ໌'],
+      ['creator-of-the-year', 'ຜູ້ສ້າງສັນແຫ່ງປີ', true, 'ສາຍຄອນເທັ້ນ'],
+      ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍຄອນເທັ້ນ'],
+      ['food', 'ຄອນເທັ້ນອາຫານ', false, 'ສາຍໄລຟ໌ສະໄຕລ໌'],
     ] as const) {
       const category = await api.post(`admin/editions/${editionId}/categories`, {
         headers: auth,

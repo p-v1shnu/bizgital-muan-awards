@@ -121,7 +121,7 @@ function QuickCreateDialog({
       open={open}
       onClose={onClose}
       title="ສ້າງຄຣີເອເຕີໃໝ່"
-      description="ເພີ່ມເຂົ້າຄັງກາງ ແລ້ວໃສ່ເປັນນອມິນີໃຫ້ເລີຍ — ຮູບ ແລະ bio ຄ່ອຍເຕີມທີຫຼັງໄດ້"
+      description="ເພີ່ມເຂົ້າຄັງກາງ ແລ້ວໃສ່ເປັນຜູ້ເຂົ້າຊີງໃຫ້ເລີຍ — ຮູບ ແລະ bio ຄ່ອຍເຕີມທີຫຼັງໄດ້"
       footer={
         <>
           <Button type="button" onClick={onClose} disabled={create.isPending}>

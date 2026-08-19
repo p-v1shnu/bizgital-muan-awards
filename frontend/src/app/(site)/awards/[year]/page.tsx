@@ -68,7 +68,7 @@ function WinnerRow({ row, editionSlug }: { row: WinnerRowData; editionSlug: stri
         href={`/awards/${editionSlug}/${category.slug}`}
         className="ml-auto text-[13px] text-brand-deep hover:underline"
       >
-        ເບິ່ງນອມິນີ →
+        ເບິ່ງຜູ້ເຂົ້າຊີງ →
       </Link>
     </div>
   );
@@ -133,7 +133,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       />
       <JsonLd
         data={breadcrumbJsonLd([
-          { name: 'ໜ້າແຮກ', path: '/' },
+          { name: 'ໜ້າຫຼັກ', path: '/' },
           { name: edition.titleLo, path: `/awards/${edition.slug}` },
         ])}
       />
@@ -291,11 +291,11 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 4 — categories, with nominees once the phase allows */}
       <Section
         eyebrow="ສາຂາ"
-        title={showNominees ? 'ສາຂາ ແລະ ນອມິນີ' : 'ສາຂາລາງວັນປີນີ້'}
+        title={showNominees ? 'ສາຂາ ແລະ ຜູ້ເຂົ້າຊີງ' : 'ສາຂາລາງວັນປີນີ້'}
         intro={
           showNominees
             ? undefined
-            : 'ລາຍຊື່ຜູ້ເຂົ້າຊິງຈະປະກາດພາຍຫຼັງ — ຕິດຕາມທາງເພຈຂອງງານ'
+            : 'ລາຍຊື່ຜູ້ເຂົ້າຊີງຈະປະກາດພາຍຫຼັງ — ຕິດຕາມທາງເພຈຂອງງານ'
         }
         className={winners.length > 0 ? 'bg-panel-2/50' : undefined}
       >
@@ -333,7 +333,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   )}
                   {category.nominees.length > 0 && (
                     <span className="ml-auto shrink-0 text-[12px] text-ink-3">
-                      {category.nominees.length} ນອມິນີ
+                      {category.nominees.length} ຜູ້ເຂົ້າຊີງ
                     </span>
                   )}
                 </summary>

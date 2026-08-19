@@ -78,7 +78,7 @@ export function organisationJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'Organization',
     name: 'Muan Awards',
-    alternateName: 'ມ່ວນ ອະວອດ',
+    alternateName: 'ມ່ວນອາວອດສ໌',
     url: siteUrl(),
     logo: siteUrl('/brand/horizontal-full-color.png'),
   };

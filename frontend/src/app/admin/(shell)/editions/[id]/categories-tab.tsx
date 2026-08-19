@@ -124,7 +124,7 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
 
               <div className="ml-auto flex items-center gap-2">
                 <Badge tone={(category._count?.nominations ?? 0) === 0 ? 'stop' : 'neutral'}>
-                  {category._count?.nominations ?? 0} ນອມິນີ
+                  {category._count?.nominations ?? 0} ຜູ້ເຂົ້າຊີງ
                 </Badge>
                 <Button size="sm" onClick={() => setEditing(category)}>
                   ແກ້ໄຂ
@@ -165,7 +165,7 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
         pending={remove.isPending}
         danger
         title={`ລຶບສາຂາ “${deleting?.nameLo}”?`}
-        description="ລຶບໄດ້ສະເພາະສາຂາທີ່ຍັງບໍ່ມີນອມິນີ"
+        description="ລຶບໄດ້ສະເພາະສາຂາທີ່ຍັງບໍ່ມີຜູ້ເຂົ້າຊີງ"
         confirmLabel="ລຶບ"
       />
     </>
@@ -272,7 +272,7 @@ function CategoryDialog({
           <span>
             <span className="block text-[13px] font-semibold text-ink">ສາຂາເດັ່ນ</span>
             <span className="block text-[11.5px] text-ink-3">
-              ຂຶ້ນໄຮໄລທ໌ໜ້າແຮກ ແລະ ແຖວທຳນຽບຜູ້ຊະນະ · ແນະນຳ 3–6 ສາຂາຕໍ່ປີ
+              ຂຶ້ນໄຮໄລທ໌ໜ້າຫຼັກ ແລະ ແຖວທຳນຽບຜູ້ຊະນະ · ແນະນຳ 3–6 ສາຂາຕໍ່ປີ
             </span>
           </span>
         </div>

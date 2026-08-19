@@ -80,7 +80,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         <CheckCircle2 className="mx-auto size-10 text-brand-deep" />
         <h2 className="mt-4 font-serif text-2xl text-ink">ຮັບຊື່ແລ້ວ ຂອບໃຈຫຼາຍໆ</h2>
         <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-ink-2">
-          ທີມງານຈະກວດລາຍຊື່ທຸກອັນ · ຖ້າມີຄົນອື່ນອີກທີ່ຢາກເສີນ ສົ່ງເພີ່ມໄດ້ເລີຍ
+          ທີມງານຈະກວດລາຍຊື່ທຸກອັນ · ຖ້າມີຄົນອື່ນອີກທີ່ຢາກສະເໜີ ສົ່ງເພີ່ມໄດ້ເລີຍ
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
@@ -125,7 +125,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
       noValidate
       className="rounded-[var(--radius-box)] border border-rule bg-panel p-6 md:p-8"
     >
-      <Field label="ສາຂາທີ່ຢາກເສີນ" required>
+      <Field label="ສາຂາທີ່ຢາກສະເໜີ" required>
         {form.categories.length > 15 && (
           <Input
             type="search"

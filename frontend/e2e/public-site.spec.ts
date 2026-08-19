@@ -54,7 +54,7 @@ test.describe('homepage', () => {
 
     // Scoped to main: the brand line also appears in the footer, by design.
     const main = page.getByRole('main');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນ ອະວອດ');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌');
     await expect(main.getByText('ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນ')).toBeVisible();
     await expect(main.getByText('ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ')).toBeVisible();
     await expect(main.getByText('ປີທີ່ຜ່ານມາ')).toBeVisible();
@@ -67,7 +67,7 @@ test.describe('homepage', () => {
     // Each of these belongs to one year and would go stale here.
     expect(body, 'sponsors belong to a year').not.toContain('Beerlao');
     expect(body, 'judges belong to a year').not.toContain('ສົມສັກ');
-    expect(body, 'the category list belongs to a year').not.toContain('ຄອນເທັນອາຫານ');
+    expect(body, 'the category list belongs to a year').not.toContain('ຄອນເທັ້ນອາຫານ');
   });
 
   test('the entry cards are not painted over by the hero', async ({ page }) => {
@@ -131,7 +131,7 @@ test.describe('a year page follows its phase', () => {
     const main = page.getByRole('main');
 
     // Headings appear only because the seed fills groupLo in (PRD §7.6).
-    await expect(main.getByRole('heading', { name: 'ສາຍຄອນເທັນ' })).toBeVisible();
+    await expect(main.getByRole('heading', { name: 'ສາຍຄອນເທັ້ນ' })).toBeVisible();
     await expect(main.getByRole('heading', { name: 'ສາຍໄລຟ໌ສະໄຕລ໌' })).toBeVisible();
 
     // 13 winners, so the rows past twelve stay folded until asked for. Scoped
@@ -195,7 +195,7 @@ test.describe('a year page follows its phase', () => {
   test('the homepage card offers the form while it is open', async ({ page }) => {
     await page.goto('/');
     const card = page.locator('div').filter({ hasText: /^ງານປີນີ້ · 2026/ }).first();
-    await expect(card.getByText('ເປີດຮັບເສີນຊື່ແລ້ວ')).toBeVisible();
+    await expect(card.getByText('ເປີດຮັບສະເໜີຊື່ແລ້ວ')).toBeVisible();
     await expect(card.getByRole('link', { name: 'ສົ່ງລາຍຊື່' })).toBeVisible();
   });
 
@@ -223,7 +223,7 @@ test('the hall of winners lists only years that have announced', async ({ page }
   const body = await page.locator('body').innerText();
 
   expect(body).toContain('2025');
-  expect(body, '2026 has not announced results').not.toContain('ມ່ວນ ອະວອດ 2026');
+  expect(body, '2026 has not announced results').not.toContain('ມ່ວນອາວອດສ໌ 2026');
 });
 
 test('a creator profile shows only announced appearances', async ({ page }) => {
@@ -428,18 +428,18 @@ test('the FAQ the team wrote reaches the page', async ({ page }) => {
   // Every entry the seed gave it, in that order, and nothing the page kept for
   // itself — the whole list is the team's, questions included.
   await expect(faq.locator('details summary')).toHaveText([
-    'ໃຜສາມາດເສີນຊື່ໄດ້?',
-    'ຈຳນວນຄັ້ງທີ່ຖືກເສີນ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
-    'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+    'ໃຜສາມາດສະເໜີຊື່ໄດ້?',
+    'ຈຳນວນຄັ້ງທີ່ຖືກສະເໜີ ມີຜົນຕໍ່ຜົນລາງວັນບໍ?',
+    'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?',
     'ຄະນະກຳມະການເລືອກມາແນວໃດ?',
-    'ຢາກຮ່ວມເປັນສະປອນເຊີ ຕິດຕໍ່ໃສ?',
+    'ຢາກຮ່ວມເປັນຜູ້ສະໜັບສະໜູນ ຕິດຕໍ່ໃສ?',
   ]);
 
   const eligibility = faq.locator('details').nth(2);
   await eligibility.locator('summary').click();
   // Both paragraphs of the answer, as two paragraphs rather than one run-on.
   await expect(eligibility.locator('p')).toHaveText([
-    'ຜູ້ສ້າງສັນຄອນເທັນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ',
+    'ຜູ້ສ້າງສັນຄອນເທັ້ນລາວ ຫຼື ຄົນທີ່ອາໄສຢູ່ ສປປ ລາວ',
     'ມີຜົນງານເຜີຍແຜ່ໃນຮອບປີທີ່ຕັດສິນ',
   ]);
 
@@ -476,7 +476,7 @@ test('the card copy and the submit list come from the back office', async ({ pag
   await page.goto('/');
   const main = page.getByRole('main');
   // 2026 is published with entries open, so the entriesOpen card wins.
-  await expect(main.getByText('ເປີດຮັບເສີນຊື່ແລ້ວ')).toBeVisible();
+  await expect(main.getByText('ເປີດຮັບສະເໜີຊື່ແລ້ວ')).toBeVisible();
   await expect(main.getByText('ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ')).toBeVisible();
 
   await page.goto('/submit');
@@ -495,7 +495,7 @@ test('the card copy and the submit list come from the back office', async ({ pag
  */
 test('the page title and description come from the back office', async ({ page }) => {
   await page.goto('/about');
-  await expect(page).toHaveTitle('ກ່ຽວກັບງານ ມ່ວນ ອະວອດ · ມ່ວນ ອະວອດ');
+  await expect(page).toHaveTitle('ກ່ຽວກັບງານ ມ່ວນອາວອດສ໌ · ມ່ວນອາວອດສ໌');
   await expect(page.locator('meta[name="description"]')).toHaveAttribute(
     'content',
     'ທີ່ມາຂອງງານ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
@@ -504,7 +504,7 @@ test('the page title and description come from the back office', async ({ page }
   // /winners has nothing set, so it must still carry the page's own words
   // rather than an empty title.
   await page.goto('/winners');
-  await expect(page).toHaveTitle('ທຳນຽບຜູ້ຊະນະ · ມ່ວນ ອະວອດ');
+  await expect(page).toHaveTitle('ທຳນຽບຜູ້ຊະນະ · ມ່ວນອາວອດສ໌');
 });
 
 /**
@@ -561,7 +561,7 @@ test('a finished year leads with who won, not with the accordions', async ({ pag
   await page.goto('/awards/2025');
   const headings = await page.getByRole('main').locator('h2').allTextContents();
   const table = headings.findIndex((h) => h.includes('ຜູ້ຊະນະທຸກສາຂາ'));
-  const categories = headings.findIndex((h) => h.includes('ສາຂາ ແລະ ນອມິນີ'));
+  const categories = headings.findIndex((h) => h.includes('ສາຂາ ແລະ ຜູ້ເຂົ້າຊີງ'));
 
   expect(table, 'the winners table is on the page').toBeGreaterThan(-1);
   expect(categories, 'the categories are on the page').toBeGreaterThan(-1);

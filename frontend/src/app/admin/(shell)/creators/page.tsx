@@ -106,7 +106,7 @@ export default function CreatorsPage() {
                 </div>
 
                 <div className="ml-auto flex items-center gap-2">
-                  <Badge>{creator._count?.nominations ?? 0} ນອມິນີ</Badge>
+                  <Badge>{creator._count?.nominations ?? 0} ຜູ້ເຂົ້າຊີງ</Badge>
                   <Button size="sm" onClick={() => setEditing(creator)}>
                     ແກ້ໄຂ
                   </Button>
@@ -146,7 +146,7 @@ export default function CreatorsPage() {
         pending={remove.isPending}
         danger
         title={`ລຶບ “${deleting?.nameLo}”?`}
-        description="ລຶບໄດ້ສະເພາະຄົນທີ່ຍັງບໍ່ເປັນນອມິນີໃນປີໃດ"
+        description="ລຶບໄດ້ສະເພາະຄົນທີ່ຍັງບໍ່ເປັນຜູ້ເຂົ້າຊີງໃນປີໃດ"
         confirmLabel="ລຶບ"
       />
     </>

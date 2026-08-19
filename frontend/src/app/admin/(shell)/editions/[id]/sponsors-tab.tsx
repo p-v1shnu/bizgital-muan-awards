@@ -98,7 +98,7 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
     <>
       <Card>
         <CardHeader
-          title="ໝວດສະປອນເຊີປີນີ້"
+          title="ໝວດຜູ້ສະໜັບສະໜູນປີນີ້"
           aside={
             <>
               <span>
@@ -131,7 +131,7 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
           <LoadingBlock />
         ) : rows.length === 0 ? (
           <EmptyState
-            title="ຍັງບໍ່ມີໝວດສະປອນເຊີ"
+            title="ຍັງບໍ່ມີໝວດຜູ້ສະໜັບສະໜູນ"
             description="ຕັ້ງໝວດເອງໄດ້ຕາມແພັກເກັດທີ່ຂາຍປີນີ້ ແລ້ວຄ່ອຍໃສ່ໂລໂກ້ · ຖ້າປີນີ້ຄືປີກ່ອນ ກົດຄັດລອກມາທັງໝວດ ແລະ ໂລໂກ້ ແລ້ວລຶບລາຍທີ່ບໍ່ຕໍ່ອອກ"
             action={
               <Button variant="primary" onClick={() => setTierDialog({ tier: null })}>
@@ -348,7 +348,7 @@ function TierDialog({
     <Dialog
       open
       onClose={onClose}
-      title={tier ? 'ປ່ຽນຊື່ໝວດ' : 'ເພີ່ມໝວດສະປອນເຊີ'}
+      title={tier ? 'ປ່ຽນຊື່ໝວດ' : 'ເພີ່ມໝວດຜູ້ສະໜັບສະໜູນ'}
       footer={
         <>
           <Button type="button" onClick={onClose} disabled={action.isPending}>
@@ -504,7 +504,7 @@ function SponsorDialog({
     <Dialog
       open
       onClose={onClose}
-      title={sponsor ? 'ແກ້ໄຂສະປອນເຊີ' : 'ເພີ່ມສະປອນເຊີ'}
+      title={sponsor ? 'ແກ້ໄຂຜູ້ສະໜັບສະໜູນ' : 'ເພີ່ມຜູ້ສະໜັບສະໜູນ'}
       footer={
         <>
           <Button type="button" onClick={onClose} disabled={action.isPending}>

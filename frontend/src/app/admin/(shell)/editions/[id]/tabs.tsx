@@ -10,9 +10,9 @@ export type EditionTab = 'details' | 'categories' | 'nominees' | 'judges' | 'spo
 const TABS: { key: EditionTab; label: string }[] = [
   { key: 'details', label: 'ຂໍ້ມູນງານ' },
   { key: 'categories', label: 'ສາຂາ' },
-  { key: 'nominees', label: 'ນອມິນີ' },
+  { key: 'nominees', label: 'ຜູ້ເຂົ້າຊີງ' },
   { key: 'judges', label: 'ກຳມະການ' },
-  { key: 'sponsors', label: 'ສະປອນເຊີ' },
+  { key: 'sponsors', label: 'ຜູ້ສະໜັບສະໜູນ' },
 ];
 
 /**

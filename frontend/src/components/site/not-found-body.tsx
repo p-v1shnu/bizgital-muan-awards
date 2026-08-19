@@ -52,6 +52,6 @@ export function NotFoundBody() {
  * pages each return their own "… not found" title, but a page that calls
  * notFound() never gets to use it: Next renders the boundary instead and takes
  * the title from there. Measured — without this the tab read
- * "ມ່ວນ ອະວອດ · Muan Awards", the layout default, on a URL that had just failed.
+ * "ມ່ວນອາວອດສ໌ · Muan Awards", the layout default, on a URL that had just failed.
  */
 export const NOT_FOUND_TITLE = 'Page not found';

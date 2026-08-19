@@ -55,7 +55,7 @@ function EditionDetail({ id }: { id: string }) {
   return (
     <>
       <PageHeader
-        crumbs={[{ label: 'ປີການປະກວດ', href: '/admin/editions' }, { label: String(edition.year) }]}
+        crumbs={[{ label: 'ປີທີ່ຈັດງານ', href: '/admin/editions' }, { label: String(edition.year) }]}
         status={<PhaseBadge phase={edition.phase} />}
         actions={
           edition.phase !== 'DRAFT' && (

@@ -255,7 +255,7 @@ test('a preview link opens a draft for someone who cannot sign in', async ({ pag
 
   const draft = await request.post(`${api}/admin/editions`, {
     headers: auth,
-    data: { year: 2031, slug: '2031', titleLo: 'ມ່ວນ ອະວອດ 2031' },
+    data: { year: 2031, slug: '2031', titleLo: 'ມ່ວນອາວອດສ໌ 2031' },
   });
   const draftId = (await draft.json()).data.id;
 

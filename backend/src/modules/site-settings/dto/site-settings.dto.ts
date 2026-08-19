@@ -18,7 +18,7 @@ import {
  * onto nothing, which is worse than the question not being there at all.
  */
 export class FaqItemDto {
-  @ApiProperty({ example: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?' })
+  @ApiProperty({ example: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?' })
   @IsString()
   @IsNotEmpty()
   @MaxLength(200)

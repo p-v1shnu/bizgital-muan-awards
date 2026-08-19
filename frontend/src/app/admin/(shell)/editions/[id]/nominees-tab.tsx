@@ -152,7 +152,7 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
           <>
             {category.isFeatured && <Badge tone="brand">ສາຂາເດັ່ນ</Badge>}
             <span>
-              {data?.length ?? 0} ນອມິນີ · ຜູ້ຊະນະ {data?.filter((n) => n.isWinner).length ?? 0}
+              {data?.length ?? 0} ຜູ້ເຂົ້າຊີງ · ຜູ້ຊະນະ {data?.filter((n) => n.isWinner).length ?? 0}
             </span>
           </>
         }
@@ -180,7 +180,7 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
       {isLoading ? (
         <LoadingBlock />
       ) : !data?.length ? (
-        <EmptyState title="ຍັງບໍ່ມີນອມິນີໃນສາຂານີ້" description="ຄົ້ນຫາຄຣີເອເຕີຈາກຄັງຂ້າງເທິງ" />
+        <EmptyState title="ຍັງບໍ່ມີຜູ້ເຂົ້າຊີງໃນສາຂານີ້" description="ຄົ້ນຫາຄຣີເອເຕີຈາກຄັງຂ້າງເທິງ" />
       ) : (
         data.map((nomination, index) => (
           <div
@@ -273,7 +273,7 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
         pending={remove.isPending}
         danger
         title={`ເອົາ “${removing?.creator.nameLo}” ອອກຈາກສາຂານີ້?`}
-        description="ຄຣີເອເຕີຍັງຢູ່ໃນຄັງ ພຽງແຕ່ບໍ່ເປັນນອມິນີຂອງສາຂານີ້ອີກ"
+        description="ຄຣີເອເຕີຍັງຢູ່ໃນຄັງ ພຽງແຕ່ບໍ່ເປັນຜູ້ເຂົ້າຊີງຂອງສາຂານີ້ອີກ"
         confirmLabel="ເອົາອອກ"
       />
     </div>

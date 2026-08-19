@@ -175,7 +175,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
         <CardBody>
           <GalleryEditor keys={gallery} onChange={setGallery} folder="editions" />
           <Note>
-            ຮູບພວກນີ້ຂຶ້ນທ້າຍໜ້າປີ — ໃສ່ຫຼັງງານຈົບ · ຮູບຂອງໜ້າແຮກແຍກຕ່າງຫາກຢູ່ “ເນື້ອຫາເວັບສ່ວນກາງ”
+            ຮູບພວກນີ້ຂຶ້ນທ້າຍໜ້າປີ — ໃສ່ຫຼັງງານຈົບ · ຮູບຂອງໜ້າຫຼັກແຍກຕ່າງຫາກຢູ່ “ເນື້ອຫາເວັບສ່ວນກາງ”
           </Note>
         </CardBody>
       </Card>

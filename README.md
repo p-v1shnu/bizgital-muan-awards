@@ -1,6 +1,6 @@
 # Muan Awards
 
-ເວັບໄຊລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ — annual awards site for Lao content creators, run by the Muan business unit at Bizgital.
+ເວັບໄຊລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ — annual awards site for Lao content creators, run by the Muan business unit at Bizgital.
 
 Product contract: [`docs/muan-awards-prd.md`](docs/muan-awards-prd.md) (v1.4).
 Design system and page mockups: [`docs/design/`](docs/design/) — open `style-guide.html` first.

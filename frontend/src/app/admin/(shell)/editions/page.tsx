@@ -23,7 +23,7 @@ export default function EditionsPage() {
   return (
     <>
       <PageHeader
-        crumbs={[{ label: 'ປີການປະກວດ' }]}
+        crumbs={[{ label: 'ປີທີ່ຈັດງານ' }]}
         actions={
           <Button variant="primary" size="sm" onClick={() => setCreating(true)}>
             <Plus className="size-3.5" /> ສ້າງປີໃໝ່
@@ -40,7 +40,7 @@ export default function EditionsPage() {
             <LoadingBlock />
           ) : !data?.length ? (
             <EmptyState
-              title="ຍັງບໍ່ມີປີການປະກວດ"
+              title="ຍັງບໍ່ມີປີທີ່ຈັດງານ"
               description="ສ້າງປີປັດຈຸບັນກ່ອນ ແລ້ວຄ່ອຍຍ້ອນໃສ່ປີເກົ່າພາຍຫຼັງ"
               action={
                 <Button variant="primary" onClick={() => setCreating(true)}>
@@ -113,7 +113,7 @@ function CreateEditionDialog({ open, onClose }: { open: boolean; onClose: () => 
         year: Number(form.year),
         // The slug is the year: /awards/2026 is what gets shared and printed.
         slug: form.year,
-        titleLo: form.titleLo || `ມ່ວນ ອະວອດ ${form.year}`,
+        titleLo: form.titleLo || `ມ່ວນອາວອດສ໌ ${form.year}`,
         phase: form.phase,
       },
       {
@@ -129,7 +129,7 @@ function CreateEditionDialog({ open, onClose }: { open: boolean; onClose: () => 
     <Dialog
       open={open}
       onClose={onClose}
-      title="ສ້າງປີການປະກວດ"
+      title="ສ້າງປີທີ່ຈັດງານ"
       description="ປີໃໝ່ເລີ່ມທີ່ “ຮ່າງ” · ປີເກົ່າທີ່ຍ້ອນໃສ່ ເລືອກສະຖານະສຸດທ້າຍໄດ້ເລີຍ"
       footer={
         <>
@@ -155,7 +155,7 @@ function CreateEditionDialog({ open, onClose }: { open: boolean; onClose: () => 
         </Field>
         <Field label="ຊື່ງານ" hint="— ວ່າງໄວ້ກໍໄດ້">
           <Input
-            placeholder={`ມ່ວນ ອະວອດ ${form.year}`}
+            placeholder={`ມ່ວນອາວອດສ໌ ${form.year}`}
             value={form.titleLo}
             onChange={(event) => setForm({ ...form, titleLo: event.target.value })}
           />

@@ -14,10 +14,10 @@ import type { Edition, HomeCards, SiteSettings } from '@/types/api';
 /** One address per page, so /awards/latest cannot read as a rival copy. */
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('home', {
-    title: 'ມ່ວນ ອະວອດ · Muan Awards',
-    description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ',
+    title: 'ມ່ວນອາວອດສ໌ · Muan Awards',
+    description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ',
   });
-  // Absolute: the root layout appends "· ມ່ວນ ອະວອດ" to every other page's
+  // Absolute: the root layout appends "· ມ່ວນອາວອດສ໌" to every other page's
   // title, and the homepage's already is the site's name.
   return { alternates: { canonical: '/' }, title: { absolute: title }, description };
 }
@@ -86,7 +86,7 @@ export default async function HomePage() {
             // The one image above the fold, so it is what LCP measures.
             <SiteImage
               imageKey={heroKey}
-              alt={site?.heroCaptionLo ?? 'ງານມອບລາງວັນ ມ່ວນ ອະວອດ'}
+              alt={site?.heroCaptionLo ?? 'ງານມອບລາງວັນ ມ່ວນອາວອດສ໌'}
               sizes="100vw"
               priority
             />
@@ -102,7 +102,7 @@ export default async function HomePage() {
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-6xl px-5 pb-28 md:pb-32">
               <h1 className="max-w-2xl font-serif text-4xl leading-[1.1] text-white md:text-6xl">
-                {site?.heroTitleLo || 'ມ່ວນ ອະວອດ'}
+                {site?.heroTitleLo || 'ມ່ວນອາວອດສ໌'}
               </h1>
               <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-white/85 md:text-base">
                 {site?.brandStatementLo || (
@@ -155,7 +155,7 @@ export default async function HomePage() {
               ກ່ຽວກັບງານ
             </p>
             <h2 className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
-              {site?.aboutTitleLo || 'ມ່ວນ ອະວອດ ຄືຫຍັງ'}
+              {site?.aboutTitleLo || 'ມ່ວນອາວອດສ໌ ຄືຫຍັງ'}
             </h2>
             <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
             <p className="text-[15px] leading-[1.85] text-ink-2">
@@ -186,7 +186,7 @@ export default async function HomePage() {
                   {typeof item === 'string' ? (
                     <SiteImage
                       imageKey={item}
-                      alt="ບັນຍາກາດງານ ມ່ວນ ອະວອດ"
+                      alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌"
                       sizes="(max-width: 768px) 33vw, 200px"
                       className="transition-transform duration-500 group-hover:scale-105"
                     />
@@ -250,9 +250,9 @@ export default async function HomePage() {
       {stats && (
         <section className="bg-ink py-11">
           <dl className="mx-auto grid max-w-6xl grid-cols-3 gap-7 px-5">
-            <Stat value={stats.years} label="ປີການປະກວດ" />
+            <Stat value={stats.years} label="ປີທີ່ຈັດງານ" />
             <Stat value={stats.categories} label="ສາຂາລາງວັນ" />
-            <Stat value={stats.creators} label="ຜູ້ສ້າງສັນທີ່ເຂົ້າຊິງ" />
+            <Stat value={stats.creators} label="ຜູ້ສ້າງສັນທີ່ເຂົ້າຊີງ" />
           </dl>
         </section>
       )}
@@ -329,7 +329,7 @@ export default async function HomePage() {
               >
                 <SiteImage
                   imageKey={key}
-                  alt="ບັນຍາກາດງານ ມ່ວນ ອະວອດ"
+                  alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌"
                   sizes="(max-width: 768px) 50vw, 380px"
                   className="transition-transform duration-500 group-hover:scale-[1.07]"
                 />
@@ -421,8 +421,8 @@ function CurrentEditionCard({
     },
     NOMINEES_ANNOUNCED: {
       eyebrow: 'ງານປີນີ້',
-      title: cards.nominees?.titleLo || 'ປະກາດນອມິນີແລ້ວ',
-      body: cards.nominees?.bodyLo || 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊິງທຸກສາຂາ',
+      title: cards.nominees?.titleLo || 'ປະກາດຜູ້ເຂົ້າຊີງແລ້ວ',
+      body: cards.nominees?.bodyLo || 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊີງທຸກສາຂາ',
     },
     WINNERS_ANNOUNCED: {
       eyebrow: 'ງານປີນີ້',
@@ -446,7 +446,7 @@ function CurrentEditionCard({
   const open = accepting
     ? {
         eyebrow: 'ງານປີນີ້',
-        title: cards.entriesOpen?.titleLo || 'ເປີດຮັບເສີນຊື່ແລ້ວ',
+        title: cards.entriesOpen?.titleLo || 'ເປີດຮັບສະເໜີຊື່ແລ້ວ',
         body: cards.entriesOpen?.bodyLo || 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
       }
     : null;

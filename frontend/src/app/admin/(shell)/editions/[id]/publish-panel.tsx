@@ -113,7 +113,7 @@ export function PublishPanel({
               </Button>
               {blocking.length > 0 ? (
                 <p className="mt-2 text-[11.5px] text-stop">
-                  ຕ້ອງແກ້ {blocking.length} ຢ່າງທີ່ໝາຍສີແດງກ່ອນ — ໃສ່ນອມິນີ ຫຼື ລຶບສາຂາທີ່ວ່າງອອກ
+                  ຕ້ອງແກ້ {blocking.length} ຢ່າງທີ່ໝາຍສີແດງກ່ອນ — ໃສ່ຜູ້ເຂົ້າຊີງ ຫຼື ລຶບສາຂາທີ່ວ່າງອອກ
                 </p>
               ) : (
                 missing.length > 0 && (
@@ -274,7 +274,7 @@ function buildChecklist(edition: Edition, categories: Category[], judges: number
       label: 'ຕັ້ງສາຂາເດັ່ນ 3–6 ສາຂາ',
       detail:
         featured === 0
-          ? 'ຍັງບໍ່ໄດ້ຕັ້ງ — ໜ້າແຮກຈະບໍ່ມີການ໌ດຜູ້ຊະນະ'
+          ? 'ຍັງບໍ່ໄດ້ຕັ້ງ — ໜ້າຫຼັກຈະບໍ່ມີການ໌ດຜູ້ຊະນະ'
           : `${featured} ສາຂາ${featured < 3 || featured > 6 ? ' — ແນະນຳ 3–6' : ''}`,
       ok: featured >= 3 && featured <= 6,
     },
@@ -294,11 +294,11 @@ function buildChecklist(edition: Edition, categories: Category[], judges: number
       ok: judges > 0,
     },
     {
-      label: 'ທຸກສາຂາມີນອມິນີ',
+      label: 'ທຸກສາຂາມີຜູ້ເຂົ້າຊີງ',
       detail:
         withoutNominees === 0
           ? 'ຄົບແລ້ວ'
-          : `ຍັງເຫຼືອ ${withoutNominees} ສາຂາ — ໃສ່ນອມິນີ ຫຼື ລຶບສາຂານັ້ນອອກ`,
+          : `ຍັງເຫຼືອ ${withoutNominees} ສາຂາ — ໃສ່ຜູ້ເຂົ້າຊີງ ຫຼື ລຶບສາຂານັ້ນອອກ`,
       ok: withoutNominees === 0,
       locks: ['NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED'],
     },

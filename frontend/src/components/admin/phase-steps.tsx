@@ -13,7 +13,7 @@ export const PHASE_ORDER: EditionPhase[] = [
 const STEP_TEXT: Record<EditionPhase, { title: string; blurb: string }> = {
   DRAFT: { title: 'ຮ່າງ', blurb: 'ຄົນນອກຍັງບໍ່ເຫັນ' },
   PUBLISHED: { title: 'ເຜີຍແຜ່', blurb: 'ໜ້າປີເປີດໃຫ້ເຫັນ' },
-  NOMINEES_ANNOUNCED: { title: 'ປະກາດນອມິນີ', blurb: 'ລາຍຊື່ຂຶ້ນໜ້າສາຂາ' },
+  NOMINEES_ANNOUNCED: { title: 'ປະກາດຜູ້ເຂົ້າຊີງ', blurb: 'ລາຍຊື່ຂຶ້ນໜ້າສາຂາ' },
   WINNERS_ANNOUNCED: { title: 'ປະກາດຜູ້ຊະນະ', blurb: 'ຜູ້ຊະນະຂຶ້ນທຳນຽບ' },
 };
 

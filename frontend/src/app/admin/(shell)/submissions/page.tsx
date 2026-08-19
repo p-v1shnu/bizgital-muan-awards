@@ -152,7 +152,7 @@ function GroupRow({ group }: { group: SubmissionGroup }) {
                 <X className="size-3.5" /> ປະຕິເສດ
               </Button>
               <Button size="sm" variant="primary" onClick={() => setAccepting(true)}>
-                <Check className="size-3.5" /> ຮັບເປັນນອມິນີ
+                <Check className="size-3.5" /> ຮັບເປັນຜູ້ເຂົ້າຊີງ
               </Button>
             </>
           )}
@@ -348,7 +348,7 @@ function AcceptDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={`ຮັບ “${group.creatorNameRaw}” ເປັນນອມິນີ`}
+      title={`ຮັບ “${group.creatorNameRaw}” ເປັນຜູ້ເຂົ້າຊີງ`}
       description={`ສາຂາ ${group.category.nameLo} · ປີ ${group.category.edition.year}`}
       footer={
         <>
@@ -366,7 +366,7 @@ function AcceptDialog({
               )
             }
           >
-            {accept.isPending ? 'ກຳລັງດຳເນີນການ…' : 'ຮັບເປັນນອມິນີ'}
+            {accept.isPending ? 'ກຳລັງດຳເນີນການ…' : 'ຮັບເປັນຜູ້ເຂົ້າຊີງ'}
           </Button>
         </>
       }

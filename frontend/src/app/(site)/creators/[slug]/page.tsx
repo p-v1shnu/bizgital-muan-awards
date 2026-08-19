@@ -71,7 +71,7 @@ export default async function CreatorPage({ params }: PageProps) {
         // Two steps, not three: there is no /creators index to point at, and a
         // breadcrumb whose middle link 404s is worse than a short one.
         data={breadcrumbJsonLd([
-          { name: 'ໜ້າແຮກ', path: '/' },
+          { name: 'ໜ້າຫຼັກ', path: '/' },
           { name: profile.nameLo, path: `/creators/${profile.slug}` },
         ])}
       />
@@ -85,7 +85,7 @@ export default async function CreatorPage({ params }: PageProps) {
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-ink-2">
             <span>
-              ເຂົ້າຊິງ {profile.appearances.length} ຄັ້ງ
+              ເຂົ້າຊີງ {profile.appearances.length} ຄັ້ງ
               {wins > 0 && <> · ຊະນະ {wins} ລາງວັນ</>}
             </span>
             {socials.length > 0 && (
@@ -116,7 +116,7 @@ export default async function CreatorPage({ params }: PageProps) {
       )}
 
       <h2 className="mt-12 text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
-        ປະຫວັດການເຂົ້າຊິງ
+        ປະຫວັດການເຂົ້າຊີງ
       </h2>
 
       {profile.appearances.length === 0 ? (
@@ -142,7 +142,7 @@ export default async function CreatorPage({ params }: PageProps) {
                   ຜູ້ຊະນະ
                 </span>
               ) : (
-                <span className="ml-auto text-[11.5px] text-ink-3">ນອມິນີ</span>
+                <span className="ml-auto text-[11.5px] text-ink-3">ຜູ້ເຂົ້າຊີງ</span>
               )}
             </li>
           ))}

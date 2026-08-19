@@ -43,7 +43,7 @@ function FormSection({
 
 /** The sections, in the order they appear — and the jump list's contents. */
 const SECTIONS = [
-  { id: 'home', label: 'ໜ້າແຮກ' },
+  { id: 'home', label: 'ໜ້າຫຼັກ' },
   { id: 'about', label: 'ກ່ຽວກັບງານ' },
   { id: 'submit', label: 'ສົ່ງລາຍຊື່' },
   { id: 'chrome', label: 'ແຖບລຸ່ມສຸດ' },
@@ -106,7 +106,7 @@ function SettingsForm({
   // The two the page has always been asked and the team alone can answer. They
   // ship as answers now, so this only speaks up if someone removes one.
   const missingStaples = [
-    { keyword: 'ຄຸນສົມບັດ', question: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?' },
+    { keyword: 'ຄຸນສົມບັດ', question: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?' },
     { keyword: 'ຄະນະກຳມະການເລືອກ', question: 'ຄະນະກຳມະການເລືອກມາແນວໃດ?' },
   ]
     .filter(({ keyword }) => !faq.some((item) => item.questionLo.includes(keyword)))
@@ -175,11 +175,11 @@ function SettingsForm({
             );
           }}
         >
-          <FormSection id="home" title="ໜ້າແຮກ">
+          <FormSection id="home" title="ໜ້າຫຼັກ">
             <Card>
-              <CardHeader title="ຂໍ້ຄວາມໜ້າແຮກ" />
+              <CardHeader title="ຂໍ້ຄວາມໜ້າຫຼັກ" />
               <CardBody>
-                <Field label="ຊື່ງານເທິງສຸດຂອງໜ້າແຮກ" help="ຫົວຂໍ້ໃຫຍ່ເທິງຮູບ hero">
+                <Field label="ຊື່ງານເທິງສຸດຂອງໜ້າຫຼັກ" help="ຫົວຂໍ້ໃຫຍ່ເທິງຮູບ hero">
                   <Input
                     required
                     value={form.heroTitleLo}
@@ -188,7 +188,7 @@ function SettingsForm({
                 </Field>
                 <Field
                   label="ຂໍ້ຄວາມແບຣນ"
-                  help="ປະໂຫຍກດຽວໃຕ້ຊື່ງານເທິງສຸດຂອງໜ້າແຮກ"
+                  help="ປະໂຫຍກດຽວໃຕ້ຊື່ງານເທິງສຸດຂອງໜ້າຫຼັກ"
                 >
                   <Textarea
                     required
@@ -196,14 +196,14 @@ function SettingsForm({
                     onChange={(event) => setForm({ ...form, brandStatementLo: event.target.value })}
                   />
                 </Field>
-                <Field label="ຫົວຂໍ້ສ່ວນ “ເກີ່ຍວກັບງານ”" help="ຫົວຂໍ້ໃຫຍ່ຂອງໜ້າແຮກ ກ່ອນຫຍໍ້ໜ້າແນະນຳງານ">
+                <Field label="ຫົວຂໍ້ສ່ວນ “ເກີ່ຍວກັບງານ”" help="ຫົວຂໍ້ໃຫຍ່ຂອງໜ້າຫຼັກ ກ່ອນຫຍໍ້ໜ້າແນະນຳງານ">
                   <Input
                     required
                     value={form.aboutTitleLo}
                     onChange={(event) => setForm({ ...form, aboutTitleLo: event.target.value })}
                   />
                 </Field>
-                <Field label="ຫຍໍ້ໜ້າແນະນຳງານ" help="ຫຍໍ້ໜ້າສັ້ນໆ ຂຶ້ນໜ້າແຮກ ແລະ ຫົວໜ້າ “ກ່ຽວກັບ”">
+                <Field label="ຫຍໍ້ໜ້າແນະນຳງານ" help="ຫຍໍ້ໜ້າສັ້ນໆ ຂຶ້ນໜ້າຫຼັກ ແລະ ຫົວໜ້າ “ກ່ຽວກັບ”">
                   <Textarea
                     required
                     className="min-h-32"
@@ -214,9 +214,9 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card>
-              <CardHeader title="ຂໍ້ຄວາມ CTA ປິດທ້າຍໜ້າແຮກ" />
+              <CardHeader title="ຂໍ້ຄວາມ CTA ປິດທ້າຍໜ້າຫຼັກ" />
               <CardBody>
-                <Field label="ຫົວຂໍ້" help="ຫົວຂໍ້ໃຫຍ່ ກ່ອນປຸ່ມ “ສົ່ງລາຍຊື່” ໃນທ້າຍໜ້າແຮກ">
+                <Field label="ຫົວຂໍ້" help="ຫົວຂໍ້ໃຫຍ່ ກ່ອນປຸ່ມ “ສົ່ງລາຍຊື່” ໃນທ້າຍໜ້າຫຼັກ">
                   <Input
                     required
                     value={form.ctaTitleLo}
@@ -233,7 +233,7 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">
-              <CardHeader title="ຂໍ້ຄວາມການ໌ດໃຕ້ hero ໜ້າແຮກ" />
+              <CardHeader title="ຂໍ້ຄວາມການ໌ດໃຕ້ hero ໜ້າຫຼັກ" />
               <CardBody>
                 <Note>
                   ການ໌ດຊ້າຍປ່ຽນຂໍ້ຄວາມຕາມ<b>ສະຖານະຂອງງານປີປັດຈຸບັນ</b> — ໃສ່ຂໍ້ຄວາມຂອງແຕ່ລະສະຖານະໄວ້
@@ -243,9 +243,9 @@ function SettingsForm({
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {(
                     [
-                      ['entriesOpen', 'ຕອນເປີດຮັບເສີນຊື່ (ສຳຄັນສຸດ — ທັບສະຖານະອື່ນ)'],
+                      ['entriesOpen', 'ຕອນເປີດຮັບສະເໜີຊື່ (ສຳຄັນສຸດ — ທັບສະຖານະອື່ນ)'],
                       ['published', 'ຕອນເຜີຍແຜ່ປີແລ້ວ ແຕ່ຍັງບໍ່ເປີດຮັບ'],
-                      ['nominees', 'ຕອນປະກາດນອມິນີແລ້ວ'],
+                      ['nominees', 'ຕອນປະກາດຜູ້ເຂົ້າຊີງແລ້ວ'],
                       ['winners', 'ຕອນປະກາດຜູ້ຊະນະແລ້ວ'],
                       ['draft', 'ຕອນປີຍັງເປັນຮ່າງ'],
                       ['noYear', 'ຕອນຍັງບໍ່ມີປີໃດເຜີຍແຜ່ເລີຍ'],
@@ -292,7 +292,7 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card>
-              <CardHeader title="ຮູບ hero ໜ້າແຮກ" />
+              <CardHeader title="ຮູບ hero ໜ້າຫຼັກ" />
               <CardBody>
                 <ImageUpload
                   hint="ແນະນຳ 2400 × 1350 px"
@@ -314,7 +314,7 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">
-              <CardHeader title="ຄັງພາບໜ້າແຮກ" aside={`${gallery.length} ຮູບ`} />
+              <CardHeader title="ຄັງພາບໜ້າຫຼັກ" aside={`${gallery.length} ຮູບ`} />
               <CardBody>
                 <GalleryEditor keys={gallery} onChange={setGallery} folder="site" />
               </CardBody>
@@ -339,12 +339,12 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">
-              <CardHeader title="ຂັ້ນຕອນການຕັດສິນ (ໜ້າແຮກ + /about)" aside={`${steps.length} ຂັ້ນ`} />
+              <CardHeader title="ຂັ້ນຕອນການຕັດສິນ (ໜ້າຫຼັກ + /about)" aside={`${steps.length} ຂັ້ນ`} />
               <CardBody>
                 <Note>
-                  ລາຍການນີ້ຂຶ້ນ<b>ສອງບ່ອນ</b> — ແຖບ “ລາງວັນນີ້ຕັດສິນແນວໃດ” ໃນໜ້າແຮກ ແລະ ຫົວຂໍ້
+                  ລາຍການນີ້ຂຶ້ນ<b>ສອງບ່ອນ</b> — ແຖບ “ລາງວັນນີ້ຕັດສິນແນວໃດ” ໃນໜ້າຫຼັກ ແລະ ຫົວຂໍ້
                   “ຂັ້ນຕອນ” ໃນໜ້າ /about · ແກ້ບ່ອນນີ້ບ່ອນດຽວ ປ່ຽນທັງສອງໜ້າພ້ອມກັນ ·
-                  ໜ້າແຮກມີໄອຄອນໃຫ້ 4 ຂັ້ນທຳອິດ ຂັ້ນທີ່ເພີ່ມມາຈະມີແຕ່ເລກລຳດັບ
+                  ໜ້າຫຼັກມີໄອຄອນໃຫ້ 4 ຂັ້ນທຳອິດ ຂັ້ນທີ່ເພີ່ມມາຈະມີແຕ່ເລກລຳດັບ
                 </Note>
                 <div className="mt-4">
                   <EntryListEditor
@@ -360,7 +360,7 @@ function SettingsForm({
                         key: 'bodyLo',
                         label: 'ຄຳອະທິບາຍ',
                         multiline: true,
-                        help: 'ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າແຮກວາງເປັນກາດແຄບ',
+                        help: 'ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າຫຼັກວາງເປັນກາດແຄບ',
                       },
                     ]}
                   />
@@ -397,7 +397,7 @@ function SettingsForm({
                       {
                         key: 'questionLo',
                         label: 'ຄຳຖາມ',
-                        placeholder: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊິງມີຫຍັງແດ່?',
+                        placeholder: 'ຄຸນສົມບັດຂອງຜູ້ເຂົ້າຊີງມີຫຍັງແດ່?',
                       },
                       {
                         key: 'answerLo',
@@ -507,7 +507,7 @@ function SettingsForm({
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {(
                     [
-                      ['home', 'ໜ້າແຮກ (/)'],
+                      ['home', 'ໜ້າຫຼັກ (/)'],
                       ['about', 'ໜ້າ ກ່ຽວກັບງານ (/about)'],
                       ['submit', 'ໜ້າ ສົ່ງລາຍຊື່ (/submit)'],
                       ['winners', 'ໜ້າ ທຳນຽບຜູ້ຊະນະ (/winners)'],

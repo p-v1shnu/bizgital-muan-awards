@@ -37,10 +37,10 @@ const notoSansLao = Noto_Sans_Lao({
 
 export const metadata: Metadata = {
   title: {
-    default: 'ມ່ວນ ອະວອດ · Muan Awards',
-    template: '%s · ມ່ວນ ອະວອດ',
+    default: 'ມ່ວນອາວອດສ໌ · Muan Awards',
+    template: '%s · ມ່ວນອາວອດສ໌',
   },
-  description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ',
+  description: 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'https://muanawards.com'),
   // Most visitors arrive from a Facebook post (PRD §10), and a share with no
   // picture is a share nobody opens. Pages with their own image — a year, a
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   // brand card, so no link is ever posted bare.
   openGraph: {
     type: 'website',
-    siteName: 'ມ່ວນ ອະວອດ · Muan Awards',
+    siteName: 'ມ່ວນອາວອດສ໌ · Muan Awards',
     images: [{ url: '/brand/og-default.png', width: 1200, height: 630 }],
   },
 };

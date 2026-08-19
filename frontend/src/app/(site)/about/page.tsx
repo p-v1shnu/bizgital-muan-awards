@@ -10,7 +10,7 @@ import type { SiteSettings } from '@/types/api';
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('about', {
     title: 'ກ່ຽວກັບງານ',
-    description: 'ທີ່ມາຂອງມ່ວນ ອະວອດ, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
+    description: 'ທີ່ມາຂອງມ່ວນອາວອດສ໌, ເກນການຕັດສິນ ແລະ ຄຳຖາມທີ່ພົບເລື້ອຍ',
   });
   return { alternates: { canonical: '/about' }, title, description };
 }
@@ -100,7 +100,7 @@ export default async function AboutPage() {
 
   return (
     <>
-      <Section eyebrow="ກ່ຽວກັບງານ" title="ມ່ວນ ອະວອດ" titleAs="h1">
+      <Section eyebrow="ກ່ຽວກັບງານ" title="ມ່ວນອາວອດສ໌" titleAs="h1">
         <p className="max-w-2xl text-[15.5px] leading-[1.9] text-ink-2">
           {site?.aboutSummaryLo || (
             <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
@@ -177,7 +177,7 @@ export default async function AboutPage() {
             <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>
                 <b className="text-ink">ຊື່ຜູ້ສ້າງສັນ, ສາຂາ, ລິງກ໌ ແລະ ເຫດຜົນ</b> ທີ່ທ່ານພິມມາ —
-                ທີມງານໃຊ້ຄັດເລືອກນອມິນີ
+                ທີມງານໃຊ້ຄັດເລືອກຜູ້ເຂົ້າຊີງ
               </li>
               <li>
                 <b className="text-ink">ຊື່ ແລະ ອີເມວຂອງທ່ານ</b> —{' '}
@@ -266,7 +266,7 @@ export default async function AboutPage() {
             </p>
           )}
           <p className="mt-6 text-[14.5px] leading-relaxed text-ink-2">
-            ຢາກເສີນຊື່ຜູ້ສ້າງສັນ? ບໍ່ຕ້ອງຕິດຕໍ່ທີມງານ ສົ່ງຜ່ານຟອມໄດ້ເລີຍ
+            ຢາກສະເໜີຊື່ຜູ້ສ້າງສັນ? ບໍ່ຕ້ອງຕິດຕໍ່ທີມງານ ສົ່ງຜ່ານຟອມໄດ້ເລີຍ
           </p>
           <div className="mt-4">
             <ActionLink href="/submit" tone="quiet">

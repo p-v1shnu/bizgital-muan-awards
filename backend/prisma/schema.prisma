@@ -353,12 +353,12 @@ model SiteSetting {
   /// in the page until a team member asked to be able to change it — the
   /// default matches what was hardcoded, so an existing row picks it up with
   /// no visible change on migration.
-  heroTitleLo      String  @default("ມ່ວນ ອະວອດ")
+  heroTitleLo      String  @default("ມ່ວນອາວອດສ໌")
   brandStatementLo String  @db.Text
   brandStatementEn String? @db.Text
   /// Heading of the homepage's "what this is" section. Same hardcode-then-ask
   /// history as heroTitleLo above.
-  aboutTitleLo     String  @default("ມ່ວນ ອະວອດ ຄືຫຍັງ")
+  aboutTitleLo     String  @default("ມ່ວນອາວອດສ໌ ຄືຫຍັງ")
   aboutSummaryLo   String  @db.Text
   aboutSummaryEn   String? @db.Text
   /// Heading + body of the homepage's closing call-to-action, just above the

@@ -75,7 +75,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       />
       <JsonLd
         data={breadcrumbJsonLd([
-          { name: 'ໜ້າແຮກ', path: '/' },
+          { name: 'ໜ້າຫຼັກ', path: '/' },
           { name: page.edition.titleLo, path: `/awards/${page.edition.slug}` },
           { name: page.nameLo, path: `/awards/${page.edition.slug}/${page.slug}` },
         ])}
@@ -96,12 +96,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
       {nominees.length === 0 ? (
         <p className="mt-10 rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-10 text-center text-[14px] text-ink-2">
-          ລາຍຊື່ຜູ້ເຂົ້າຊິງສາຂານີ້ຈະປະກາດພາຍຫຼັງ
+          ລາຍຊື່ຜູ້ເຂົ້າຊີງສາຂານີ້ຈະປະກາດພາຍຫຼັງ
         </p>
       ) : (
         <>
           <p className="mt-8 text-[12px] font-bold uppercase tracking-[0.16em] text-ink-3">
-            {nominees.length} ນອມິນີ
+            {nominees.length} ຜູ້ເຂົ້າຊີງ
           </p>
           <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {nominees.map((nominee) => (

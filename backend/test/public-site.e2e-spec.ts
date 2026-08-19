@@ -18,7 +18,7 @@ describe('public site', () => {
       await api(h)
         .post(path('/admin/editions'))
         .set(h.auth)
-        .send({ year: 2027, slug: '2027', titleLo: 'ມ່ວນ ອະວອດ 2027' })
+        .send({ year: 2027, slug: '2027', titleLo: 'ມ່ວນອາວອດສ໌ 2027' })
         .expect(201)
     ).body.data.id;
 
@@ -455,7 +455,7 @@ describe('public site', () => {
         .set(h.auth)
         .send({
           judgingSteps: [
-            { titleLo: ' ເສີນຊື່ ', bodyLo: ' ໃຜກໍສົ່ງໄດ້ ' },
+            { titleLo: ' ສະເໜີຊື່ ', bodyLo: ' ໃຜກໍສົ່ງໄດ້ ' },
             { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ' },
             { titleLo: 'ຂັ້ນທີ່ຍັງບໍ່ໄດ້ຂຽນ', bodyLo: '   ' },
           ],
@@ -464,7 +464,7 @@ describe('public site', () => {
 
       const response = await api(h).get(path('/site')).expect(200);
       expect(response.body.data.judgingSteps).toEqual([
-        { titleLo: 'ເສີນຊື່', bodyLo: 'ໃຜກໍສົ່ງໄດ້' },
+        { titleLo: 'ສະເໜີຊື່', bodyLo: 'ໃຜກໍສົ່ງໄດ້' },
         { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ' },
       ]);
     });

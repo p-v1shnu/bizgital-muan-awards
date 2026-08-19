@@ -38,7 +38,7 @@ export function Badge({ tone, dot, children, className }: BadgeProps) {
 export const PHASE_LABEL: Record<EditionPhase, string> = {
   DRAFT: 'ຮ່າງ',
   PUBLISHED: 'ເຜີຍແຜ່ແລ້ວ',
-  NOMINEES_ANNOUNCED: 'ປະກາດນອມິນີແລ້ວ',
+  NOMINEES_ANNOUNCED: 'ປະກາດຜູ້ເຂົ້າຊີງແລ້ວ',
   WINNERS_ANNOUNCED: 'ປະກາດຜູ້ຊະນະແລ້ວ',
 };
 

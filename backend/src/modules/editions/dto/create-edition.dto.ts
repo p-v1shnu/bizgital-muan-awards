@@ -29,7 +29,7 @@ export class CreateEditionDto {
   @MaxLength(40)
   slug!: string;
 
-  @ApiProperty({ example: 'ມ່ວນ ອະວອດ 2026' })
+  @ApiProperty({ example: 'ມ່ວນອາວອດສ໌ 2026' })
   @IsString()
   @MinLength(1)
   @MaxLength(160)

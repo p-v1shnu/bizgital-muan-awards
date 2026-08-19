@@ -50,10 +50,10 @@ export async function SiteHeader() {
         {/* The lockups are chosen per background, never recoloured with a CSS
             filter (PRD §6.0.2) — the horizontal one already carries the name,
             so the wordmark is not repeated in text beside it. */}
-        <Link href="/" className="flex items-center" aria-label="ມ່ວນ ອະວອດ · Muan Awards">
+        <Link href="/" className="flex items-center" aria-label="ມ່ວນອາວອດສ໌ · Muan Awards">
           <Image
             src="/brand/horizontal-black.png"
-            alt="ມ່ວນ ອະວອດ"
+            alt="ມ່ວນອາວອດສ໌"
             // The rendered size, not the file's. Declaring the full 1100 made
             // Next ask its optimiser for the largest device width it knows —
             // a 1200px re-encode of a logo that is drawn 104 pixels wide.
@@ -70,7 +70,7 @@ export async function SiteHeader() {
             priority
             className="h-8 w-auto sm:hidden"
           />
-          <span className="ml-2 font-serif text-lg leading-none text-ink sm:hidden">ມ່ວນ ອະວອດ</span>
+          <span className="ml-2 font-serif text-lg leading-none text-ink sm:hidden">ມ່ວນອາວອດສ໌</span>
         </Link>
 
         <nav className="ml-auto flex items-center gap-1 text-[13px]">
@@ -141,13 +141,13 @@ export async function SiteFooter() {
                 the full-colour lockup is meant to sit (PRD §6.0.2). */}
             <Image
               src="/brand/horizontal-full-color.png"
-              alt="ມ່ວນ ອະວອດ"
+              alt="ມ່ວນອາວອດສ໌"
               width={130}
               height={40}
               className="h-10 w-auto"
             />
             <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">
-              {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັນລາວ'}
+              {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຜູ້ສ້າງສັນຄອນເທັ້ນລາວ'}
             </p>
             {socials.length > 0 && (
               <div className="mt-5 flex gap-2">
@@ -194,7 +194,7 @@ export async function SiteFooter() {
             links={[
               { href: '/about#contact', label: 'ຕິດຕໍ່ທີມງານ' },
               { href: '/about#privacy', label: 'ຂໍ້ມູນສ່ວນຕົວ' },
-              { href: '/about#sponsor', label: 'ຮ່ວມເປັນສະປອນເຊີ' },
+              { href: '/about#sponsor', label: 'ຮ່ວມເປັນຜູ້ສະໜັບສະໜູນ' },
             ]}
           />
         </div>

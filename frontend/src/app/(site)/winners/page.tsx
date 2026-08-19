@@ -11,7 +11,7 @@ import type { WinnersYear } from '@/types/public';
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('winners', {
     title: 'ທຳນຽບຜູ້ຊະນະ',
-    description: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ຂອງມ່ວນ ອະວອດ',
+    description: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ຂອງມ່ວນອາວອດສ໌',
   });
   return { alternates: { canonical: '/winners' }, title, description };
 }
@@ -46,7 +46,7 @@ export default async function WinnersPage() {
               >
                 <Link href={`/awards/${year.slug}`} className="relative block min-h-44 bg-panel-2">
                   {/* Inside the link, so this alt becomes part of what the
-                      link is called — "ມ່ວນ ອະວອດ 2025 2025" reads better than
+                      link is called — "ມ່ວນອາວອດສ໌ 2025 2025" reads better than
                       a bare number, and the year's key visual stops being
                       invisible to an image search. */}
                   <SiteImage

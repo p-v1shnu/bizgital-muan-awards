@@ -60,7 +60,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <FoilRule className="mx-auto mb-5 w-16" />
-          <h1 className="font-serif text-3xl text-ink">ມ່ວນ ອະວອດ</h1>
+          <h1 className="font-serif text-3xl text-ink">ມ່ວນອາວອດສ໌</h1>
           <p className="mt-1 text-[13px] text-ink-3">ເຂົ້າສູ່ລະບົບຫຼັງບ້ານ</p>
         </div>
 

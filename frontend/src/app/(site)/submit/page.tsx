@@ -11,7 +11,7 @@ import { formatDate } from '@/lib/dates';
 export async function generateMetadata(): Promise<Metadata> {
   const { title, description } = await pageSeo('submit', {
     title: 'ສົ່ງລາຍຊື່',
-    description: 'ເສີນຊື່ຜູ້ສ້າງສັນຄອນເທັນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
+    description: 'ສະເໜີຊື່ຜູ້ສ້າງສັນຄອນເທັ້ນລາວທີ່ທ່ານຄິດວ່າຄູ່ຄວນໄດ້ລາງວັນ',
   });
   return { alternates: { canonical: '/submit' }, title, description };
 }
@@ -36,7 +36,7 @@ export default async function SubmitPage() {
   const steps = afterSending.length > 0 ? afterSending : [
     'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
     'ຊື່ທີ່ຖືກສົ່ງຫຼາຍຄັ້ງຈະຖືກລວມເປັນລາຍການດຽວ ບໍ່ນັບເປັນຄະແນນ',
-    'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກເສີນ',
+    'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກສະເໜີ',
   ];
 
   // Someone who arrives the day after the deadline is not in the same position
@@ -55,13 +55,13 @@ export default async function SubmitPage() {
           <p className="text-[15px] leading-relaxed text-ink-2">
             {closed ? (
               <>
-                ການເສີນຊື່ຂອງງານປີ {closed.edition.year} ປິດແລ້ວ
+                ການສະເໜີຊື່ຂອງງານປີ {closed.edition.year} ປິດແລ້ວ
                 {closed.closedAt ? ` ເມື່ອ ${formatDate(closed.closedAt)}` : ''} ·
                 ຕອນນີ້ຢູ່ລະຫວ່າງການຄັດກອງ ແລະ ຕັດສິນ
               </>
             ) : (
               <>
-                ຕອນນີ້ຍັງບໍ່ໄດ້ເປີດຮັບການເສີນຊື່ · ເມື່ອເປີດແລ້ວປຸ່ມ “ສົ່ງລາຍຊື່”
+                ຕອນນີ້ຍັງບໍ່ໄດ້ເປີດຮັບການສະເໜີຊື່ · ເມື່ອເປີດແລ້ວປຸ່ມ “ສົ່ງລາຍຊື່”
                 ຈະຂຶ້ນຢູ່ເທິງສຸດຂອງທຸກໜ້າ
               </>
             )}
@@ -87,7 +87,7 @@ export default async function SubmitPage() {
   return (
     <Section
       eyebrow={`ງານປີ ${form.edition.year}`}
-      title="ເສີນຊື່ຜູ້ສ້າງສັນ"
+      title="ສະເໜີຊື່ຜູ້ສ້າງສັນ"
       titleAs="h1"
       intro="ໃຜກໍສົ່ງໄດ້ ບໍ່ຕ້ອງລົງທະບຽນ · ສົ່ງໄດ້ຫຼາຍຄົນ ຫຼາຍສາຂາ"
     >

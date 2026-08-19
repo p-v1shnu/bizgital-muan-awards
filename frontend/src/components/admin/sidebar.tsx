@@ -31,7 +31,7 @@ const SECTIONS: { heading?: string; items: NavItem[] }[] = [
   {
     items: [
       { href: '/admin', label: 'ພາບລວມ', icon: LayoutGrid },
-      { href: '/admin/editions', label: 'ປີການປະກວດ', icon: ListOrdered },
+      { href: '/admin/editions', label: 'ປີທີ່ຈັດງານ', icon: ListOrdered },
     ],
   },
   {
@@ -69,7 +69,7 @@ export function Sidebar() {
       <Link href="/admin" className="flex items-center gap-2.5 px-2 pt-1.5 pb-4">
         <span className="foil size-6.5 shrink-0 rounded-[7px]" />
         <span>
-          <span className="block font-serif text-base leading-tight">ມ່ວນ ອະວອດ</span>
+          <span className="block font-serif text-base leading-tight">ມ່ວນອາວອດສ໌</span>
           <span className="block text-[10px] uppercase tracking-[0.16em] text-[#9d9184]">Admin</span>
         </span>
       </Link>
