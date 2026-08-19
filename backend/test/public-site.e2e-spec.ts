@@ -492,7 +492,7 @@ describe('public site', () => {
         .send({
           homeCards: {
             entriesOpen: { titleLo: '  ເປີດຮັບແລ້ວ  ', bodyLo: 'ສົ່ງຊື່ໄດ້ເລີຍ' },
-            draft: { titleLo: 'ກຳລັງກຽມ', bodyLo: '   ' },
+            draft: { titleLo: 'ກຳລັງຕຽມການ', bodyLo: '   ' },
           },
           submitAfterLo: 'ຂໍ້ໜຶ່ງ\nຂໍ້ສອງ',
         })
@@ -503,7 +503,7 @@ describe('public site', () => {
         entriesOpen: { titleLo: 'ເປີດຮັບແລ້ວ', bodyLo: 'ສົ່ງຊື່ໄດ້ເລີຍ' },
         // The blank body is dropped, not stored — that is what lets the page
         // fall back rather than render an empty line.
-        draft: { titleLo: 'ກຳລັງກຽມ' },
+        draft: { titleLo: 'ກຳລັງຕຽມການ' },
       });
       expect(response.body.data.submitAfterLo).toBe('ຂໍ້ໜຶ່ງ\nຂໍ້ສອງ');
     });

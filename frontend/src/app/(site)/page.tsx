@@ -358,10 +358,10 @@ export default async function HomePage() {
       <section className="border-y border-rule bg-panel px-5 py-14 text-center md:py-16">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-serif text-[clamp(26px,3.6vw,38px)] text-ink">
-            {site?.ctaTitleLo || 'ຮູ້ຈັກຜູ້ສ້າງສັນທີ່ຄູ່ຄວນບໍ?'}
+            {site?.ctaTitleLo || 'ຢາກສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກບໍ່?'}
           </h2>
           <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-ink-2">
-            {site?.ctaBodyLo || 'ສົ່ງຊື່ເຂົ້າມາໄດ້ ບໍ່ຈຳເປັນຕ້ອງບອກຊື່ຜູ້ສົ່ງ'}
+            {site?.ctaBodyLo || 'ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກເຂົ້າມາໄດ້ເລີຍ'}
           </p>
           <div className="mt-6 flex justify-center">
             <ActionLink href="/submit">ສົ່ງລາຍຊື່</ActionLink>
@@ -431,7 +431,7 @@ function CurrentEditionCard({
     },
     DRAFT: {
       eyebrow: 'ງານປີນີ້',
-      title: cards.draft?.titleLo || 'ກຳລັງກຽມ',
+      title: cards.draft?.titleLo || 'ກຳລັງຕຽມການ',
       body: cards.draft?.bodyLo ?? '',
     },
   }[edition.phase];
@@ -447,7 +447,7 @@ function CurrentEditionCard({
     ? {
         eyebrow: 'ງານປີນີ້',
         title: cards.entriesOpen?.titleLo || 'ເປີດຮັບສະເໜີຊື່ແລ້ວ',
-        body: cards.entriesOpen?.bodyLo || 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
+        body: cards.entriesOpen?.bodyLo || 'ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
       }
     : null;
   const shown = open ?? copy;

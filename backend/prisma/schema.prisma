@@ -363,8 +363,8 @@ model SiteSetting {
   aboutSummaryEn   String? @db.Text
   /// Heading + body of the homepage's closing call-to-action, just above the
   /// "ສົ່ງລາຍຊື່" button. Same story again.
-  ctaTitleLo       String  @default("ຮູ້ຈັກຜູ້ສ້າງສັນທີ່ຄູ່ຄວນບໍ?")
-  ctaBodyLo        String  @default("ສົ່ງຊື່ເຂົ້າມາໄດ້ ບໍ່ຈຳເປັນຕ້ອງບອກຊື່ຜູ້ສົ່ງ")
+  ctaTitleLo       String  @default("ຢາກສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກບໍ່?")
+  ctaBodyLo        String  @default("ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກເຂົ້າມາໄດ້ເລີຍ")
   galleryImageKeys Json?
   /// The organisation's own accounts, shown as icon links in the footer —
   /// separate from a Creator's or Judge's own socialLinks. { facebook, tiktok,

@@ -71,13 +71,13 @@ export default async function seed() {
       // actually see rather than a half-filled stand-in.
       homeCards: {
         noYear: { titleLo: 'ງານປີຕໍ່ໄປ', bodyLo: 'ຈະປະກາດໃນໄວໆນີ້' },
-        draft: { titleLo: 'ກຳລັງກຽມ' },
+        draft: { titleLo: 'ກຳລັງຕຽມການ' },
         published: { titleLo: 'ເປີດແລ້ວ', bodyLo: 'ເບິ່ງສາຂາ ແລະ ລາຍລະອຽດຂອງງານປີນີ້' },
         nominees: { titleLo: 'ປະກາດຜູ້ເຂົ້າຊີງແລ້ວ', bodyLo: 'ເບິ່ງລາຍຊື່ຜູ້ເຂົ້າຊີງທຸກສາຂາ' },
         winners: { titleLo: 'ປະກາດຜົນແລ້ວ', bodyLo: 'ເບິ່ງຜູ້ຊະນະທຸກສາຂາຂອງປີນີ້' },
         entriesOpen: {
           titleLo: 'ເປີດຮັບສະເໜີຊື່ແລ້ວ',
-          bodyLo: 'ສົ່ງຊື່ຜູ້ສ້າງສັນທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
+          bodyLo: 'ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານຄິດວ່າສົມຄວນໄດ້ຮັບລາງວັນ',
         },
         hallOfWinners: { bodyLo: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ' },
       },
