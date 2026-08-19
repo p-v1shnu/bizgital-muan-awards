@@ -140,20 +140,20 @@ export async function SiteFooter() {
       <div className="weave mt-24 h-3 border-y border-rule bg-panel-2" aria-hidden />
       <footer className="relative overflow-hidden bg-ink text-[#e8e1d7]">
         <div className="foil h-[3px]" aria-hidden />
-        {/* docs/design/home.html `.mu-foot .wm` hangs the mark off the bottom
-            right corner at 5%. Two attempts at that, and both read badly: this
-            footer has four columns and a rule across the bottom, so anywhere in
-            the corner the mark ends up sliced by a line of text, and a sliced
-            logo looks like a mistake rather than a decoration.
+        {/* Whole mark, upper right, clear of the rule that crosses the bottom —
+            chosen from five placements mocked at this footer's real geometry.
+            docs/design/home.html `.mu-foot .wm` hangs it off the bottom corner
+            instead, but that corner is not empty here: four link columns reach
+            the right edge and the copyright rule runs under them, so a mark
+            down there comes out sliced by two lines of text.
 
-            So it stops being a placed mark and becomes the ground it is printed
-            on: large, centred, bleeding off the bottom, faint enough that no
-            single element appears to be sitting on top of it. Symmetrical, so
-            there is no crop to read as accidental. White art on the ink ground,
-            never a filter. */}
+            Sized to sit beside the last column rather than behind it, and kept
+            whole for the same reason the section watermarks are: a mark cut off
+            at nothing reads as a mistake. White art on the ink ground, never a
+            filter. */}
         <Watermark
           tone="light"
-          className="-bottom-[220px] left-1/2 hidden h-[640px] w-[820px] -translate-x-1/2 opacity-[0.045] md:block"
+          className="top-10 right-6 hidden h-[148px] w-[190px] opacity-[0.07] md:block"
         />
         <div className="relative mx-auto max-w-6xl px-5 py-12">
           <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
