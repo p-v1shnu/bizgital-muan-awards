@@ -437,6 +437,31 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 
 ---
 
+## 6.1 กฎเวลาเขียน migration ที่แตะข้อความในคอลัมน์ JSON
+
+**ห้ามใช้ `CHAR(10)` เปล่า ๆ ข้างใน `JSON_OBJECT` / `JSON_SET` / `JSON_ARRAY_APPEND`**
+ให้เขียน `CHAR(10 USING utf8mb4)` หรือใช้ `'\n'` ในสตริงแทน
+
+`CHAR()` คืนค่าเป็นสตริง **binary** · `CONCAT` ที่มี argument เป็น binary จะคืน binary ทั้งก้อน ·
+และ JSON ที่ได้ค่าเป็น binary จะเก็บเป็น **opaque scalar** แล้วแสดงผลออกมาเป็นข้อความ
+`base64:type15:4LuA4Lqb…` แทนตัวหนังสือจริง — MySQL ไม่ฟ้อง error ใด ๆ
+
+```sql
+SELECT JSON_OBJECT('a', CONCAT('ກ', CHAR(10), 'ຂ'));
+-- {"a": "base64:type15:4LqBCuC6gg=="}          ← พัง
+SELECT JSON_OBJECT('a', CONCAT('ກ', CHAR(10 USING utf8mb4), 'ຂ'));
+-- {"a": "ກ\nຂ"}                                ← ถูก
+```
+
+เกิดขึ้นจริงกับ `16_faq_policy_answers` (คำตอบ FAQ 2 ข้อกลายเป็น base64 บนเว็บที่ deploy
+แล้ว) แก้ด้วย `zz_repair_faq_answer_encoding` · **การเขียนลงคอลัมน์ TEXT/VARCHAR
+ตรง ๆ ไม่มีปัญหานี้** (ไบต์เป็น UTF-8 อยู่แล้ว) — เฉพาะตอนค่าถูกยัดเข้า JSON เท่านั้น
+
+> เทสต์จับบั๊กนี้ไม่ได้ เพราะชุดทดสอบสร้างแถว `site_settings` ของตัวเอง ส่วน migration
+> ตัวที่พังทำงานเฉพาะกับแถวที่ **มีอยู่ก่อนแล้ว** — จับได้ทางเดียวคืออ่าน SQL ตอนเขียน
+
+---
+
 ## 7. ข้อจำกัดที่ต้องรู้ก่อนขยายเป็นหลาย container
 
 ระบบนี้ตั้งใจออกแบบให้รัน **API หนึ่ง container** (ตาม PRD ข้อ 9 ที่ตัด Redis/worker ออก)
