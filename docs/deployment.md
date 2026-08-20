@@ -46,6 +46,25 @@ git remote -v                     # ต้องเป็น URL เปล่า
 cd /srv/muan && git pull origin main && docker compose up -d --build
 ```
 
+> **`/srv/muan` เป็นเพียงตัวอย่าง** — เอกสารนี้ใช้ที่อยู่นี้ตลอดทั้งไฟล์ แต่เครื่องจริงอยู่ที่ไหน
+> ก็ได้ · **ลืมว่าอยู่ไหน ให้ถาม docker:**
+>
+> ```bash
+> docker compose ls          # คอลัมน์ CONFIG FILES บอกที่อยู่ของ compose.yml
+> ```
+>
+> `cd` ผิดที่แล้วสั่งต่อ ไม่ error ให้เห็นชัด ๆ — `git pull` จะบอกว่าไม่ใช่ repo,
+> `docker compose` จะไปสร้าง project เปล่าอีกตัว และคำสั่งที่อ่าน `.env` จะได้ค่าว่าง
+> **วิธีตรวจว่าโค้ดใหม่ขึ้นจริง ไม่ใช่ดูว่าคำสั่งไม่ error แต่ดูจำนวน migration:**
+>
+> ```bash
+> docker compose logs backend | grep -c "migrations found"   # มีบรรทัดนี้ทุกครั้งที่ backend สตาร์ท
+> docker compose logs backend | grep "migrations found" | tail -1
+> ```
+>
+> ตัวเลขในบรรทัดล่าสุดต้องเท่ากับจำนวนโฟลเดอร์ใน `backend/prisma/migrations`
+> (ไม่นับ `migration_lock.toml`) · น้อยกว่านั้น = **container ยังรันโค้ดเก่า** ยังไม่ได้ build ใหม่
+
 ---
 
 ## 1. เตรียม `.env`
@@ -215,16 +234,26 @@ curl -s -o /dev/null -w "list ทั้งถัง (ต้องไม่ใช
 build เว็บเสร็จตอน API ยังไม่ขึ้น (กล่องข้างบน) และตอนเพิ่ง deploy โค้ดที่เปลี่ยนหน้าตาของหน้า
 ที่ถูกอบไว้ ซึ่งหน้าเก่ายังถูกเสิร์ฟอยู่ได้ถึง 60 วิ
 
-รันบนเครื่องเซิร์ฟเวอร์ — อ่านคีย์จาก `.env` เพื่อไม่ให้ค่าไปค้างใน shell history:
+**หลัง `up -d --build` ไม่ต้องสั่ง** — container ใหม่เริ่มด้วยแคชเปล่าอยู่แล้ว
+
+รันบนเครื่องเซิร์ฟเวอร์ ในโฟลเดอร์ที่มี `compose.yml` (ดูกล่อง "`/srv/muan` เป็นเพียงตัวอย่าง"
+ในข้อ 0) — ทั้งคีย์และพอร์ตอ่านจาก `.env` ทั้งคู่ คีย์จึงไม่ไปค้างใน shell history และพอร์ตก็ตรง
+กับเครื่องที่ย้าย `FRONTEND_HOST_PORT` ไปแล้ว:
 
 ```bash
-cd /srv/muan
-curl -fsS -X POST http://127.0.0.1:3000/api/revalidate \
+curl -fsS -X POST \
+  "http://127.0.0.1:$(grep '^FRONTEND_HOST_PORT=' .env | cut -d= -f2- || echo 3000)/api/revalidate" \
   -H "x-revalidate-secret: $(grep '^REVALIDATE_SECRET=' .env | cut -d= -f2-)"
 ```
 
-คาดหวัง: `{"revalidated":true,"at":"…"}` · ได้ 401 = คีย์ไม่ตรง · ได้ 503 = ยังไม่ได้ตั้ง
-`REVALIDATE_SECRET` ใน `.env` (ถ้าไม่ตั้ง ปลายทางนี้ปิดตาย ไม่ได้เปิดให้ใครก็ยิงได้)
+คาดหวัง: `{"revalidated":true,"at":"…"}`
+
+| ได้อะไร | หมายความว่า |
+|---|---|
+| 401 | คีย์ไม่ตรง — หรือ `grep` ไม่เจอไฟล์ `.env` จึงส่ง header เปล่า (**cd ผิดโฟลเดอร์**) |
+| 503 | ยังไม่ได้ตั้ง `REVALIDATE_SECRET` ใน `.env` — ถ้าไม่ตั้ง ปลายทางนี้ปิดตาย ไม่ได้เปิดให้ใครก็ยิงได้ |
+| 404 | พอร์ตนั้นไม่ใช่เว็บนี้ — บนเครื่องที่รันหลายเว็บ 3000 อาจเป็นของคนอื่น ตรวจ `FRONTEND_HOST_PORT` ใน `.env` |
+| curl: (7) | ไม่มีอะไรฟังพอร์ตนั้น — `docker compose ps` ดูว่า frontend ขึ้นอยู่ไหม |
 
 ---
 
