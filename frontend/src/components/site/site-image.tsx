@@ -11,6 +11,16 @@ import { imageUrl } from '@/lib/images';
  * When the key is missing — the team has not uploaded that picture yet — a
  * warm panel stands in rather than a broken frame.
  */
+/**
+ * What to pass as `fallbackClassName` on a hero that prints white text over the
+ * picture. The default stand-in is a warm cream panel, which is right for a card
+ * on paper and wrong under a white heading — the year title and the homepage's
+ * own hero were both close to invisible on it while the team had yet to upload
+ * an image. Kept here rather than written out at each hero, so the two cannot
+ * drift into two different darks.
+ */
+export const INK_FALLBACK = 'bg-[linear-gradient(160deg,#2c2028,#1b1116)]';
+
 export function SiteImage({
   imageKey,
   alt = '',

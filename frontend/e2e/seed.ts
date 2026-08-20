@@ -2,6 +2,8 @@ import { request } from '@playwright/test';
 
 export const API = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
 export const ADMIN = { email: 'admin@muanawards.com', password: 'a-very-long-password' };
+/** The finished year's highlight film. Read by the spec, so the two cannot drift. */
+export const HIGHLIGHT_URL = 'https://www.youtube.com/watch?v=muan2025';
 
 /**
  * Puts two believable years in front of the browser: 2025 finished with
@@ -137,6 +139,17 @@ export default async function seed() {
   if ((existing.data ?? []).length >= 2) {
     const seeded = existing.data.find((row: { year: number }) => row.year === 2026);
     if (seeded) await openEntriesOn(api, auth, seeded.id);
+    // And the finished year's film, for the same reason the site settings above
+    // are written every time: a database seeded before this field existed has
+    // nothing in it, and the spec for it would fail on a laptop for a reason
+    // that has nothing to do with the page.
+    const finished = existing.data.find((row: { year: number }) => row.year === 2025);
+    if (finished) {
+      await api.patch(`admin/editions/${finished.id}`, {
+        headers: auth,
+        data: { highlightUrl: HIGHLIGHT_URL },
+      });
+    }
     await purge();
     return;
   }
@@ -174,6 +187,9 @@ export default async function seed() {
         descriptionLo: `ງານມອບລາງວັນປະຈຳປີ ${year}`,
         venueLo: 'ຫໍປະຊຸມແຫ່ງຊາດ, ນະຄອນຫຼວງວຽງຈັນ',
         activitiesLo: 'ຍ່າງພົມແດງ\nການສະແດງເປີດງານ\nປະກາດຜົນລາງວັນ',
+        // Only the finished year has a film of the night, which is also what
+        // makes it the year the homepage hero's second button points at.
+        ...(finalPhase === 'WINNERS_ANNOUNCED' ? { highlightUrl: HIGHLIGHT_URL } : {}),
       },
     });
     const editionId = (await edition.json()).data.id;

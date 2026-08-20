@@ -1,0 +1,13 @@
+-- The link to a year's highlight video. The approved mockup
+-- (docs/design/home.html) puts a "watch the highlights" button in the homepage
+-- hero next to the way in to this year, pointing at the year before — and
+-- nothing on the edition record could hold what it points at, so the button
+-- was left unbuilt rather than made to lead somewhere it already led.
+--
+-- Nullable with no default: a year with no film shows no button, and every
+-- year backfilled from before the awards were filmed is that year.
+--
+-- Named `zz_` for the reason the migrations before it are: this directory is
+-- applied in lexicographic order and its numbers are unpadded, so 9_ runs
+-- after 19_. A `zz_` prefix is the only way to be certain a file runs last.
+ALTER TABLE `editions` ADD COLUMN `highlightUrl` VARCHAR(191) NULL;

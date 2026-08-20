@@ -115,4 +115,11 @@ export class CreateEditionDto {
   @IsOptional()
   @IsUrl({ require_protocol: true })
   voteUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: "The night's highlight video; the button hides when unset",
+  })
+  @IsOptional()
+  @IsUrl({ require_protocol: true })
+  highlightUrl?: string | null;
 }

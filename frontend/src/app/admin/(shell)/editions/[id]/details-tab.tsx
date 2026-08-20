@@ -25,6 +25,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
     activitiesLo: edition.activitiesLo ?? '',
     ticketUrl: edition.ticketUrl ?? '',
     voteUrl: edition.voteUrl ?? '',
+    highlightUrl: edition.highlightUrl ?? '',
   });
   const [heroImageKey, setHeroImageKey] = useState(edition.heroImageKey);
   const [gallery, setGallery] = useState<string[]>(imageKeyList(edition.galleryImageKeys));
@@ -50,6 +51,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
         activitiesLo: emptyToNull(form.activitiesLo),
         ticketUrl: emptyToNull(form.ticketUrl),
         voteUrl: emptyToNull(form.voteUrl),
+        highlightUrl: emptyToNull(form.highlightUrl),
         heroImageKey: heroImageKey ?? null,
         galleryImageKeys: gallery,
       },
@@ -149,6 +151,17 @@ export function DetailsTab({ edition }: { edition: Edition }) {
               placeholder="https://…"
               value={form.voteUrl}
               onChange={(event) => setForm({ ...form, voteUrl: event.target.value })}
+            />
+          </Field>
+          <Field
+            label="ລິງກ໌ວິດີໂອໄຮໄລທ໌ງານ"
+            help="ວິດີໂອສະຫຼຸບບັນຍາກາດງານ (YouTube, Facebook ຫຼື ບ່ອນອື່ນ) — ໃສ່ແລ້ວປຸ່ມຈະຂຶ້ນທັງໜ້າປີນີ້ ແລະ ໜ້າຫຼັກ ຕອນທີ່ປີນີ້ກາຍເປັນປີກ່ອນ"
+          >
+            <Input
+              type="url"
+              placeholder="https://…"
+              value={form.highlightUrl}
+              onChange={(event) => setForm({ ...form, highlightUrl: event.target.value })}
             />
           </Field>
         </CardBody>

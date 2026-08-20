@@ -25,6 +25,8 @@ export interface Edition {
   galleryImageKeys: string[] | null;
   ticketUrl: string | null;
   voteUrl: string | null;
+  /** The night's highlight video, wherever the team published it. */
+  highlightUrl: string | null;
   createdAt: string;
   updatedAt: string;
   /** Only on the dashboard payload: both switches resolved together. */

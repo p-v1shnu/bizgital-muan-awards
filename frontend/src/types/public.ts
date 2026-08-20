@@ -33,6 +33,7 @@ export interface PublicEditionSummary {
   galleryImageKeys: string[] | null;
   ticketUrl: string | null;
   voteUrl: string | null;
+  highlightUrl: string | null;
   /**
    * The second switch of PRD §4, decided server-side. Three states, not two:
    * accepting · closed after having been open · never opened at all, which a

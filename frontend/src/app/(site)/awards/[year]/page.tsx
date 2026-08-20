@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { CalendarDays, Clock, Eye, MapPin } from 'lucide-react';
+import { CalendarDays, Clock, Eye, MapPin, Play } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
-import { SiteImage, SiteImageFixed } from '@/components/site/site-image';
+import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
@@ -171,7 +171,15 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 1 — hero: the only place a year is allowed its own look */}
       <section className="relative overflow-hidden bg-panel-2">
         <div className="relative h-[46vh] min-h-[320px]">
-          <SiteImage imageKey={edition.heroImageKey} alt={edition.titleLo} sizes="100vw" priority />
+          {/* Dark where there is no photograph yet: the title, the venue and
+              the buttons below are all white. */}
+          <SiteImage
+            imageKey={edition.heroImageKey}
+            alt={edition.titleLo}
+            sizes="100vw"
+            priority
+            fallbackClassName={INK_FALLBACK}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/30 to-transparent" />
 
           <div className="absolute inset-x-0 bottom-0 mx-auto max-w-6xl px-5 pb-8">
@@ -231,6 +239,16 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               {safeHttpUrl(edition.voteUrl) && (
                 <ActionLink href={safeHttpUrl(edition.voteUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
                   ໂຫວດ
+                </ActionLink>
+              )}
+              {/* Also here, not only in the homepage hero. There the film shows
+                  for one year only — the year before the current one — so
+                  without this every older year's film would go out of reach the
+                  day a newer one had its own. */}
+              {safeHttpUrl(edition.highlightUrl) && (
+                <ActionLink href={safeHttpUrl(edition.highlightUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+                  <Play className="size-4 shrink-0" aria-hidden />
+                  ເບິ່ງໄຮໄລທ໌ງານ
                 </ActionLink>
               )}
             </div>

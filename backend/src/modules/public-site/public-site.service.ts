@@ -406,6 +406,7 @@ export class PublicSiteService {
     galleryImageKeys: unknown;
     ticketUrl: string | null;
     voteUrl: string | null;
+    highlightUrl: string | null;
     submissionsOpen: boolean;
     submissionsCloseAt: Date | null;
     submissionsOpenedAt: Date | null;
@@ -425,6 +426,7 @@ export class PublicSiteService {
       galleryImageKeys: edition.galleryImageKeys,
       ticketUrl: edition.ticketUrl,
       voteUrl: edition.voteUrl,
+      highlightUrl: edition.highlightUrl,
       // The second switch of PRD §4, which the year page never received and so
       // guessed at from the phase — showing "send us a name" on a published
       // year with no form open, and hiding it the moment nominees were

@@ -1,6 +1,6 @@
 import { expect, request, test } from '@playwright/test';
 
-import { ADMIN, API } from './seed';
+import { ADMIN, API, HIGHLIGHT_URL } from './seed';
 
 /**
  * Each spec file signs in from its own address.
@@ -472,6 +472,31 @@ test('both pages describe judging in the same words', async ({ page }) => {
  * /admin/site now. Both had them written into the page, so what is worth holding
  * is that the database's wording is what actually reaches the browser.
  */
+/**
+ * The film of the night, which the approved mockup puts in the homepage hero as
+ * a second button pointing at the year before. It went unbuilt for a while
+ * because the edition record had nowhere to keep what it would point at, and a
+ * button leading to the year page the timeline below already leads to is not
+ * the button the mockup drew. Only the finished year is seeded with one.
+ */
+test('the highlight film is reachable from the hero and from its own year', async ({ page }) => {
+  await page.goto('/');
+  const hero = page.getByRole('main').getByRole('link', { name: /ໄຮໄລທ໌ງານ 2025/ });
+  await expect(hero).toHaveAttribute('href', HIGHLIGHT_URL);
+  // Off-site links say so, and open away from the page (PRD §7.4).
+  await expect(hero).toHaveAttribute('target', '_blank');
+
+  // Also on that year's own page. The hero shows one year's film — the year
+  // before the current one — so this is what keeps an older year's film from
+  // going out of reach the day a newer year has its own.
+  await page.goto('/awards/2025');
+  await expect(page.getByRole('link', { name: /ໄຮໄລທ໌ງານ/ })).toBeVisible();
+
+  // 2026 has no film. No empty button, and nothing pointing nowhere.
+  await page.goto('/awards/2026');
+  await expect(page.getByRole('link', { name: /ໄຮໄລທ໌ງານ/ })).toHaveCount(0);
+});
+
 test('the card copy and the submit list come from the back office', async ({ page }) => {
   await page.goto('/');
   const main = page.getByRole('main');

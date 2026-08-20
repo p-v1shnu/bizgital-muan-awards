@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, ClipboardList, Gavel, Megaphone, Star, Trophy } from 'lucide-react';
+import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 'lucide-react';
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
-import { SiteImage } from '@/components/site/site-image';
+import { INK_FALLBACK, SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
-import { safeHttpUrl } from '@/lib/utils';
+import { cn, safeHttpUrl } from '@/lib/utils';
 import { imageKeyList } from '@/lib/images';
 import type { Edition, HomeCards, SiteSettings } from '@/types/api';
 
@@ -83,6 +83,17 @@ export default async function HomePage() {
    * page knows better than the team does.
    */
   const heroKicker = site?.heroKickerLo?.trim();
+  /**
+   * The year before this one, and its film — the mockup's second hero button.
+   *
+   * "The year before" is the newest year that is not the one the hero is
+   * inviting people into, which is the list's second entry: /editions is every
+   * year a visitor may see, newest first. Not simply `editions[1]`, because the
+   * newest year and `current` are the same record only while the newest is out
+   * of DRAFT; comparing ids says what is meant either way.
+   */
+  const previous = (editions ?? []).find((edition) => edition.id !== current?.id);
+  const previousHighlight = safeHttpUrl(previous?.highlightUrl);
   const featuredWinners = (latestWinners?.categories ?? [])
     .filter((category) => category.isFeatured)
     .slice(0, 4);
@@ -112,7 +123,7 @@ export default async function HomePage() {
             // heading, the brand statement, now the pill and the credit — was
             // near-invisible on it. The team's own upload prompt keeps its light
             // chip and stays readable.
-            <div className="grid size-full place-items-center bg-[linear-gradient(160deg,#2c2028,#1b1116)]">
+            <div className={cn('grid size-full place-items-center', INK_FALLBACK)}>
               <p className="px-6 text-center text-[13px] text-white/60">
                 <Placeholder>ຮູບ hero — ອັບໂຫລດຜ່ານ /admin/site</Placeholder>
               </p>
@@ -148,11 +159,31 @@ export default async function HomePage() {
                   can only be that year's page, and a button leading to the same
                   page the timeline below already leads to earns its place only
                   once there is real footage behind it. */}
-              {current && (
-                <div className="mt-6">
-                  <ActionLink href={`/awards/${current.slug}`} tone="quiet">
-                    ເບິ່ງງານປີ {current.year}
-                  </ActionLink>
+              {(current || previousHighlight) && (
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  {current && (
+                    <ActionLink href={`/awards/${current.slug}`} tone="quiet">
+                      ເບິ່ງງານປີ {current.year}
+                    </ActionLink>
+                  )}
+                  {/* The film of last year's night. Outlined rather than filled,
+                      as the mockup has it: on a photograph two solid buttons
+                      compete, and this is the second thing to do here, not the
+                      first. Both icons are earned — the triangle says it is a
+                      video, the corner arrow says the video is somewhere else,
+                      which is the promise every off-site link on this site makes
+                      (PRD §7.4). */}
+                  {previousHighlight && previous && (
+                    <ActionLink
+                      href={previousHighlight}
+                      tone="quiet"
+                      external
+                      className="border-white/45 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                    >
+                      <Play className="size-4 shrink-0" aria-hidden />
+                      ເບິ່ງໄຮໄລທ໌ງານ {previous.year}
+                    </ActionLink>
+                  )}
                 </div>
               )}
             </div>

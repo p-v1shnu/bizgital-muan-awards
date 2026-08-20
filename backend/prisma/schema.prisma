@@ -103,6 +103,17 @@ model Edition {
   /// External services run by other providers; a button appears only when set.
   ticketUrl String?
   voteUrl   String?
+  /// The highlight reel of the night, wherever the team published it — YouTube,
+  /// Facebook, anywhere. The approved mockup puts a "watch the highlights"
+  /// button in the homepage hero pointing at the year before
+  /// (docs/design/home.html), and there was nothing on this record for it to
+  /// point at; the year page's own CTA row carries it too, so a year's film
+  /// does not become unreachable the moment a newer year has one.
+  ///
+  /// A link rather than an upload: a video is the one thing on this site that
+  /// would dwarf everything else in object storage, and every platform the team
+  /// already publishes to plays it better than we would.
+  highlightUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
