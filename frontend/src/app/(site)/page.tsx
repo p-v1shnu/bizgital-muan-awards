@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, ClipboardList, Gavel, Megaphone, Trophy } from 'lucide-react';
+import { ArrowRight, ClipboardList, Gavel, Megaphone, Star, Trophy } from 'lucide-react';
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
@@ -71,6 +71,24 @@ export default async function HomePage() {
   const cards = site?.homeCards ?? {};
   const gallery = imageKeyList(site?.galleryImageKeys);
   const latestWinners = winnerYears?.[0];
+  /**
+   * The little pill above the hero title, which docs/design/home.html writes as
+   * "Since 2023 · Vientiane" and the build had left out.
+   *
+   * The year is derived rather than written down. 2023 is when the awards began,
+   * but the site cannot show that year yet — the team is still backfilling
+   * 2023–2025 (PRD §7.5) — and a pill that says "since 2023" above a site whose
+   * oldest page is 2026 is a claim the visitor can't follow. So it counts the
+   * years actually on the site, and stays quiet about the year until there is
+   * more than one: with a single year it would read "since 2026", which is both
+   * odd and untrue. It starts saying 2023 by itself the day those years go in.
+   */
+  const shownYears = (editions ?? []).map((edition) => edition.year);
+  const firstYear = shownYears.length > 1 ? Math.min(...shownYears) : null;
+  // The footer's location line, cut at the first comma: that field holds an
+  // address for the footer ("ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ") and the pill has room
+  // for the city alone.
+  const heroPlace = site?.footerLocationLo?.split(',')[0].trim() || 'ນະຄອນຫຼວງວຽງຈັນ';
   const featuredWinners = (latestWinners?.categories ?? [])
     .filter((category) => category.isFeatured)
     .slice(0, 4);
@@ -86,13 +104,22 @@ export default async function HomePage() {
             // The one image above the fold, so it is what LCP measures.
             <SiteImage
               imageKey={heroKey}
-              alt={site?.heroCaptionLo ?? 'ງານມອບລາງວັນ ມ່ວນອາວອດສ໌'}
+              // Not heroCaptionLo: that field is a credit line under the
+              // picture ("ຄຳບັນຍາຍໃຕ້ຮູບ" in /admin/site) and now appears as
+              // one, in the corner below. A credit describes where a photo came
+              // from, which is not what someone who cannot see it needs read out.
+              alt="ງານມອບລາງວັນ ມ່ວນອາວອດສ໌"
               sizes="100vw"
               priority
             />
           ) : (
-            <div className="grid size-full place-items-center bg-[linear-gradient(160deg,#f4efe5,#e9e0d0)]">
-              <p className="px-6 text-center text-[13px] text-ink-3">
+            // Dark, like the photograph it stands in for. It used to be a cream
+            // gradient, and everything the hero prints over it — a white
+            // heading, the brand statement, now the pill and the credit — was
+            // near-invisible on it. The team's own upload prompt keeps its light
+            // chip and stays readable.
+            <div className="grid size-full place-items-center bg-[linear-gradient(160deg,#2c2028,#1b1116)]">
+              <p className="px-6 text-center text-[13px] text-white/60">
                 <Placeholder>ຮູບ hero — ອັບໂຫລດຜ່ານ /admin/site</Placeholder>
               </p>
             </div>
@@ -101,6 +128,10 @@ export default async function HomePage() {
 
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-6xl px-5 pb-28 md:pb-32">
+              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] text-brand-edge">
+                <Star className="size-3.5" aria-hidden />
+                {firstYear ? `ຕັ້ງແຕ່ປີ ${firstYear} · ${heroPlace}` : heroPlace}
+              </p>
               <h1 className="max-w-2xl font-serif text-4xl leading-[1.1] text-white md:text-6xl">
                 {site?.heroTitleLo || 'ມ່ວນອາວອດສ໌'}
               </h1>
@@ -109,11 +140,18 @@ export default async function HomePage() {
                   <Placeholder>ຂໍ້ຄວາມແບຣນ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
                 )}
               </p>
-              {/* docs/design/home.html puts one action in the hero — the way in
-                  to this year — and the build had left it out, so the only route
-                  to the year page was a secondary button inside the card below.
-                  `quiet` is the light chip: on a photograph the cream button is
-                  the prominent one, and ink on ink would not be. */}
+              {/* The way in to this year, which docs/design/home.html puts here
+                  and the build had left out — the only route to the year page
+                  was a secondary button inside the card below. `quiet` is the
+                  light chip: on a photograph the cream button is the prominent
+                  one, and ink on ink would not be.
+
+                  The mockup has a second button beside it, "ເບິ່ງໄຮໄລທ໌ງານ 2024",
+                  pointing at the year before. It stays out until there is a year
+                  before: an Edition holds no highlight-video field, so the link
+                  can only be that year's page, and a button leading to the same
+                  page the timeline below already leads to earns its place only
+                  once there is real footage behind it. */}
               {current && (
                 <div className="mt-6">
                   <ActionLink href={`/awards/${current.slug}`} tone="quiet">
@@ -123,6 +161,21 @@ export default async function HomePage() {
               )}
             </div>
           </div>
+
+          {/* The photo credit, in the corner the mockup puts it in. Its 104px
+              clears the cards below, which pull 96px up over the hero's edge,
+              and it lines up with the right edge of the same centred column the
+              cards sit in rather than with the window — against the window it
+              floated in the margin beside them. Held back on a phone: there the
+              hero text runs the full width and the credit would land on the
+              button. */}
+          {site?.heroCaptionLo?.trim() && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-[104px] hidden md:block">
+              <p className="mx-auto max-w-6xl px-5 text-right text-[10.5px] text-white/60">
+                {site.heroCaptionLo}
+              </p>
+            </div>
+          )}
         </div>
 
         {/*
