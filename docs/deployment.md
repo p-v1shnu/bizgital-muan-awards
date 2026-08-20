@@ -480,6 +480,36 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 | อัปโหลดปฏิเสธตรงๆ (error ขึ้นทันที) | อ่านข้อความจาก API ตรงๆ — บอกชนิดไฟล์/ขนาด/bucket ต่อไม่ติด |
 | หน้าเว็บไม่อัปเดตหลังกดบันทึก | `REVALIDATE_SECRET` สองฝั่งไม่ตรงกัน |
 | ฟอร์มส่งรายชื่อโดน 429 ทั้งที่คนละคน | `trust proxy` ไม่ทำงาน — Caddy ต้องส่ง `X-Forwarded-For` |
+| `docker compose up --build` จบด้วย `panic: runtime error: makeslice: len out of range` ใน `progressui`/`vt100` | **ไม่ใช่ build พัง** — ดูข้อล่าง |
+
+### build จบด้วย panic ใน progressui / vt100
+
+```
+panic: runtime error: makeslice: len out of range
+github.com/tonistiigi/vt100.NewVT100(0x6, 0xfffffffffffffff8)
+```
+
+ตัวที่พังคือ **ตัวแสดงความคืบหน้าแบบกราฟิกของ buildx** ไม่ใช่ตัว build เอง —
+`NewVT100(6, -8)` คือมันถามความกว้างของ terminal แล้วได้ค่า 0 (session ที่ไม่มีขนาดจริง
+เช่น ต่อผ่าน SSH ที่ไม่ได้ขอ TTY, รันผ่านตัวช่วยบางตัว, หรือหน้าต่างถูกย่อระหว่าง build)
+แล้วเอาไปลบเป็นค่าติดลบ · สังเกตว่าบรรทัดก่อน panic มักขึ้น `Building (30/30)` แล้ว —
+**image ส่วนใหญ่ build เสร็จไปแล้ว** แต่คำสั่งตายก่อนจะได้สั่ง `up`
+
+แก้ด้วยการสั่งไม่ให้ใช้ตัวแสดงผลแบบนั้น:
+
+```bash
+BUILDKIT_PROGRESS=plain docker compose up -d --build
+```
+
+(หรือ `docker compose up -d --build --progress plain` · `plain` พิมพ์ log ทีละบรรทัด
+ไม่ต้องรู้ความกว้างจอ จึงไม่มีทางพังแบบนี้ และอ่านย้อนหลังได้ดีกว่าเวลา build ล้ม)
+
+ตรวจว่าขึ้นจริงหลังจากนั้น:
+
+```bash
+docker compose ps                                          # ต้อง Up ทั้งสามตัว
+docker compose logs backend | grep "migrations found" | tail -1
+```
 
 ---
 
