@@ -109,6 +109,18 @@ export default async function HomePage() {
                   <Placeholder>ຂໍ້ຄວາມແບຣນ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
                 )}
               </p>
+              {/* docs/design/home.html puts one action in the hero — the way in
+                  to this year — and the build had left it out, so the only route
+                  to the year page was a secondary button inside the card below.
+                  `quiet` is the light chip: on a photograph the cream button is
+                  the prominent one, and ink on ink would not be. */}
+              {current && (
+                <div className="mt-6">
+                  <ActionLink href={`/awards/${current.slug}`} tone="quiet">
+                    ເບິ່ງງານປີ {current.year}
+                  </ActionLink>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -463,15 +475,13 @@ function CurrentEditionCard({
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">
+        {/* While the form is open the card carries only the thing with a
+            deadline: the hero above already links to the year page, and the
+            same button twice on one screen reads as two different places. */}
         {accepting ? (
-          <>
-            <ActionLink href="/submit" className="px-4 py-2.5 text-[13px]">
-              ສົ່ງລາຍຊື່
-            </ActionLink>
-            <ActionLink href={`/awards/${edition.slug}`} tone="quiet" className="px-4 py-2.5 text-[13px]">
-              ເບິ່ງງານປີ {edition.year}
-            </ActionLink>
-          </>
+          <ActionLink href="/submit" className="px-4 py-2.5 text-[13px]">
+            ສົ່ງລາຍຊື່
+          </ActionLink>
         ) : (
           <ActionLink href={`/awards/${edition.slug}`} className="px-4 py-2.5 text-[13px]">
             ເບິ່ງງານປີ {edition.year}
