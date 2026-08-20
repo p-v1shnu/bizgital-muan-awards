@@ -104,42 +104,85 @@ export default async function HomePage() {
 
       {/* 2 — hero, with the two entry cards overlapping its lower edge */}
       <section className="relative">
-        <div className="relative h-[58vh] min-h-[380px] w-full overflow-hidden bg-panel-2">
-          {heroKey ? (
-            // The one image above the fold, so it is what LCP measures.
-            <SiteImage
-              imageKey={heroKey}
-              // Not heroCaptionLo: that field is a credit line under the
-              // picture ("ຄຳບັນຍາຍໃຕ້ຮູບ" in /admin/site) and now appears as
-              // one, in the corner below. A credit describes where a photo came
-              // from, which is not what someone who cannot see it needs read out.
-              alt="ງານມອບລາງວັນ ມ່ວນອາວອດສ໌"
-              sizes="100vw"
-              priority
-            />
-          ) : (
-            // Dark, like the photograph it stands in for. It used to be a cream
-            // gradient, and everything the hero prints over it — a white
-            // heading, the brand statement, now the pill and the credit — was
-            // near-invisible on it. The team's own upload prompt keeps its light
-            // chip and stays readable.
-            <div className={cn('grid size-full place-items-center', INK_FALLBACK)}>
-              <p className="px-6 text-center text-[13px] text-white/60">
-                <Placeholder>ຮູບ hero — ອັບໂຫລດຜ່ານ /admin/site</Placeholder>
-              </p>
-            </div>
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-ink/75 via-ink/25 to-transparent" />
+        {/*
+          The hero is sized by its words, not by the window.
 
-          <div className="absolute inset-x-0 bottom-0">
-            <div className="mx-auto max-w-6xl px-5 pb-28 md:pb-32">
+          It used to be `h-[58vh]` with the words absolutely positioned against
+          the bottom edge, and on a wide, short window — a 16:9 screen at 100%
+          zoom is exactly that — the block of words was taller than the box it
+          was pinned inside. What overflowed went upwards, so `overflow-hidden`
+          cut the pill off the top of the page entirely, and the heading rode up
+          out of the dark part of the picture onto the bright part, where white
+          text on a wedding dress cannot be read. Zooming out fixed it, which is
+          the signature of a height that is too small rather than of a colour
+          that is too light.
+
+          A minimum height with the words in normal flow, aligned to the end, is
+          what docs/design/home.html does (`.hero{min-height:560px;display:flex;
+          align-items:flex-end}`). The box can only ever be as tall as, or
+          taller than, what is in it: nothing can be clipped, and the words stay
+          where the scrim below is darkest at every window size and zoom.
+        */}
+        <div className="relative flex min-h-[560px] items-end overflow-hidden bg-ink md:min-h-[64vh]">
+          <div className="absolute inset-0">
+            {heroKey ? (
+              // The one image above the fold, so it is what LCP measures.
+              <SiteImage
+                imageKey={heroKey}
+                // Not heroCaptionLo: that field is a credit line under the
+                // picture ("ຄຳບັນຍາຍໃຕ້ຮູບ" in /admin/site) and now appears as
+                // one, in the corner below. A credit describes where a photo came
+                // from, which is not what someone who cannot see it needs read out.
+                alt="ງານມອບລາງວັນ ມ່ວນອາວອດສ໌"
+                sizes="100vw"
+                priority
+                fallbackClassName={INK_FALLBACK}
+              />
+            ) : (
+              // Dark, like the photograph it stands in for. It used to be a cream
+              // gradient, and everything the hero prints over it — a white
+              // heading, the brand statement, now the pill and the credit — was
+              // near-invisible on it. The team's own upload prompt keeps its light
+              // chip and stays readable.
+              <div className={cn('grid size-full place-items-center', INK_FALLBACK)}>
+                <p className="px-6 text-center text-[13px] text-white/60">
+                  <Placeholder>ຮູບ hero — ອັບໂຫລດຜ່ານ /admin/site</Placeholder>
+                </p>
+              </div>
+            )}
+          </div>
+          {/* Measured from the bottom in pixels, not in percentages.
+
+              A photograph is bright wherever it likes, so the words can only be
+              read if the page darkens the picture under them — and where the
+              words are is a distance from the bottom edge (their own height plus
+              the padding), not a fraction of the hero. The percentage scrim this
+              replaces had its clear window at 32% from the top, which is exactly
+              where the pill lands once the title runs to two lines: pale text,
+              full brightness, unreadable. In pixels the band covers the words at
+              every hero height and every zoom, and still lets the top of the
+              picture through. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-[linear-gradient(to_top,rgba(34,28,25,0.95)_0px,rgba(34,28,25,0.86)_140px,rgba(34,28,25,0.72)_300px,rgba(34,28,25,0.48)_440px,rgba(34,28,25,0.2)_560px,rgba(34,28,25,0)_680px)]"
+          />
+
+          <div className="relative w-full">
+            <div className="mx-auto max-w-6xl px-5 pt-16 pb-28 md:pb-32">
               {heroKicker && (
-                <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] text-brand-edge">
+                // A faint fill of its own on top of the scrim. The pill is the
+                // highest thing in the hero and therefore the one sitting on the
+                // least-darkened part of the picture, and it is small pale text:
+                // the belt as well as the braces.
+                <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 bg-ink/25 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] text-brand-edge backdrop-blur-[2px]">
                   <Star className="size-3.5" aria-hidden />
                   {heroKicker}
                 </p>
               )}
-              <h1 className="max-w-2xl font-serif text-4xl leading-[1.1] text-white md:text-6xl">
+              {/* Scaled by the width rather than jumping from 36px to 60px at a
+                  single breakpoint, so the title stops turning into three lines
+                  on the windows between the two. The mockup's own curve. */}
+              <h1 className="max-w-2xl font-serif text-[clamp(32px,4.6vw,60px)] leading-[1.08] text-white">
                 {site?.heroTitleLo || 'ມ່ວນອາວອດສ໌'}
               </h1>
               <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-white/85 md:text-base">
@@ -153,12 +196,12 @@ export default async function HomePage() {
                   light chip: on a photograph the cream button is the prominent
                   one, and ink on ink would not be.
 
-                  The mockup has a second button beside it, "ເບິ່ງໄຮໄລທ໌ງານ 2024",
-                  pointing at the year before. It stays out until there is a year
-                  before: an Edition holds no highlight-video field, so the link
-                  can only be that year's page, and a button leading to the same
-                  page the timeline below already leads to earns its place only
-                  once there is real footage behind it. */}
+                  Beside it, the mockup's second button — the year before's
+                  highlight film. It waits for two things rather than one: a year
+                  before this one, and a film on that year (Edition.highlightUrl,
+                  filled in that year's own tab). Without the film the only place
+                  it could lead is that year's page, which the timeline further
+                  down already leads to. */}
               {(current || previousHighlight) && (
                 <div className="mt-6 flex flex-wrap items-center gap-3">
                   {current && (
