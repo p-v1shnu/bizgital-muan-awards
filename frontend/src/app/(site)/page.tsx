@@ -75,20 +75,14 @@ export default async function HomePage() {
    * The little pill above the hero title, which docs/design/home.html writes as
    * "Since 2023 · Vientiane" and the build had left out.
    *
-   * The year is derived rather than written down. 2023 is when the awards began,
-   * but the site cannot show that year yet — the team is still backfilling
-   * 2023–2025 (PRD §7.5) — and a pill that says "since 2023" above a site whose
-   * oldest page is 2026 is a claim the visitor can't follow. So it counts the
-   * years actually on the site, and stays quiet about the year until there is
-   * more than one: with a single year it would read "since 2026", which is both
-   * odd and untrue. It starts saying 2023 by itself the day those years go in.
+   * The team types it. It was briefly worked out here instead — the oldest year
+   * on the site, and the footer's location cut at its first comma — which is a
+   * fact the page can be sure of but not the one the pill is making: the awards
+   * began in 2023 and the site does not carry that year yet. Blank hides the
+   * pill rather than substituting anything, because there is nothing here the
+   * page knows better than the team does.
    */
-  const shownYears = (editions ?? []).map((edition) => edition.year);
-  const firstYear = shownYears.length > 1 ? Math.min(...shownYears) : null;
-  // The footer's location line, cut at the first comma: that field holds an
-  // address for the footer ("ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ") and the pill has room
-  // for the city alone.
-  const heroPlace = site?.footerLocationLo?.split(',')[0].trim() || 'ນະຄອນຫຼວງວຽງຈັນ';
+  const heroKicker = site?.heroKickerLo?.trim();
   const featuredWinners = (latestWinners?.categories ?? [])
     .filter((category) => category.isFeatured)
     .slice(0, 4);
@@ -128,10 +122,12 @@ export default async function HomePage() {
 
           <div className="absolute inset-x-0 bottom-0">
             <div className="mx-auto max-w-6xl px-5 pb-28 md:pb-32">
-              <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] text-brand-edge">
-                <Star className="size-3.5" aria-hidden />
-                {firstYear ? `ຕັ້ງແຕ່ປີ ${firstYear} · ${heroPlace}` : heroPlace}
-              </p>
+              {heroKicker && (
+                <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] text-brand-edge">
+                  <Star className="size-3.5" aria-hidden />
+                  {heroKicker}
+                </p>
+              )}
               <h1 className="max-w-2xl font-serif text-4xl leading-[1.1] text-white md:text-6xl">
                 {site?.heroTitleLo || 'ມ່ວນອາວອດສ໌'}
               </h1>

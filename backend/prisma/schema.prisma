@@ -349,6 +349,17 @@ model SiteSetting {
   heroImageKey     String?
   heroCaptionLo    String?
   heroCaptionEn    String?
+  /// The small pill above the homepage hero heading — "ຕັ້ງແຕ່ປີ 2023 ·
+  /// ນະຄອນຫຼວງວຽງຈັນ" in the approved mockup (docs/design/home.html `.hero
+  /// .kick`).
+  ///
+  /// One line the team writes, rather than a year the page works out for
+  /// itself: the first attempt counted the years on the site and named the
+  /// oldest, which is a fact the page can be sure of but not the fact the pill
+  /// is making — the awards began in 2023 and the site does not carry that year
+  /// yet. Nullable, and blank hides the pill: it is decoration, and the team
+  /// must be able to take decoration off without a developer.
+  heroKickerLo     String?
   /// The site's own name, set as the homepage hero's heading. Was hardcoded
   /// in the page until a team member asked to be able to change it — the
   /// default matches what was hardcoded, so an existing row picks it up with

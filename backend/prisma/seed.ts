@@ -121,6 +121,7 @@ async function main() {
     update: {},
     create: {
       id: 'singleton',
+      heroKickerLo: 'ຕັ້ງແຕ່ປີ 2023 · ນະຄອນຫຼວງວຽງຈັນ',
       brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ',
       aboutSummaryLo:
         'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນເນື້ອຫາລາວ ໃນທຸກຮູບແບບ.',

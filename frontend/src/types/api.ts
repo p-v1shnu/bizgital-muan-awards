@@ -168,6 +168,8 @@ export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
   heroCaptionLo: string | null;
+  /** The pill above the hero heading. Blank hides it. */
+  heroKickerLo: string | null;
   heroTitleLo: string;
   brandStatementLo: string;
   aboutTitleLo: string;

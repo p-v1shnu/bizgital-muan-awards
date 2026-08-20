@@ -184,6 +184,12 @@ export class UpdateSiteSettingsDto {
   @MaxLength(200)
   heroCaptionEn?: string | null;
 
+  @ApiPropertyOptional({ description: 'The pill above the homepage hero heading; blank hides it' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  heroKickerLo?: string | null;
+
   @ApiPropertyOptional({ description: 'The homepage hero heading — the site\'s own name' })
   @IsOptional()
   @IsString()

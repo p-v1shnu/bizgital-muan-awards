@@ -478,6 +478,12 @@ test('the card copy and the submit list come from the back office', async ({ pag
   // 2026 is published with entries open, so the entriesOpen card wins.
   await expect(main.getByText('ເປີດຮັບສະເໜີຊື່ແລ້ວ')).toBeVisible();
   await expect(main.getByText('ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ')).toBeVisible();
+  // The hero's pill and its photo credit. Neither has any wording of its own in
+  // the page — the pill's year was worked out there for one commit and the
+  // credit only ever reached the image's alt attribute — so seeing them on the
+  // page is the whole of the proof that they arrive from /admin/site.
+  await expect(main.getByText('ຕັ້ງແຕ່ປີ 2023 · ນະຄອນຫຼວງວຽງຈັນ')).toBeVisible();
+  await expect(main.getByText('ພາບ: ງານມ່ວນອາວອດສ໌ 2025')).toBeVisible();
 
   await page.goto('/submit');
   const after = page.getByRole('list').filter({ hasText: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື' });

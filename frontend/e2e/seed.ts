@@ -50,6 +50,11 @@ export default async function seed() {
   await api.put('admin/site', {
     headers: auth,
     data: {
+      // The pill above the hero heading and the credit in its corner. Both are
+      // the team's words and neither has a fallback in the page, so a blank
+      // field is indistinguishable from a page that stopped reading them.
+      heroKickerLo: 'ຕັ້ງແຕ່ປີ 2023 · ນະຄອນຫຼວງວຽງຈັນ',
+      heroCaptionLo: 'ພາບ: ງານມ່ວນອາວອດສ໌ 2025',
       brandStatementLo: 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ ທີ່ຄັດເລືອກໂດຍຄະນະກຳມະການ',
       aboutSummaryLo: 'ມ່ວນອາວອດສ໌ ຄືເວທີປະຈຳປີທີ່ຍ້ອງຍໍຜົນງານຂອງຜູ້ສ້າງສັນເນື້ອຫາລາວ ໃນທຸກຮູບແບບ',
       // The contact box on /about, and — separately, for the footer's icon row

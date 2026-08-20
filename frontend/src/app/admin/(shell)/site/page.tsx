@@ -89,6 +89,7 @@ function SettingsForm({
     ctaTitleLo: initial?.ctaTitleLo ?? '',
     ctaBodyLo: initial?.ctaBodyLo ?? '',
     heroCaptionLo: initial?.heroCaptionLo ?? '',
+    heroKickerLo: initial?.heroKickerLo ?? '',
     contactEmail: initial?.contactEmail ?? '',
     contactPhone: initial?.contactPhone ?? '',
     submitAfterLo: initial?.submitAfterLo ?? '',
@@ -157,6 +158,7 @@ function SettingsForm({
                 ctaTitleLo: form.ctaTitleLo,
                 ctaBodyLo: form.ctaBodyLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
+                heroKickerLo: emptyToNull(form.heroKickerLo),
                 contactEmail: emptyToNull(form.contactEmail),
                 contactPhone: emptyToNull(form.contactPhone),
                 // An entry the team started and left blank is dropped rather
@@ -179,6 +181,16 @@ function SettingsForm({
             <Card>
               <CardHeader title="ຂໍ້ຄວາມໜ້າຫຼັກ" />
               <CardBody>
+                <Field
+                  label="ປ້າຍນ້ອຍເທິງຫົວຂໍ້"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຖວນ້ອຍໃນຂອບມົນເທິງຫົວຂໍ້ໃຫຍ່ · ວ່າງໄວ້ = ບໍ່ໃຫ້ມີປ້າຍ"
+                >
+                  <Input
+                    value={form.heroKickerLo}
+                    onChange={(event) => setForm({ ...form, heroKickerLo: event.target.value })}
+                  />
+                </Field>
                 <Field label="ຊື່ງານເທິງສຸດຂອງໜ້າຫຼັກ" help="ຫົວຂໍ້ໃຫຍ່ເທິງຮູບ hero">
                   <Input
                     required
