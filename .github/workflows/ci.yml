@@ -126,12 +126,38 @@ jobs:
       # in production. A test that opens or closes entries and then reads the
       # page needs the change to have reached the cache.
       REVALIDATE_URL: http://127.0.0.1:3000/api/revalidate
+      # MinIO stands in for DigitalOcean Spaces here exactly as it does in
+      # docker-compose.local.yml — same variable names, same bucket.
+      S3_ENDPOINT: http://127.0.0.1:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: muan-awards
+      S3_ACCESS_KEY: minioadmin
+      S3_SECRET_KEY: minioadmin
+      S3_PUBLIC_URL: http://127.0.0.1:9000/muan-awards
 
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      # Without this the API's own S3 client has nothing to talk to: every
+      # upload it makes fails, which is exactly what the admin upload test
+      # exercises. `--network host` is what lets 127.0.0.1:9000 (the endpoint
+      # above) reach the container from both the runner and the API process.
+      - name: Start object storage (MinIO)
+        run: |
+          docker run -d --name minio --network host \
+            -e MINIO_ROOT_USER="$S3_ACCESS_KEY" -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" \
+            minio/minio server /data
+          timeout 60 sh -c 'until curl -sf http://127.0.0.1:9000/minio/health/live; do sleep 1; done'
+          docker run --rm --network host \
+            -v "${{ github.workspace }}/docs/storage-policy.json:/policy.json:ro" \
+            --entrypoint sh minio/mc -c "
+              mc alias set local http://127.0.0.1:9000 $S3_ACCESS_KEY $S3_SECRET_KEY &&
+              mc mb --ignore-existing local/$S3_BUCKET &&
+              mc anonymous set-json /policy.json local/$S3_BUCKET
+            "
 
       - name: Build and start the API
         working-directory: backend
