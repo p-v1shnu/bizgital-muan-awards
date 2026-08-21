@@ -12,8 +12,11 @@ import { useDebounced } from '@/lib/use-debounced';
 import type { Creator } from '@/types/api';
 
 /**
- * Search the creator library, or add someone who is not in it yet without
- * leaving the page — the team is usually mid-way through one category.
+ * Browse the creator library, or narrow it by typing — shown open rather
+ * than waiting for a search, the same reasoning the judge picker (in
+ * judges-tab.tsx) already uses: seeing who's already there is half of
+ * deciding this is someone new. Add someone not in it yet without leaving
+ * the page — the team is usually mid-way through one category.
  */
 export function CreatorPicker({
   exclude,
@@ -30,9 +33,7 @@ export function CreatorPicker({
   const [creating, setCreating] = useState(false);
 
   const { data, isFetching } = useApiPage<Creator>(
-    debounced.trim().length > 0
-      ? `/admin/creators?perPage=8&q=${encodeURIComponent(debounced.trim())}`
-      : null,
+    `/admin/creators?perPage=20${debounced.trim() ? `&q=${encodeURIComponent(debounced.trim())}` : ''}`,
   );
 
   return (
@@ -53,36 +54,38 @@ export function CreatorPicker({
         </Button>
       </div>
 
-      {debounced.trim() && data && (
-        <ul className="mt-2 overflow-hidden rounded-[var(--radius-ui-sm)] border border-rule bg-white">
-          {data.data.length === 0 ? (
-            <li className="px-3 py-2.5 text-[12.5px] text-ink-3">
-              ບໍ່ພົບ “{debounced}” ໃນຄັງ — ກົດ “ສ້າງໃໝ່” ເພື່ອເພີ່ມ
-            </li>
-          ) : (
-            data.data.map((creator) => {
-              const already = exclude.has(creator.id);
-              return (
-                <li key={creator.id} className="border-b border-hairline last:border-b-0">
-                  <button
-                    type="button"
-                    disabled={already || pending}
-                    onClick={() => {
-                      onPick(creator.id);
-                      setTerm('');
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-panel-2 disabled:opacity-45 disabled:hover:bg-transparent"
-                  >
-                    <span className="font-serif text-[15px] text-ink">{creator.nameLo}</span>
-                    <span className="text-[11.5px] text-ink-3">@{creator.slug}</span>
-                    {already && <span className="ml-auto text-[11px] text-ink-3">ຢູ່ໃນສາຂານີ້ແລ້ວ</span>}
-                  </button>
-                </li>
-              );
-            })
-          )}
-        </ul>
-      )}
+      <ul className="mt-2 max-h-80 overflow-y-auto rounded-[var(--radius-ui-sm)] border border-rule bg-white">
+        {!data?.data.length ? (
+          <li className="px-3 py-2.5 text-[12.5px] text-ink-3">
+            {debounced.trim() ? (
+              <>ບໍ່ພົບ “{debounced}” ໃນຄັງ — ກົດ “ສ້າງໃໝ່” ເພື່ອເພີ່ມ</>
+            ) : (
+              <>ຄັງຍັງວ່າງຢູ່ — ກົດ “ສ້າງໃໝ່” ເພື່ອເພີ່ມ</>
+            )}
+          </li>
+        ) : (
+          data.data.map((creator) => {
+            const already = exclude.has(creator.id);
+            return (
+              <li key={creator.id} className="border-b border-hairline last:border-b-0">
+                <button
+                  type="button"
+                  disabled={already || pending}
+                  onClick={() => {
+                    onPick(creator.id);
+                    setTerm('');
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] hover:bg-panel-2 disabled:opacity-45 disabled:hover:bg-transparent"
+                >
+                  <span className="font-serif text-[15px] text-ink">{creator.nameLo}</span>
+                  <span className="text-[11.5px] text-ink-3">@{creator.slug}</span>
+                  {already && <span className="ml-auto text-[11px] text-ink-3">ຢູ່ໃນສາຂານີ້ແລ້ວ</span>}
+                </button>
+              </li>
+            );
+          })
+        )}
+      </ul>
 
       <QuickCreateDialog
         open={creating}
