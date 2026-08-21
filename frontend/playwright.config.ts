@@ -35,7 +35,15 @@ export default defineConfig({
   globalSetup: './e2e/seed.ts',
 
   projects: [
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    // Everything except the phone file. Without the ignore, mobile.spec.ts ran
+    // here too — the desktop project matches every spec — and its assertions
+    // either duplicated a desktop check or, once one of them looked for the
+    // phone menu, failed at 1280px for being true only on a phone.
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /mobile\.spec\.ts/,
+    },
     // Most visitors arrive from Facebook on a phone (PRD §10).
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: /mobile\.spec\.ts/ },
   ],

@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { ArrowUpRight, Facebook, Instagram, Youtube } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { MobileNav } from '@/components/site/mobile-nav';
+import type { NavItem } from '@/components/site/mobile-nav';
 import { Watermark } from '@/components/site/watermark';
 import { tryGetPublic } from '@/lib/api/server';
 import type { Edition, SiteSettings } from '@/types/api';
@@ -45,6 +47,22 @@ export async function SiteHeader() {
     tryGetPublic<Edition | null>('/editions/accepting-submissions'),
   ]);
 
+  /**
+   * One list, laid out two ways: in a row from `md` up, and behind a button
+   * below it. Built here because the first item's year comes from the request
+   * above, and because the two layouts drifting apart is exactly how
+   * "ກ່ຽວກັບງານ" came to be missing from the header on a phone.
+   *
+   * Before the first year is published there is nothing to point at, and an
+   * item reading "ງານປີ" with no year — linking to a page that answers 404 —
+   * is worse than no item at all.
+   */
+  const navItems: NavItem[] = [
+    ...(latest ? [{ href: `/awards/${latest.slug}`, label: `ງານປີ ${latest.year}` }] : []),
+    { href: '/winners', label: 'ທຳນຽບຜູ້ຊະນະ' },
+    { href: '/about', label: 'ກ່ຽວກັບງານ' },
+  ];
+
   return (
     <header className="sticky top-0 z-40 border-b border-rule/70 bg-paper/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
@@ -71,28 +89,39 @@ export async function SiteHeader() {
             priority
             className="h-8 w-auto sm:hidden"
           />
-          <span className="ml-2 font-serif text-lg leading-none text-ink sm:hidden">ມ່ວນອາວອດສ໌</span>
+          {/* Never wrapped: it is a name, and "ມ່ວນອາວ / ອດສ໌" across two lines
+              is what dragged the whole header onto a second line. Dropped
+              entirely on the narrowest phones, where the bar has to hold the
+              button and the menu as well — the mark alone still identifies the
+              site, and the link is labelled with the full name. */}
+          <span className="ml-2 hidden font-serif text-lg leading-none whitespace-nowrap text-ink min-[380px]:inline sm:hidden">
+            ມ່ວນອາວອດສ໌
+          </span>
         </Link>
 
         <nav className="ml-auto flex items-center gap-1 text-[13px]">
-          {/* Before the first year is published there is nothing to point at,
-              and an item reading "ງານປີ" with no year — linking to a page that
-              answers 404 — is worse than no item at all. */}
-          {latest && <NavLink href={`/awards/${latest.slug}`}>ງານປີ {latest.year}</NavLink>}
-          <NavLink href="/winners">ທຳນຽບຜູ້ຊະນະ</NavLink>
-          <NavLink href="/about" className="hidden sm:inline-flex">
-            ກ່ຽວກັບງານ
-          </NavLink>
+          <div className="hidden items-center gap-1 md:flex">
+            {navItems.map((item) => (
+              <NavLink key={item.href} href={item.href}>
+                {item.label}
+              </NavLink>
+            ))}
+          </div>
 
-          {/* Only shown while the form is genuinely open (PRD §4.2). */}
+          {/* Only shown while the form is genuinely open (PRD §4.2). It stays in
+              the bar on a phone rather than going into the menu: it is the one
+              thing the site asks a visitor to do, and a call to action behind a
+              button nobody opens is not one. */}
           {openEdition && (
             <Link
               href="/submit"
-              className="ml-2 rounded-[var(--radius-btn)] bg-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-deep"
+              className="ml-2 shrink-0 rounded-[var(--radius-btn)] bg-ink px-4 py-2 text-[13px] font-semibold text-white hover:bg-brand-deep"
             >
               ສົ່ງລາຍຊື່
             </Link>
           )}
+
+          <MobileNav items={navItems} className="ml-1 md:hidden" />
         </nav>
       </div>
     </header>
