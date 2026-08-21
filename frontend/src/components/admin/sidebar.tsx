@@ -9,6 +9,7 @@ import {
   LayoutGrid,
   ListOrdered,
   Star,
+  Tag,
   Users,
   UserCog,
 } from 'lucide-react';
@@ -37,6 +38,7 @@ const SECTIONS: { heading?: string; items: NavItem[] }[] = [
   {
     heading: 'ຄັງຂໍ້ມູນ',
     items: [
+      { href: '/admin/categories', label: 'ຄັງສາຂາ', icon: Tag },
       { href: '/admin/creators', label: 'ຄັງຄຣີເອເຕີ', icon: Users },
       { href: '/admin/judges', label: 'ຄັງກຳມະການ', icon: Star },
       {
