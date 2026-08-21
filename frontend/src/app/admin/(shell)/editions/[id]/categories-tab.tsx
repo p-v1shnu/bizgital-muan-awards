@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, ChevronUp, Copy, Plus, Star, Trash2 } from 'lucide-react';
 
 import { CategoryTemplatePicker } from '@/components/admin/category-template-picker';
@@ -192,12 +192,15 @@ function CategoryDialog({
   // works on this edition's own copy of the name, which the library has
   // nothing to do with (see CreateCategoryDto/UpdateCategoryDto).
   const [template, setTemplate] = useState<CategoryTemplate | null>(null);
-  // The dialog element (see ui/dialog.tsx) never unmounts on close, only
-  // `<dialog>.close()`s — without this, cancelling a pick and reopening
-  // "add category" would skip the picker and reuse whatever was chosen last.
-  useEffect(() => {
+  // Reset synchronously during render rather than in an effect — the dialog
+  // element (see ui/dialog.tsx) never unmounts on close, only `.close()`s, so
+  // without this, cancelling a pick and reopening "add category" would skip
+  // the picker and reuse whatever was chosen last.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
     if (open) setTemplate(null);
-  }, [open]);
+  }
 
   const [form, setForm] = useState({
     slug: category?.slug ?? '',
