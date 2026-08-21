@@ -207,9 +207,14 @@ test.describe('the edition page', () => {
     const url = page.url().split('?')[0];
     await page.goto(`${url}?tab=categories`);
 
+    // Adding a category means picking it from the library first (or making a
+    // new library entry on the spot) — the per-edition dialog itself no
+    // longer takes a name or slug directly.
     await page.getByRole('button', { name: 'ເພີ່ມສາຂາ' }).first().click();
+    await page.getByRole('button', { name: 'ສ້າງໃໝ່' }).click();
     await page.getByRole('textbox', { name: 'ຊື່ສາຂາ (ລາວ)' }).fill('ສາຂາທົດສອບວ່າງເປົ່າ');
     await page.getByRole('textbox', { name: 'slug' }).fill('empty-test');
+    await page.getByRole('button', { name: 'ສ້າງ ແລະ ໃສ່' }).click();
     await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
     await expect(page.getByText('ສາຂາທົດສອບວ່າງເປົ່າ')).toBeVisible();
 

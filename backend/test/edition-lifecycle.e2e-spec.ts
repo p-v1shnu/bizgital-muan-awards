@@ -1,4 +1,4 @@
-import { api, createHarness, path, type Harness } from './harness';
+import { api, categoryTemplate, createHarness, path, type Harness } from './harness';
 
 /** The rules of PRD §4 — the ones that decide what the public can see. */
 describe('edition lifecycle', () => {
@@ -18,10 +18,11 @@ describe('edition lifecycle', () => {
     beforeAll(async () => {
       const created = await createEdition({ year: 2030, slug: '2030', titleLo: 'ງານ 2030' }).expect(201);
       editionId = created.body.data.id;
+      const templateId = await categoryTemplate(h, 'main', 'ສາຂາຫຼັກ');
       await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
         .set(h.auth)
-        .send({ slug: 'main', nameLo: 'ສາຂາຫຼັກ' })
+        .send({ templateId })
         .expect(201);
     });
 

@@ -37,7 +37,12 @@ export class CategoriesService {
 
   async create(editionId: string, dto: CreateCategoryDto, actorId: string, ipAddress?: string) {
     await this.assertEditionExists(editionId);
-    await this.assertSlugFree(editionId, dto.slug);
+
+    const template = await this.prisma.categoryTemplate.findFirst({
+      where: { id: dto.templateId, deletedAt: null },
+    });
+    if (!template) throw new NotFoundException('Category template not found');
+    await this.assertSlugFree(editionId, template.slug);
 
     // New categories land at the end of the list.
     const last = await this.prisma.category.findFirst({
@@ -47,7 +52,18 @@ export class CategoriesService {
     });
 
     const category = await this.prisma.category.create({
-      data: { ...dto, editionId, sortOrder: (last?.sortOrder ?? -1) + 1 },
+      data: {
+        editionId,
+        templateId: template.id,
+        slug: template.slug,
+        nameLo: template.nameLo,
+        nameEn: template.nameEn,
+        descriptionLo: dto.descriptionLo,
+        descriptionEn: dto.descriptionEn,
+        groupLo: dto.groupLo,
+        isFeatured: dto.isFeatured,
+        sortOrder: (last?.sortOrder ?? -1) + 1,
+      },
     });
 
     await this.audit.log({
@@ -167,6 +183,7 @@ export class CategoriesService {
       await this.prisma.category.createMany({
         data: fresh.map((c, index) => ({
           editionId,
+          templateId: c.templateId,
           slug: c.slug,
           nameLo: c.nameLo,
           nameEn: c.nameEn,

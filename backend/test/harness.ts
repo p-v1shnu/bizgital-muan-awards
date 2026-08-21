@@ -61,6 +61,7 @@ export async function reset(prisma: PrismaService) {
   await prisma.editionJudge.deleteMany();
   await prisma.editionSponsor.deleteMany();
   await prisma.category.deleteMany();
+  await prisma.categoryTemplate.deleteMany();
   await prisma.edition.deleteMany();
   await prisma.creator.deleteMany();
   await prisma.judge.deleteMany();
@@ -70,3 +71,19 @@ export async function reset(prisma: PrismaService) {
 
 export const api = (harness: Harness) => request(harness.server);
 export const path = (suffix: string) => `/api/v1${suffix}`;
+
+/**
+ * The library entry a test's category is assigned from. Made directly
+ * through Prisma rather than the library's own endpoint, since what these
+ * specs care about is the category that comes out of it, not the library
+ * API itself. Upsert so two spots in one file naming the same slug share one
+ * template — the same thing two real editions picking the same award would do.
+ */
+export async function categoryTemplate(h: Harness, slug: string, nameLo: string) {
+  const template = await h.prisma.categoryTemplate.upsert({
+    where: { slug },
+    update: {},
+    create: { slug, nameLo },
+  });
+  return template.id;
+}

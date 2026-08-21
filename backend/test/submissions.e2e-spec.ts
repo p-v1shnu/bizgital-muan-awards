@@ -1,4 +1,4 @@
-import { api, createHarness, path, type Harness } from './harness';
+import { api, categoryTemplate, createHarness, path, type Harness } from './harness';
 
 describe('public submissions and the screening queue', () => {
   let h: Harness;
@@ -14,11 +14,12 @@ describe('public submissions and the screening queue', () => {
         .send({ year: 2029, slug: '2029', titleLo: 'ງານ 2029' })
         .expect(201)
     ).body.data.id;
+    const templateId = await categoryTemplate(h, 'main', 'ສາຂາຫຼັກ');
     categoryId = (
       await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
         .set(h.auth)
-        .send({ slug: 'main', nameLo: 'ສາຂາຫຼັກ' })
+        .send({ templateId })
         .expect(201)
     ).body.data.id;
   });
@@ -245,10 +246,11 @@ describe('public submissions and the screening queue', () => {
     });
 
     it('refuses to merge across categories', async () => {
+      const elsewhereTemplateId = await categoryTemplate(h, 'elsewhere', 'ສາຂາອື່ນ');
       const other = await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
         .set(h.auth)
-        .send({ slug: 'elsewhere', nameLo: 'ສາຂາອື່ນ' })
+        .send({ templateId: elsewhereTemplateId })
         .expect(201);
       await api(h)
         .post(path('/submissions'))

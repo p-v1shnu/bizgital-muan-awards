@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronDown, ChevronUp, Copy, Plus, Star, Trash2 } from 'lucide-react';
 
+import { CategoryTemplatePicker } from '@/components/admin/category-template-picker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
@@ -10,7 +11,7 @@ import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState, ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
 import { Field, Input, Select, Switch, Textarea } from '@/components/ui/field';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { Category, Edition } from '@/types/api';
+import type { Category, CategoryTemplate, Edition } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 export function CategoriesTab({ edition }: { edition: Edition }) {
@@ -148,6 +149,7 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
         open={creating || editing !== null}
         category={editing}
         editionId={edition.id}
+        existingTemplateIds={new Set((data ?? []).map((c) => c.templateId).filter((id): id is string => id !== null))}
         onClose={() => {
           setCreating(false);
           setEditing(null);
@@ -176,13 +178,27 @@ function CategoryDialog({
   open,
   category,
   editionId,
+  existingTemplateIds,
   onClose,
 }: {
   open: boolean;
   category: Category | null;
   editionId: string;
+  /** Templates already assigned to this edition — greyed out in the picker. */
+  existingTemplateIds: Set<string>;
   onClose: () => void;
 }) {
+  // Only asked when adding a category the edition does not have yet — editing
+  // works on this edition's own copy of the name, which the library has
+  // nothing to do with (see CreateCategoryDto/UpdateCategoryDto).
+  const [template, setTemplate] = useState<CategoryTemplate | null>(null);
+  // The dialog element (see ui/dialog.tsx) never unmounts on close, only
+  // `<dialog>.close()`s — without this, cancelling a pick and reopening
+  // "add category" would skip the picker and reuse whatever was chosen last.
+  useEffect(() => {
+    if (open) setTemplate(null);
+  }, [open]);
+
   const [form, setForm] = useState({
     slug: category?.slug ?? '',
     nameLo: category?.nameLo ?? '',
@@ -206,15 +222,39 @@ function CategoryDialog({
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
-    action.mutate(
+    if (category) {
+      update.mutate(
+        {
+          slug: form.slug,
+          nameLo: form.nameLo,
+          groupLo: emptyToNull(form.groupLo),
+          descriptionLo: emptyToNull(form.descriptionLo),
+          isFeatured: form.isFeatured,
+        },
+        { onSuccess: onClose },
+      );
+      return;
+    }
+    if (!template) return;
+    create.mutate(
       {
-        slug: form.slug,
-        nameLo: form.nameLo,
+        templateId: template.id,
         groupLo: emptyToNull(form.groupLo),
         descriptionLo: emptyToNull(form.descriptionLo),
         isFeatured: form.isFeatured,
       },
       { onSuccess: onClose },
+    );
+  }
+
+  // Adding a category and no template picked yet: the library search stands
+  // in for the whole dialog, since there is nothing else to ask until one is
+  // chosen (or made) — the per-edition fields below need a name to sit under.
+  if (!category && !template) {
+    return (
+      <Dialog open={open} onClose={onClose} title="ເພີ່ມສາຂາ" description="ເລືອກສາຂາຈາກຄັງ ຫຼື ສ້າງໃໝ່">
+        <CategoryTemplatePicker exclude={existingTemplateIds} onPick={setTemplate} />
+      </Dialog>
     );
   }
 
@@ -235,21 +275,39 @@ function CategoryDialog({
       }
     >
       <form id="category-form" onSubmit={submit} noValidate>
-        <Field label="ຊື່ສາຂາ (ລາວ)">
-          <Input
-            required
-            value={form.nameLo}
-            onChange={(event) => setForm({ ...form, nameLo: event.target.value })}
-          />
-        </Field>
-        <Field label="slug" help="ໃຊ້ໃນ URL — ຕົວອັກສອນລາຕິນນ້ອຍ, ຕົວເລກ ແລະ ຂີດກາງ">
-          <Input
-            required
-            pattern="[a-z0-9\-]+"
-            value={form.slug}
-            onChange={(event) => setForm({ ...form, slug: event.target.value })}
-          />
-        </Field>
+        {category ? (
+          <>
+            <Field label="ຊື່ສາຂາ (ລາວ)">
+              <Input
+                required
+                value={form.nameLo}
+                onChange={(event) => setForm({ ...form, nameLo: event.target.value })}
+              />
+            </Field>
+            <Field label="slug" help="ໃຊ້ໃນ URL — ຕົວອັກສອນລາຕິນນ້ອຍ, ຕົວເລກ ແລະ ຂີດກາງ">
+              <Input
+                required
+                pattern="[a-z0-9\-]+"
+                value={form.slug}
+                onChange={(event) => setForm({ ...form, slug: event.target.value })}
+              />
+            </Field>
+          </>
+        ) : (
+          template && (
+            <Field label="ສາຂາ">
+              <div className="flex items-center gap-2 rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2 px-3 py-2">
+                <span className="min-w-0 flex-1 truncate">
+                  <span className="font-serif text-[15px] text-ink">{template.nameLo}</span>
+                  <span className="ml-2 text-[11.5px] text-ink-3">/{template.slug}</span>
+                </span>
+                <Button type="button" size="sm" onClick={() => setTemplate(null)}>
+                  ປ່ຽນ
+                </Button>
+              </div>
+            </Field>
+          )
+        )}
         <Field label="ກຸ່ມ" hint="— ບໍ່ບັງຄັບ" help="ໃຊ້ຕອນສາຂາຫຼາຍ ຢາກແບ່ງເປັນຫົວຂໍ້">
           <Input
             value={form.groupLo}

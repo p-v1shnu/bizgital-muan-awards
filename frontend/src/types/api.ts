@@ -36,6 +36,7 @@ export interface Edition {
 export interface Category {
   id: string;
   editionId: string;
+  templateId: string | null;
   slug: string;
   nameLo: string;
   nameEn: string | null;
@@ -46,6 +47,15 @@ export interface Category {
   _count?: { nominations: number };
   /** Only ever the winner, when the list endpoint includes it. */
   nominations?: Nomination[];
+}
+
+/** The category library — pick one of these into an edition rather than retyping it. */
+export interface CategoryTemplate {
+  id: string;
+  slug: string;
+  nameLo: string;
+  nameEn: string | null;
+  _count?: { categories: number };
 }
 
 export interface Creator {

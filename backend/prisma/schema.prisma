@@ -128,12 +128,18 @@ model Edition {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Category — an award within one edition
+// Category — one edition's own copy of a library award (CategoryTemplate,
+// below, with the other permanent libraries)
 // ─────────────────────────────────────────────────────────────
 
 model Category {
   id        String @id @default(cuid())
   editionId String
+
+  /// Which library entry this was created from — how a slug stays the same
+  /// award year over year without becoming a live read of one. Nullable: a
+  /// category made before the library existed, or a genuine one-off, has none.
+  templateId String?
 
   slug          String
   nameLo        String
@@ -155,17 +161,42 @@ model Category {
   updatedAt DateTime @updatedAt
 
   edition     Edition            @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  template    CategoryTemplate?  @relation(fields: [templateId], references: [id], onDelete: SetNull)
   nominations Nomination[]
   submissions PublicSubmission[]
 
   @@unique([editionId, slug])
   @@index([editionId, sortOrder])
+  @@index([templateId])
   @@map("categories")
 }
 
 // ─────────────────────────────────────────────────────────────
 // Permanent libraries — entered once, reused every year
 // ─────────────────────────────────────────────────────────────
+
+/// What a Category is stamped from at creation time — so "creator of the
+/// year" gets the same slug every time it is picked instead of being retyped.
+/// Not a live link the year page reads through: renaming a template only
+/// changes what the *next* pick copies down, the same reasoning
+/// EditionSponsorTier documents for why that table isn't shared either. A
+/// slug already assigned to some edition stays exactly as assigned even if
+/// this row changes later.
+model CategoryTemplate {
+  id     String  @id @default(cuid())
+  slug   String  @unique
+  nameLo String
+  nameEn String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  categories Category[]
+
+  @@index([deletedAt])
+  @@map("category_templates")
+}
 
 model Creator {
   id     String  @id @default(cuid())
