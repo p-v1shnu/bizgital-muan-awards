@@ -226,18 +226,34 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   button on a published year with no form open, then took it
                   away the moment nominees were announced while entries were
                   still being taken. */}
+              {/* quiet here, not primary: on the photograph a filled cream chip
+                  is the one thing that reads as a button, while ink-on-ink
+                  would not (see the homepage hero for the same call). */}
               {edition.acceptingSubmissions && (
-                <ActionLink href="/submit" className="px-4 py-2.5 text-[13px]">
+                <ActionLink href="/submit" tone="quiet" className="px-4 py-2.5 text-[13px]">
                   ສົ່ງລາຍຊື່
                 </ActionLink>
               )}
+              {/* Outlined rather than filled, as the homepage hero's highlight
+                  button is: three quiet chips beside the submit button would
+                  compete with it for the same attention. */}
               {safeHttpUrl(edition.ticketUrl) && (
-                <ActionLink href={safeHttpUrl(edition.ticketUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+                <ActionLink
+                  href={safeHttpUrl(edition.ticketUrl) as string}
+                  tone="quiet"
+                  external
+                  className="border-white/45 bg-transparent px-4 py-2.5 text-[13px] text-white hover:bg-white/10 hover:text-white"
+                >
                   ຊື້ບັດ
                 </ActionLink>
               )}
               {safeHttpUrl(edition.voteUrl) && (
-                <ActionLink href={safeHttpUrl(edition.voteUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+                <ActionLink
+                  href={safeHttpUrl(edition.voteUrl) as string}
+                  tone="quiet"
+                  external
+                  className="border-white/45 bg-transparent px-4 py-2.5 text-[13px] text-white hover:bg-white/10 hover:text-white"
+                >
                   ໂຫວດ
                 </ActionLink>
               )}
@@ -246,7 +262,12 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   without this every older year's film would go out of reach the
                   day a newer one had its own. */}
               {safeHttpUrl(edition.highlightUrl) && (
-                <ActionLink href={safeHttpUrl(edition.highlightUrl) as string} tone="quiet" external className="px-4 py-2.5 text-[13px]">
+                <ActionLink
+                  href={safeHttpUrl(edition.highlightUrl) as string}
+                  tone="quiet"
+                  external
+                  className="border-white/45 bg-transparent px-4 py-2.5 text-[13px] text-white hover:bg-white/10 hover:text-white"
+                >
                   <Play className="size-4 shrink-0" aria-hidden />
                   ເບິ່ງໄຮໄລທ໌ງານ
                 </ActionLink>
