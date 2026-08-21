@@ -203,18 +203,26 @@ test.describe('the edition page', () => {
    * category with nobody in it cannot be announced, and the way out is to
    * remove the category rather than invent a nominee for it.
    */
-  test('an empty category locks the announcement until it is removed', async ({ page }) => {
+  test('an empty category locks the announcement until it is removed', async ({ page, request }) => {
     const url = page.url().split('?')[0];
-    await page.goto(`${url}?tab=categories`);
 
-    // Adding a category means picking it from the library first (or making a
-    // new library entry on the spot) — the per-edition dialog itself no
-    // longer takes a name or slug directly.
+    // Adding a category means picking it from the library — a category not
+    // there yet is added on its own page (/admin/categories), not from
+    // inside an edition, so this one is made the way that page would.
+    const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
+    const login = await request.post(`${api}/auth/login`, {
+      data: { email: 'admin@muanawards.com', password: 'a-very-long-password' },
+    });
+    const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+    await request.post(`${api}/admin/category-templates`, {
+      headers: auth,
+      data: { slug: 'empty-test', nameLo: 'ສາຂາທົດສອບວ່າງເປົ່າ' },
+    });
+
+    await page.goto(`${url}?tab=categories`);
     await page.getByRole('button', { name: 'ເພີ່ມສາຂາ' }).first().click();
-    await page.getByRole('button', { name: 'ສ້າງໃໝ່' }).click();
-    await page.getByRole('textbox', { name: 'ຊື່ສາຂາ (ລາວ)' }).fill('ສາຂາທົດສອບວ່າງເປົ່າ');
-    await page.getByRole('textbox', { name: 'slug' }).fill('empty-test');
-    await page.getByRole('button', { name: 'ສ້າງ ແລະ ໃສ່' }).click();
+    await page.getByPlaceholder('ຄົ້ນຫາສາຂາຈາກຄັງ…').fill('ສາຂາທົດສອບວ່າງເປົ່າ');
+    await page.getByRole('button', { name: /ສາຂາທົດສອບວ່າງເປົ່າ/ }).click();
     await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
     await expect(page.getByText('ສາຂາທົດສອບວ່າງເປົ່າ')).toBeVisible();
 

@@ -252,10 +252,11 @@ function CategoryDialog({
 
   // Adding a category and no template picked yet: the library search stands
   // in for the whole dialog, since there is nothing else to ask until one is
-  // chosen (or made) — the per-edition fields below need a name to sit under.
+  // chosen — the per-edition fields below need a name to sit under. A
+  // category not yet in the library gets added there first (ຄັງສາຂາ), not here.
   if (!category && !template) {
     return (
-      <Dialog open={open} onClose={onClose} title="ເພີ່ມສາຂາ" description="ເລືອກສາຂາຈາກຄັງ ຫຼື ສ້າງໃໝ່">
+      <Dialog open={open} onClose={onClose} title="ເພີ່ມສາຂາ" description="ເລືອກສາຂາຈາກຄັງ">
         <CategoryTemplatePicker exclude={existingTemplateIds} onPick={setTemplate} />
       </Dialog>
     );
