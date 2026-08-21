@@ -158,10 +158,17 @@ async function main() {
   ];
 
   for (const [index, category] of categories.entries()) {
+    // The library entry a real admin would pick from, not type — created
+    // here too so a category slug is never typed by more than one place.
+    const template = await prisma.categoryTemplate.upsert({
+      where: { slug: category.slug },
+      update: {},
+      create: { slug: category.slug, nameLo: category.nameLo },
+    });
     await prisma.category.upsert({
       where: { editionId_slug: { editionId: edition.id, slug: category.slug } },
       update: {},
-      create: { ...category, editionId: edition.id, sortOrder: index },
+      create: { ...category, templateId: template.id, editionId: edition.id, sortOrder: index },
     });
   }
 

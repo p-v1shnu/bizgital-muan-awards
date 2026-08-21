@@ -10,6 +10,7 @@ import { PublicThrottlerGuard } from './common/guards/public-throttler.guard';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { CategoriesModule } from './modules/categories/categories.module';
+import { CategoryTemplatesModule } from './modules/category-templates/category-templates.module';
 import { CreatorsModule } from './modules/creators/creators.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { EditionsModule } from './modules/editions/editions.module';
@@ -36,6 +37,7 @@ import { SubmissionsModule } from './modules/submissions/submissions.module';
     IdentityAccessModule,
     EditionsModule,
     CategoriesModule,
+    CategoryTemplatesModule,
     CreatorsModule,
     JudgesModule,
     NominationsModule,

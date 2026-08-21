@@ -174,6 +174,29 @@ export default async function seed() {
   });
   const judgeId = (await judge.json()).data.id;
 
+  // One category-templates row per slug, made once here rather than inside
+  // the per-year loop below — a category assigned to both 2025 and 2026 is
+  // the same library entry picked twice, not two templates with the same
+  // slug (which the library refuses).
+  const namedCategoryTemplateIds: Record<string, string> = {};
+  for (const [slug, nameLo] of [
+    ['creator-of-the-year', 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ'],
+    ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ'],
+    ['food', 'ເນື້ອຫາອາຫານ'],
+  ] as const) {
+    const created = await api.post('admin/category-templates', { headers: auth, data: { slug, nameLo } });
+    namedCategoryTemplateIds[slug] = (await created.json()).data.id;
+  }
+  // Enough for the longer year's 13 extras below; both years share the same 13.
+  const extraCategoryTemplateIds: string[] = [];
+  for (let index = 0; index < 13; index += 1) {
+    const created = await api.post('admin/category-templates', {
+      headers: auth,
+      data: { slug: `award-${index + 1}`, nameLo: `ສາຂາເພີ່ມເຕີມ ${index + 1}` },
+    });
+    extraCategoryTemplateIds.push((await created.json()).data.id);
+  }
+
   for (const [year, finalPhase] of [
     [2025, 'WINNERS_ANNOUNCED'],
     [2026, 'PUBLISHED'],
@@ -194,7 +217,7 @@ export default async function seed() {
     });
     const editionId = (await edition.json()).data.id;
 
-    for (const [slug, nameLo, isFeatured, groupLo] of [
+    for (const [slug, , isFeatured, groupLo] of [
       ['creator-of-the-year', 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ', true, 'ສາຍເນື້ອຫາ'],
       ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍເນື້ອຫາ'],
       ['food', 'ເນື້ອຫາອາຫານ', false, 'ສາຍໄລຟ໌ສະໄຕລ໌'],
@@ -202,8 +225,7 @@ export default async function seed() {
       const category = await api.post(`admin/editions/${editionId}/categories`, {
         headers: auth,
         data: {
-          slug,
-          nameLo,
+          templateId: namedCategoryTemplateIds[slug],
           isFeatured,
           groupLo,
           descriptionLo: 'ມອບໃຫ້ຜົນງານທີ່ໂດດເດັ່ນທີ່ສຸດຂອງປີ',
@@ -241,8 +263,7 @@ export default async function seed() {
       const category = await api.post(`admin/editions/${editionId}/categories`, {
         headers: auth,
         data: {
-          slug: `award-${index + 1}`,
-          nameLo: `ສາຂາເພີ່ມເຕີມ ${index + 1}`,
+          templateId: extraCategoryTemplateIds[index],
           groupLo: 'ສາຂາອື່ນໆ',
         },
       });

@@ -1,4 +1,4 @@
-import { api, createHarness, path, type Harness } from './harness';
+import { api, categoryTemplate, createHarness, path, type Harness } from './harness';
 
 /**
  * What each phase is allowed to reveal. The dangerous case is the middle one:
@@ -22,11 +22,12 @@ describe('public site', () => {
         .expect(201)
     ).body.data.id;
 
+    const templateId = await categoryTemplate(h, 'creator-of-the-year', 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ');
     categoryId = (
       await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
         .set(h.auth)
-        .send({ slug: 'creator-of-the-year', nameLo: 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ', isFeatured: true })
+        .send({ templateId, isFeatured: true })
         .expect(201)
     ).body.data.id;
 
@@ -335,11 +336,12 @@ describe('public site', () => {
           .send({ year: 2030, slug: '2030', titleLo: 'ງານ 2030' })
           .expect(201)
       ).body.data.id;
+      const secretTemplateId = await categoryTemplate(h, 'secret', 'ສາຂາລັບ');
       const hiddenCategory = (
         await api(h)
           .post(path(`/admin/editions/${hidden}/categories`))
           .set(h.auth)
-          .send({ slug: 'secret', nameLo: 'ສາຂາລັບ' })
+          .send({ templateId: secretTemplateId })
           .expect(201)
       ).body.data.id;
       const secret = (
