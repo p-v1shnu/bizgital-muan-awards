@@ -32,6 +32,13 @@ COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
+# Docker sets HOSTNAME to the container's own hostname by default, and the
+# standalone server.js binds to that literally instead of falling back to
+# every interface — so it ends up reachable only on the container's own IP,
+# never on 127.0.0.1 (which is what the healthcheck, and any loopback probe,
+# uses). Override it back to the wildcard address.
+ENV HOSTNAME=0.0.0.0
+
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]
