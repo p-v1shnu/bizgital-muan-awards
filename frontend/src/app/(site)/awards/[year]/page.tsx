@@ -211,14 +211,19 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               )}
             </div>
 
-            {/* A year that has closed its entries says so; a year that never
-                took any — every backfilled one — says nothing at all. */}
-            {!edition.acceptingSubmissions && edition.submissionsHaveOpened && (
-              <p className="mt-4 inline-flex items-center gap-2 rounded-[var(--radius-ui-sm)] bg-black/35 px-3 py-2 text-[13px] text-white/90 backdrop-blur-sm">
-                <Clock className="size-4 shrink-0" />
-                ປິດຮັບລາຍຊື່ແລ້ວ — ຢູ່ລະຫວ່າງການຄັດກອງ ແລະ ຕັດສິນ
-              </p>
-            )}
+            {/* A year that has closed its entries says so, until there is a
+                result to show instead — the categories below already carry
+                it once winners are announced, so restating "still judging"
+                on top of them would just be stale. A year that never took
+                any entries — every backfilled one — says nothing at all. */}
+            {!edition.acceptingSubmissions &&
+              edition.submissionsHaveOpened &&
+              edition.phase !== 'WINNERS_ANNOUNCED' && (
+                <p className="mt-4 inline-flex items-center gap-2 rounded-[var(--radius-ui-sm)] bg-black/35 px-3 py-2 text-[13px] text-white/90 backdrop-blur-sm">
+                  <Clock className="size-4 shrink-0" />
+                  ປິດຮັບລາຍຊື່ແລ້ວ — ຢູ່ລະຫວ່າງການຄັດກອງ ແລະ ຕັດສິນ
+                </p>
+              )}
 
             <div className="mt-5 flex flex-wrap gap-2">
               {/* Driven by the form's own switch, not by the phase. The two are
