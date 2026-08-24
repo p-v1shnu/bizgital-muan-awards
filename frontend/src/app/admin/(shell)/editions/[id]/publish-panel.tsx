@@ -198,7 +198,14 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
           />
           <span>
             <span className="block text-[13px] font-semibold text-ink">
-              {edition.submissionsOpen ? 'ເປີດຢູ່' : 'ປິດຢູ່'}
+              {/* Three labels, not two — "never opened" reads the same as
+                  "closed" off the switch alone, and a backfilled year that
+                  is done for good must not be told it is merely closed. */}
+              {edition.submissionsOpen
+                ? 'ເປີດຢູ່'
+                : edition.submissionsOpenedAt
+                  ? 'ປິດຢູ່'
+                  : 'ຍັງບໍ່ເປີດຮັບ'}
             </span>
             <span className="block text-[11.5px] text-ink-3">
               {edition.submissionsOpen ? 'ຄົນນອກສົ່ງລາຍຊື່ໄດ້' : 'ຄົນນອກສົ່ງລາຍຊື່ບໍ່ໄດ້'}
