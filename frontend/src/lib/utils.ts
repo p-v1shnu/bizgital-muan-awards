@@ -41,3 +41,13 @@ export function emptyToNull(value: string | null | undefined) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
 }
+
+/**
+ * What a slug field does to whatever lands in it, typed or pasted — so a
+ * title copied from somewhere else ("Creator Of The Year") becomes something
+ * the slug pattern (`[a-z0-9-]+`) already accepts, instead of tripping it and
+ * leaving the team to fix it by hand.
+ */
+export function slugify(value: string) {
+  return value.toLowerCase().replace(/\s+/g, '-').replace(/-+/g, '-');
+}

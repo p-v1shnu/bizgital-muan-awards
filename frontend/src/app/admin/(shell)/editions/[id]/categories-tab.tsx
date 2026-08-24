@@ -12,7 +12,7 @@ import { EmptyState, ErrorNote, LoadingBlock, Note } from '@/components/ui/feedb
 import { Field, Input, Select, Switch, Textarea } from '@/components/ui/field';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { Category, CategoryTemplate, Edition } from '@/types/api';
-import { emptyToNull } from '@/lib/utils';
+import { emptyToNull, slugify } from '@/lib/utils';
 
 export function CategoriesTab({ edition }: { edition: Edition }) {
   const path = `/admin/editions/${edition.id}/categories`;
@@ -293,7 +293,7 @@ function CategoryDialog({
                 required
                 pattern="[a-z0-9\-]+"
                 value={form.slug}
-                onChange={(event) => setForm({ ...form, slug: event.target.value })}
+                onChange={(event) => setForm({ ...form, slug: slugify(event.target.value) })}
               />
             </Field>
           </>

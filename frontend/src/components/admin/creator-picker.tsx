@@ -10,6 +10,7 @@ import { Field, Input } from '@/components/ui/field';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Creator } from '@/types/api';
+import { slugify } from '@/lib/utils';
 
 /**
  * Browse the creator library, or narrow it by typing — shown open rather
@@ -153,7 +154,7 @@ function QuickCreateDialog({
             pattern="[a-z0-9\-]+"
             placeholder="khamla-sisouvanh"
             value={slug}
-            onChange={(event) => setSlug(event.target.value)}
+            onChange={(event) => setSlug(slugify(event.target.value))}
           />
         </Field>
         {create.error && <ErrorNote error={create.error} />}

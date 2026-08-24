@@ -14,7 +14,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { CategoryTemplate } from '@/types/api';
-import { emptyToNull } from '@/lib/utils';
+import { emptyToNull, slugify } from '@/lib/utils';
 
 /**
  * The library editions pick their categories from — browsing it here is what
@@ -222,7 +222,7 @@ function CategoryTemplateDialog({
             required
             pattern="[a-z0-9\-]+"
             value={form.slug}
-            onChange={(event) => setForm({ ...form, slug: event.target.value })}
+            onChange={(event) => setForm({ ...form, slug: slugify(event.target.value) })}
           />
         </Field>
 
