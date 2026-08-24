@@ -11,7 +11,7 @@ import { ImageUpload } from '@/components/admin/image-upload';
 import { imageKeyList } from '@/lib/images';
 import { useApiMutation } from '@/lib/api/hooks';
 import type { Edition } from '@/types/api';
-import { emptyToNull } from '@/lib/utils';
+import { emptyToNull, slugify } from '@/lib/utils';
 
 /** Everything about the event itself. The two switches live in the right rail. */
 export function DetailsTab({ edition }: { edition: Edition }) {
@@ -75,7 +75,7 @@ export function DetailsTab({ edition }: { edition: Edition }) {
             <Field label="URL ຂອງໜ້າ" help={`/awards/${form.slug || '…'}`}>
               <Input
                 value={form.slug}
-                onChange={(event) => setForm({ ...form, slug: event.target.value })}
+                onChange={(event) => setForm({ ...form, slug: slugify(event.target.value) })}
               />
             </Field>
           </div>

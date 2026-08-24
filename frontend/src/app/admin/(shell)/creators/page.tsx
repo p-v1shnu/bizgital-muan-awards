@@ -16,7 +16,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Creator } from '@/types/api';
-import { emptyToNull } from '@/lib/utils';
+import { emptyToNull, slugify } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
 
@@ -233,7 +233,7 @@ function CreatorDialog({
             required
             pattern="[a-z0-9\-]+"
             value={form.slug}
-            onChange={(event) => setForm({ ...form, slug: event.target.value })}
+            onChange={(event) => setForm({ ...form, slug: slugify(event.target.value) })}
           />
         </Field>
 
