@@ -46,8 +46,24 @@ export function emptyToNull(value: string | null | undefined) {
  * What a slug field does to whatever lands in it, typed or pasted — so a
  * title copied from somewhere else ("Creator Of The Year") becomes something
  * the slug pattern (`[a-z0-9-]+`) already accepts, instead of tripping it and
- * leaving the team to fix it by hand.
+ * leaving the team to fix it by hand. A name with no Latin letters in it at
+ * all (a Lao-only name, say) has nothing left to keep — callers that need a
+ * usable slug either way should fall back to `randomSlug` when this returns "".
  */
 export function slugify(value: string) {
-  return value.toLowerCase().replace(/\s+/g, '-').replace(/-+/g, '-');
+  return value
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/**
+ * A slug nobody has to think up on the spot. Used as the starting value for
+ * someone whose name can't be turned into one (see `slugify`) — typing over
+ * it in the slug field replaces it the same as any other starting value.
+ */
+export function randomSlug(prefix: string) {
+  return `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
 }

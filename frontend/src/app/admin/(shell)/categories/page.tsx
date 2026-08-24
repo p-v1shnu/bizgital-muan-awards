@@ -14,7 +14,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { CategoryTemplate } from '@/types/api';
-import { emptyToNull, slugify } from '@/lib/utils';
+import { emptyToNull, randomSlug, slugify } from '@/lib/utils';
 
 /**
  * The library editions pick their categories from — browsing it here is what
@@ -158,11 +158,22 @@ function CategoryTemplateDialog({
   template: CategoryTemplate | null;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState({
+  // The name most categories get typed in is Lao — nothing a slug pattern
+  // accepts — so the English name is what auto-slug tries first here,
+  // unlike the creator form (where the primary name is as likely to be a
+  // Latin channel name as a Lao person's). Falls back to the Lao name, then
+  // to a random slug, the same as any other name that yields nothing.
+  const deriveSlug = (nameLo: string, nameEn: string) => slugify(nameEn) || slugify(nameLo);
+
+  const [form, setForm] = useState(() => ({
     nameLo: template?.nameLo ?? '',
     nameEn: template?.nameEn ?? '',
-    slug: template?.slug ?? '',
-  });
+    slug: template ? template.slug : randomSlug('category'),
+  }));
+  // Once the slug field itself has been typed into, the name fields no
+  // longer overwrite it — a deliberate edit should stick.
+  const [slugTouched, setSlugTouched] = useState(template !== null);
+
   // Reset synchronously during render, not in an effect — the dialog element
   // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
   // this, saving one category and opening "add" again showed the one just
@@ -171,8 +182,22 @@ function CategoryTemplateDialog({
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setForm({ nameLo: template?.nameLo ?? '', nameEn: template?.nameEn ?? '', slug: template?.slug ?? '' });
+      setForm({
+        nameLo: template?.nameLo ?? '',
+        nameEn: template?.nameEn ?? '',
+        slug: template ? template.slug : randomSlug('category'),
+      });
+      setSlugTouched(template !== null);
     }
+  }
+
+  function setName(field: 'nameLo' | 'nameEn', value: string) {
+    setForm((f) => {
+      const next = { ...f, [field]: value };
+      if (slugTouched) return next;
+      const derived = deriveSlug(next.nameLo, next.nameEn);
+      return derived ? { ...next, slug: derived } : next;
+    });
   }
 
   const create = useApiMutation<Record<string, unknown>>('/admin/category-templates', 'POST', [
@@ -216,24 +241,23 @@ function CategoryTemplateDialog({
         }}
       >
         <Field label="ຊື່ສາຂາ (ລາວ)">
-          <Input
-            required
-            value={form.nameLo}
-            onChange={(event) => setForm({ ...form, nameLo: event.target.value })}
-          />
+          <Input required value={form.nameLo} onChange={(event) => setName('nameLo', event.target.value)} />
         </Field>
         <Field label="ຊື່ (ອັງກິດ)" hint="— ບໍ່ບັງຄັບ">
-          <Input
-            value={form.nameEn}
-            onChange={(event) => setForm({ ...form, nameEn: event.target.value })}
-          />
+          <Input value={form.nameEn} onChange={(event) => setName('nameEn', event.target.value)} />
         </Field>
-        <Field label="slug" help="ໃຊ້ໃນ URL — ຕົວອັກສອນລາຕິນນ້ອຍ, ຕົວເລກ ແລະ ຂີດກາງ">
+        <Field
+          label="slug"
+          help="ສ້າງໃຫ້ອັດຕະໂນມັດຈາກຊື່ (ອັງກິດ) ກ່ອນ ຫຼື ຊື່ (ລາວ) ຖ້າບໍ່ມີ — ພິມແກ້ໄດ້ທຸກເວລາ"
+        >
           <Input
             required
             pattern="[a-z0-9\-]+"
             value={form.slug}
-            onChange={(event) => setForm({ ...form, slug: slugify(event.target.value) })}
+            onChange={(event) => {
+              setSlugTouched(true);
+              setForm({ ...form, slug: slugify(event.target.value) });
+            }}
           />
         </Field>
 

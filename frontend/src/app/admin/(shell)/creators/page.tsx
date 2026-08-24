@@ -16,7 +16,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Creator } from '@/types/api';
-import { emptyToNull, slugify } from '@/lib/utils';
+import { emptyToNull, randomSlug, slugify } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
 
@@ -162,14 +162,24 @@ function CreatorDialog({
   creator: Creator | null;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState({
+  // A slug someone has to think up on the spot is exactly what slows down
+  // adding a name fast — so a new creator starts with one nobody had to
+  // type (see randomSlug), swapped for a real one derived from the primary
+  // name the moment that name gives up anything sluggable (see slugify).
+  // Editing an existing creator never does either — their slug already
+  // shows up as a URL, and quietly rewriting it here would break that link.
+  const [form, setForm] = useState(() => ({
     nameLo: creator?.nameLo ?? '',
     nameEn: creator?.nameEn ?? '',
-    slug: creator?.slug ?? '',
+    slug: creator ? creator.slug : randomSlug('creator'),
     bioLo: creator?.bioLo ?? '',
-  });
+  }));
   const [avatarKey, setAvatarKey] = useState(creator?.avatarKey ?? null);
   const [socials, setSocials] = useState<Record<string, string>>(creator?.socialLinks ?? {});
+  // Once the slug field itself has been typed into, the primary name no
+  // longer overwrites it — a deliberate edit should stick.
+  const [slugTouched, setSlugTouched] = useState(creator !== null);
+
   // Reset synchronously during render, not in an effect — the dialog element
   // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
   // this, saving one creator and opening "add" again showed the one just
@@ -181,12 +191,21 @@ function CreatorDialog({
       setForm({
         nameLo: creator?.nameLo ?? '',
         nameEn: creator?.nameEn ?? '',
-        slug: creator?.slug ?? '',
+        slug: creator ? creator.slug : randomSlug('creator'),
         bioLo: creator?.bioLo ?? '',
       });
       setAvatarKey(creator?.avatarKey ?? null);
       setSocials(creator?.socialLinks ?? {});
+      setSlugTouched(creator !== null);
     }
+  }
+
+  function setNameLo(nameLo: string) {
+    setForm((f) => {
+      if (slugTouched) return { ...f, nameLo };
+      const derived = slugify(nameLo);
+      return { ...f, nameLo, slug: derived || f.slug };
+    });
   }
 
   const create = useApiMutation<Record<string, unknown>>('/admin/creators', 'POST', ['/admin/creators']);
@@ -231,14 +250,10 @@ function CreatorDialog({
         }}
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field label="ຊື່ (ລາວ)">
-            <Input
-              required
-              value={form.nameLo}
-              onChange={(event) => setForm({ ...form, nameLo: event.target.value })}
-            />
+          <Field label="ຊື່ຫຼັກ" help="ຊື່ຄົນ ຫຼື ຊື່ຊ່ອງ — ແລ້ວແຕ່ອັນໃດຄືຊື່ທີ່ໃຊ້ຈິງ">
+            <Input required value={form.nameLo} onChange={(event) => setNameLo(event.target.value)} />
           </Field>
-          <Field label="ຊື່ (ອັງກິດ)" hint="— ບໍ່ບັງຄັບ">
+          <Field label="ຊື່ອື່ນ" hint="— ບໍ່ບັງຄັບ" help="ຊື່ຮຽກອີກແບບ — ຄົນອ່ານເຫັນນຳ ຊື່ຫຼັກ">
             <Input
               value={form.nameEn}
               onChange={(event) => setForm({ ...form, nameEn: event.target.value })}
@@ -246,12 +261,18 @@ function CreatorDialog({
           </Field>
         </div>
 
-        <Field label="slug" help={`ໜ້າໂປຣໄຟລ໌ — /creators/${form.slug || '…'}`}>
+        <Field
+          label="slug"
+          help={`ໜ້າໂປຣໄຟລ໌ — /creators/${form.slug || '…'} · ສ້າງໃຫ້ອັດຕະໂນມັດຈາກຊື່ຫຼັກ ພິມແກ້ໄດ້ທຸກເວລາ`}
+        >
           <Input
             required
             pattern="[a-z0-9\-]+"
             value={form.slug}
-            onChange={(event) => setForm({ ...form, slug: slugify(event.target.value) })}
+            onChange={(event) => {
+              setSlugTouched(true);
+              setForm({ ...form, slug: slugify(event.target.value) });
+            }}
           />
         </Field>
 
