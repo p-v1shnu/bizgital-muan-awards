@@ -170,6 +170,24 @@ function CreatorDialog({
   });
   const [avatarKey, setAvatarKey] = useState(creator?.avatarKey ?? null);
   const [socials, setSocials] = useState<Record<string, string>>(creator?.socialLinks ?? {});
+  // Reset synchronously during render, not in an effect — the dialog element
+  // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
+  // this, saving one creator and opening "add" again showed the one just
+  // typed rather than a blank form.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setForm({
+        nameLo: creator?.nameLo ?? '',
+        nameEn: creator?.nameEn ?? '',
+        slug: creator?.slug ?? '',
+        bioLo: creator?.bioLo ?? '',
+      });
+      setAvatarKey(creator?.avatarKey ?? null);
+      setSocials(creator?.socialLinks ?? {});
+    }
+  }
 
   const create = useApiMutation<Record<string, unknown>>('/admin/creators', 'POST', ['/admin/creators']);
   const update = useApiMutation<Record<string, unknown>>(`/admin/creators/${creator?.id}`, 'PATCH', [

@@ -192,15 +192,6 @@ function CategoryDialog({
   // works on this edition's own copy of the name, which the library has
   // nothing to do with (see CreateCategoryDto/UpdateCategoryDto).
   const [template, setTemplate] = useState<CategoryTemplate | null>(null);
-  // Reset synchronously during render rather than in an effect — the dialog
-  // element (see ui/dialog.tsx) never unmounts on close, only `.close()`s, so
-  // without this, cancelling a pick and reopening "add category" would skip
-  // the picker and reuse whatever was chosen last.
-  const [wasOpen, setWasOpen] = useState(open);
-  if (open !== wasOpen) {
-    setWasOpen(open);
-    if (open) setTemplate(null);
-  }
 
   const [form, setForm] = useState({
     slug: category?.slug ?? '',
@@ -209,6 +200,25 @@ function CategoryDialog({
     descriptionLo: category?.descriptionLo ?? '',
     isFeatured: category?.isFeatured ?? false,
   });
+
+  // Reset synchronously during render rather than in an effect — the dialog
+  // element (see ui/dialog.tsx) never unmounts on close, only `.close()`s, so
+  // without this, saving a category (or cancelling a pick) and reopening
+  // "add category" would skip the picker and show what was typed last time.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setTemplate(null);
+      setForm({
+        slug: category?.slug ?? '',
+        nameLo: category?.nameLo ?? '',
+        groupLo: category?.groupLo ?? '',
+        descriptionLo: category?.descriptionLo ?? '',
+        isFeatured: category?.isFeatured ?? false,
+      });
+    }
+  }
 
   const invalidate = [`/admin/editions/${editionId}/categories`, '/admin/dashboard'];
   const create = useApiMutation<Record<string, unknown>>(

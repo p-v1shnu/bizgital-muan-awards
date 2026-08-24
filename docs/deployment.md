@@ -43,9 +43,16 @@ git remote -v                     # ต้องเป็น URL เปล่า
 **Deploy รอบถัดไป:**
 
 ```bash
-cd /srv/muan && git pull origin main && docker compose up -d --build
+cd /srv/muan && git pull origin main && docker compose up -d --build --force-recreate
 ```
 
+> **`--force-recreate` ห้ามลืม** — เจอมาแล้วจริงบนเครื่อง production: `--build` เพียวๆ
+> build image ใหม่เสร็จ (ดูจาก `docker images` timestamp ก็ใหม่) แต่ container ที่รันอยู่
+> **ไม่ถูกสั่งให้สร้างใหม่** ยังใช้ image เก่าต่อไปเรื่อยๆ — `docker compose ps` จะยังโชว์
+> `CREATED`/`STATUS` เป็นของหลายวันก่อน ทั้งที่ build ผ่านไม่มี error เลย หน้าเว็บเลย
+> ไม่เปลี่ยนแม้ deploy "สำเร็จ" ทุกครั้ง `--force-recreate` คือตัวบังคับให้ swap container
+> ไปใช้ image ใหม่จริง ๆ
+>
 > **`/srv/muan` เป็นเพียงตัวอย่าง** — เอกสารนี้ใช้ที่อยู่นี้ตลอดทั้งไฟล์ แต่เครื่องจริงอยู่ที่ไหน
 > ก็ได้ · **ลืมว่าอยู่ไหน ให้ถาม docker:**
 >
@@ -55,15 +62,17 @@ cd /srv/muan && git pull origin main && docker compose up -d --build
 >
 > `cd` ผิดที่แล้วสั่งต่อ ไม่ error ให้เห็นชัด ๆ — `git pull` จะบอกว่าไม่ใช่ repo,
 > `docker compose` จะไปสร้าง project เปล่าอีกตัว และคำสั่งที่อ่าน `.env` จะได้ค่าว่าง
-> **วิธีตรวจว่าโค้ดใหม่ขึ้นจริง ไม่ใช่ดูว่าคำสั่งไม่ error แต่ดูจำนวน migration:**
+> **วิธีตรวจว่าโค้ดใหม่ขึ้นจริง ไม่ใช่ดูว่าคำสั่งไม่ error แต่ดูสองอย่างนี้:**
 >
 > ```bash
-> docker compose logs backend | grep -c "migrations found"   # มีบรรทัดนี้ทุกครั้งที่ backend สตาร์ท
+> docker compose ps                                           # CREATED ต้องเป็น "seconds/minutes ago"
+> docker compose logs backend | grep -c "migrations found"    # มีบรรทัดนี้ทุกครั้งที่ backend สตาร์ท
 > docker compose logs backend | grep "migrations found" | tail -1
 > ```
 >
 > ตัวเลขในบรรทัดล่าสุดต้องเท่ากับจำนวนโฟลเดอร์ใน `backend/prisma/migrations`
 > (ไม่นับ `migration_lock.toml`) · น้อยกว่านั้น = **container ยังรันโค้ดเก่า** ยังไม่ได้ build ใหม่
+> · `CREATED` เป็นวันก่อนๆทั้งที่พึ่ง deploy = ลืม `--force-recreate` ข้างบน
 
 ---
 
@@ -318,7 +327,7 @@ Caddy ขอใบรับรอง TLS เองอัตโนมัติ
 ### 4.0 URL ที่ถูกอบไว้ในไฟล์ JS — ตรวจข้อนี้ก่อนเพื่อน
 
 `NEXT_PUBLIC_*` ทุกตัว**ถูกฝังลงในไฟล์ JS ตอน build** ไม่ได้อ่านจาก `.env` ตอนรัน ·
-แก้ `.env` แล้ว `restart` เฉยๆ **ไม่มีผล** ต้อง `docker compose up -d --build frontend`
+แก้ `.env` แล้ว `restart` เฉยๆ **ไม่มีผล** ต้อง `docker compose up -d --build --force-recreate frontend`
 
 ที่ทำให้ข้อนี้อันตรายคือ**หน้าเว็บจะดูปกติทุกอย่าง**: หน้าสาธารณะเรนเดอร์ที่เซิร์ฟเวอร์
 และคุยกับ backend ผ่านเน็ตเวิร์กภายใน Docker ไม่ได้ใช้ค่านี้เลย · ที่พังคือทุกอย่างที่
@@ -336,8 +345,8 @@ curl -s https://<โดเมน>/admin/setup \
 ต้องได้ `https://<โดเมนนี้>/api/v1` **ค่าเดียว** · ถ้าได้โดเมนอื่น แก้ `.env` แล้ว
 
 ```bash
-docker compose up -d --build frontend
-docker compose up -d backend        # ถ้าแก้ CORS_ORIGINS ด้วย
+docker compose up -d --build --force-recreate frontend
+docker compose up -d --force-recreate backend        # ถ้าแก้ CORS_ORIGINS ด้วย
 ```
 
 แล้วเปิดหน้าใน incognito — ไฟล์ JS เก่ายังค้างในเบราว์เซอร์
@@ -498,11 +507,11 @@ github.com/tonistiigi/vt100.NewVT100(0x6, 0xfffffffffffffff8)
 แก้ด้วยการสั่งไม่ให้ใช้ตัวแสดงผลแบบนั้น:
 
 ```bash
-BUILDKIT_PROGRESS=plain docker compose up -d --build
+BUILDKIT_PROGRESS=plain docker compose up -d --build --force-recreate
 ```
 
-(หรือ `docker compose up -d --build --progress plain` · `plain` พิมพ์ log ทีละบรรทัด
-ไม่ต้องรู้ความกว้างจอ จึงไม่มีทางพังแบบนี้ และอ่านย้อนหลังได้ดีกว่าเวลา build ล้ม)
+(หรือ `docker compose up -d --build --force-recreate --progress plain` · `plain` พิมพ์ log
+ทีละบรรทัด ไม่ต้องรู้ความกว้างจอ จึงไม่มีทางพังแบบนี้ และอ่านย้อนหลังได้ดีกว่าเวลา build ล้ม)
 
 ตรวจว่าขึ้นจริงหลังจากนั้น:
 

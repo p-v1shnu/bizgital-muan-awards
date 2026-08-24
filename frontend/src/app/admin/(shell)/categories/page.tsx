@@ -163,6 +163,17 @@ function CategoryTemplateDialog({
     nameEn: template?.nameEn ?? '',
     slug: template?.slug ?? '',
   });
+  // Reset synchronously during render, not in an effect — the dialog element
+  // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
+  // this, saving one category and opening "add" again showed the one just
+  // typed rather than a blank form.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setForm({ nameLo: template?.nameLo ?? '', nameEn: template?.nameEn ?? '', slug: template?.slug ?? '' });
+    }
+  }
 
   const create = useApiMutation<Record<string, unknown>>('/admin/category-templates', 'POST', [
     '/admin/category-templates',

@@ -157,6 +157,23 @@ function JudgeDialog({
     bioLo: judge?.bioLo ?? '',
   });
   const [avatarKey, setAvatarKey] = useState(judge?.avatarKey ?? null);
+  // Reset synchronously during render, not in an effect — the dialog element
+  // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
+  // this, saving one judge and opening "add" again showed the one just
+  // typed rather than a blank form.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setForm({
+        nameLo: judge?.nameLo ?? '',
+        nameEn: judge?.nameEn ?? '',
+        positionLo: judge?.positionLo ?? '',
+        bioLo: judge?.bioLo ?? '',
+      });
+      setAvatarKey(judge?.avatarKey ?? null);
+    }
+  }
 
   const create = useApiMutation<Record<string, unknown>>('/admin/judges', 'POST', ['/admin/judges']);
   const update = useApiMutation<Record<string, unknown>>(`/admin/judges/${judge?.id}`, 'PATCH', [
