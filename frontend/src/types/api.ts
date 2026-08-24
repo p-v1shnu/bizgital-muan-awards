@@ -16,6 +16,9 @@ export interface Edition {
   phase: EditionPhase;
   submissionsOpen: boolean;
   submissionsCloseAt: string | null;
+  /** Set the first time entries were ever opened, and never cleared — tells
+   * "never opened" apart from "closed" once the switch reads false. */
+  submissionsOpenedAt: string | null;
   eventDate: string | null;
   venueLo: string | null;
   venueEn: string | null;
