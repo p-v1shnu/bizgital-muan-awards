@@ -10,7 +10,7 @@ import { Field, Input } from '@/components/ui/field';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Creator } from '@/types/api';
-import { slugify } from '@/lib/utils';
+import { randomSlug, slugify } from '@/lib/utils';
 
 /**
  * Browse the creator library, or narrow it by typing — shown open rather
@@ -113,8 +113,32 @@ function QuickCreateDialog({
   onClose: () => void;
   onCreated: (creator: Creator) => void;
 }) {
-  const [nameLo, setNameLo] = useState(initialName);
-  const [slug, setSlug] = useState('');
+  const [nameLo, setNameLoRaw] = useState(initialName);
+  const [slug, setSlug] = useState(() => slugify(initialName) || randomSlug('creator'));
+  // Once the slug field itself has been typed into, the name no longer
+  // overwrites it — a deliberate edit should stick.
+  const [slugTouched, setSlugTouched] = useState(false);
+
+  // Reset synchronously during render, not in an effect — this dialog has no
+  // `key` from its parent (CreatorPicker) and so never unmounts, only
+  // `open`s and `close`s, so without this, cancelling one quick-create and
+  // opening another would keep showing what was typed into the first.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setNameLoRaw(initialName);
+      setSlug(slugify(initialName) || randomSlug('creator'));
+      setSlugTouched(false);
+    }
+  }
+
+  function setNameLo(value: string) {
+    setNameLoRaw(value);
+    if (slugTouched) return;
+    const derived = slugify(value);
+    setSlug((previous) => derived || previous);
+  }
 
   const create = useApiMutation<Record<string, unknown>, Creator>('/admin/creators', 'POST', [
     '/admin/creators',
@@ -145,16 +169,22 @@ function QuickCreateDialog({
           create.mutate({ nameLo, slug }, { onSuccess: onCreated });
         }}
       >
-        <Field label="ຊື່ (ລາວ)">
+        <Field label="ຊື່">
           <Input required value={nameLo} onChange={(event) => setNameLo(event.target.value)} />
         </Field>
-        <Field label="slug" help="ໃຊ້ໃນ URL ໜ້າໂປຣໄຟລ໌ — ຕົວອັກສອນລາຕິນນ້ອຍ, ຕົວເລກ ແລະ ຂີດກາງ">
+        <Field
+          label="slug"
+          help="ໃຊ້ໃນ URL ໜ້າໂປຣໄຟລ໌ — ສ້າງໃຫ້ອັດຕະໂນມັດຈາກຊື່ຂ້າງເທິງ ພິມແກ້ໄດ້ທຸກເວລາ"
+        >
           <Input
             required
             pattern="[a-z0-9\-]+"
             placeholder="khamla-sisouvanh"
             value={slug}
-            onChange={(event) => setSlug(slugify(event.target.value))}
+            onChange={(event) => {
+              setSlugTouched(true);
+              setSlug(slugify(event.target.value));
+            }}
           />
         </Field>
         {create.error && <ErrorNote error={create.error} />}

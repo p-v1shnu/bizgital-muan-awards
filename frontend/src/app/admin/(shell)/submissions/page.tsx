@@ -12,7 +12,7 @@ import { Field, Input, Select } from '@/components/ui/field';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { Pager } from '@/components/admin/pager';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
-import { safeHttpUrl } from '@/lib/utils';
+import { randomSlug, safeHttpUrl, slugify } from '@/lib/utils';
 import { useDebounced } from '@/lib/use-debounced';
 import type { SubmissionGroup, SubmissionStatus } from '@/types/api';
 import { formatDateTime } from '@/lib/dates';
@@ -332,7 +332,25 @@ function AcceptDialog({
 }) {
   const [mode, setMode] = useState<'existing' | 'new'>('new');
   const [creatorId, setCreatorId] = useState('');
-  const [newCreatorSlug, setNewCreatorSlug] = useState('');
+  // Nobody types this name — it's whatever the public form already
+  // collected — so the slug can start fully derived from it, same as the
+  // library's own quick-create.
+  const [newCreatorSlug, setNewCreatorSlug] = useState(
+    () => slugify(group.creatorNameRaw) || randomSlug('creator'),
+  );
+
+  // Reset synchronously during render, not in an effect — this dialog has no
+  // `key` from its row, so accepting-then-cancelling and reopening the same
+  // row would otherwise keep showing the previous attempt's choices.
+  const [wasOpen, setWasOpen] = useState(open);
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setMode('new');
+      setCreatorId('');
+      setNewCreatorSlug(slugify(group.creatorNameRaw) || randomSlug('creator'));
+    }
+  }
 
   const suggestions = useApiPage<{ id: string; nameLo: string; slug: string }>(
     `/admin/creators?perPage=10&q=${encodeURIComponent(group.creatorNameRaw)}`,
@@ -391,12 +409,15 @@ function AcceptDialog({
       </div>
 
       {mode === 'new' ? (
-        <Field label="slug ຂອງຄຣີເອເຕີໃໝ່" help={`ຊື່ຈະໃຊ້ຕາມທີ່ຜູ້ສົ່ງພິມມາ: “${group.creatorNameRaw}”`}>
+        <Field
+          label="slug ຂອງຄຣີເອເຕີໃໝ່"
+          help={`ຊື່ຈະໃຊ້ຕາມທີ່ຜູ້ສົ່ງພິມມາ: “${group.creatorNameRaw}” · ສ້າງໃຫ້ອັດຕະໂນມັດ ພິມແກ້ໄດ້ທຸກເວລາ`}
+        >
           <Input
             pattern="[a-z0-9\-]+"
             placeholder="bounmy-chanthavong"
             value={newCreatorSlug}
-            onChange={(event) => setNewCreatorSlug(event.target.value)}
+            onChange={(event) => setNewCreatorSlug(slugify(event.target.value))}
           />
         </Field>
       ) : (
