@@ -22,6 +22,13 @@ describe('public submissions and the screening queue', () => {
         .send({ templateId })
         .expect(201)
     ).body.data.id;
+
+    // The submission switch may only turn on for a PUBLISHED edition now.
+    await api(h)
+      .patch(path(`/admin/editions/${editionId}/phase`))
+      .set(h.auth)
+      .send({ phase: 'PUBLISHED' })
+      .expect(200);
   });
 
   afterAll(() => h.close());

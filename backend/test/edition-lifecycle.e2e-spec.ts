@@ -121,6 +121,25 @@ describe('edition lifecycle', () => {
     });
   });
 
+  /**
+   * Placed before "the submission switch requires a published edition":
+   * that block publishes two more years (2031, 2032), and this test's exact
+   * expectations only hold while 2030 is still the newest published year.
+   */
+  describe('"latest" means three different things (§4.3.1)', () => {
+    it('separates the nav, the winners strip and the timeline', async () => {
+      // 2030 is PUBLISHED, 2019 has winners. The newest year overall is not
+      // the newest year with results — which is exactly the trap.
+      const nav = await api(h).get(path('/editions/latest')).expect(200);
+      const strip = await api(h).get(path('/editions/latest-winners')).expect(200);
+      const timeline = await api(h).get(path('/editions')).expect(200);
+
+      expect(nav.body.data.year).toBe(2030);
+      expect(strip.body.data.year).toBe(2019);
+      expect(timeline.body.data.map((e: { year: number }) => e.year)).toEqual([2030, 2019]);
+    });
+  });
+
   describe('the submission switch requires a published edition', () => {
     let firstId: string;
     let secondId: string;
@@ -180,66 +199,6 @@ describe('edition lifecycle', () => {
       });
       const open = await api(h).get(path('/editions/accepting-submissions')).expect(200);
       expect(open.body.data).toBeNull();
-    });
-
-    it('closes automatically once nominees are announced, and refuses to reopen', async () => {
-      // secondId's raw switch is still `true` from above — only the elapsed
-      // close date makes it read as shut — so this is exactly the case of a
-      // switch left on that announcing has to catch.
-      const templateId = await categoryTemplate(h, 'auto-close', 'ສາຂາທົດສອບການປິດອັດຕະໂນມັດ');
-      const categoryId = (
-        await api(h)
-          .post(path(`/admin/editions/${secondId}/categories`))
-          .set(h.auth)
-          .send({ templateId })
-          .expect(201)
-      ).body.data.id;
-      const creator = (
-        await api(h)
-          .post(path('/admin/creators'))
-          .set(h.auth)
-          .send({ nameLo: 'ຄົນທົດສອບ', slug: 'test-auto-close' })
-          .expect(201)
-      ).body.data;
-      await api(h)
-        .post(path(`/admin/categories/${categoryId}/nominations`))
-        .set(h.auth)
-        .send({ creatorId: creator.id })
-        .expect(201);
-
-      await api(h)
-        .patch(path(`/admin/editions/${secondId}/phase`))
-        .set(h.auth)
-        .send({ phase: 'NOMINEES_ANNOUNCED' })
-        .expect(200);
-
-      const after = await api(h).get(path(`/admin/editions/${secondId}`)).set(h.auth).expect(200);
-      expect(after.body.data.submissionsOpen).toBe(false);
-
-      const reopen = await setSubmissions(secondId, { submissionsOpen: true }).expect(400);
-      expect(reopen.body.message).toContain('PUBLISHED');
-
-      const audit = await api(h)
-        .get(path('/admin/audit?perPage=100&action=edition.submissions.autoclosed'))
-        .set(h.auth)
-        .expect(200);
-      expect(audit.body.data.some((entry: { targetId: string }) => entry.targetId === secondId)).toBe(
-        true,
-      );
-    });
-  });
-
-  describe('"latest" means three different things (§4.3.1)', () => {
-    it('separates the nav, the winners strip and the timeline', async () => {
-      // 2030 is PUBLISHED, 2019 has winners. The newest year overall is not
-      // the newest year with results — which is exactly the trap.
-      const nav = await api(h).get(path('/editions/latest')).expect(200);
-      const strip = await api(h).get(path('/editions/latest-winners')).expect(200);
-      const timeline = await api(h).get(path('/editions')).expect(200);
-
-      expect(nav.body.data.year).toBe(2030);
-      expect(strip.body.data.year).toBe(2019);
-      expect(timeline.body.data.map((e: { year: number }) => e.year)).toEqual([2030, 2019]);
     });
   });
 
@@ -482,6 +441,73 @@ describe('edition lifecycle', () => {
         .expect(200);
 
       expect(untouched.body.data.ticketUrl).toBe('https://tickets.example.com/again');
+    });
+  });
+
+  /**
+   * Placed last on purpose: the "latest" describe block earlier in this file
+   * asserts an exact timeline, and any additional PUBLISHED-or-later year
+   * created before it runs would break that.
+   */
+  describe('announcing nominees closes a forgotten switch', () => {
+    it('closes automatically, and refuses to reopen behind the announcement', async () => {
+      const editionId = (await createEdition({ year: 2050, slug: '2050', titleLo: 'ງານ 2050' })).body
+        .data.id;
+      const templateId = await categoryTemplate(h, 'auto-close', 'ສາຂາທົດສອບການປິດອັດຕະໂນມັດ');
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+      const creator = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທົດສອບ', slug: 'test-auto-close' })
+          .expect(201)
+      ).body.data;
+      await api(h)
+        .post(path(`/admin/categories/${categoryId}/nominations`))
+        .set(h.auth)
+        .send({ creatorId: creator.id })
+        .expect(201);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .set(h.auth)
+        .send({ submissionsOpen: true })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(200);
+
+      const after = await api(h).get(path(`/admin/editions/${editionId}`)).set(h.auth).expect(200);
+      expect(after.body.data.submissionsOpen).toBe(false);
+
+      const reopen = await api(h)
+        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .set(h.auth)
+        .send({ submissionsOpen: true })
+        .expect(400);
+      expect(reopen.body.message).toContain('PUBLISHED');
+
+      const audit = await api(h)
+        .get(path('/admin/audit?perPage=100&action=edition.submissions.autoclosed'))
+        .set(h.auth)
+        .expect(200);
+      expect(audit.body.data.some((entry: { targetId: string }) => entry.targetId === editionId)).toBe(
+        true,
+      );
     });
   });
 });

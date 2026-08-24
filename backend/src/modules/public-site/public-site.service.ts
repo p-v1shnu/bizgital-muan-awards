@@ -249,9 +249,14 @@ export class PublicSiteService {
       // older one that has already been through its own cycle — someone
       // arriving between two editions is looking forward to the next one,
       // not back at a cycle that has nothing left to do with them.
+      //
+      // PUBLISHED specifically, not any VISIBLE phase: a backfilled year can
+      // reach NOMINEES_ANNOUNCED or WINNERS_ANNOUNCED having never taken
+      // entries at all, and that is not "about to open" — nothing later than
+      // PUBLISHED ever can any more (see `setSubmissions`).
       const [upcoming, closed] = await Promise.all([
         this.prisma.edition.findFirst({
-          where: { phase: { in: VISIBLE }, submissionsOpenedAt: null },
+          where: { phase: EditionPhase.PUBLISHED, submissionsOpenedAt: null },
           orderBy: { year: 'asc' },
         }),
         // The most recent year that ever took entries, if there is one — its
