@@ -55,6 +55,33 @@ describe('access control', () => {
     await api(h).get(path('/admin/audit')).set(h.auth).expect(200);
   });
 
+  /**
+   * Rolling back a phase is the one edition action a plain admin cannot take
+   * at all — everything else about an edition (content, phase moving
+   * forward, the submission switch) is open to any admin.
+   */
+  it('restricts rolling back an announcement to super admins', async () => {
+    const editionId = (
+      await api(h)
+        .post(path('/admin/editions'))
+        .set(h.auth)
+        .send({ year: 2047, slug: '2047', titleLo: 'ງານ 2047', phase: 'PUBLISHED' })
+        .expect(201)
+    ).body.data.id;
+
+    await api(h)
+      .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+      .set(plainAdmin)
+      .send({ phase: 'DRAFT', reason: 'ທົດສອບສິດຂອງ admin ທຳມະດາ' })
+      .expect(403);
+
+    await api(h)
+      .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+      .set(h.auth)
+      .send({ phase: 'DRAFT', reason: 'ທົດສອບສິດຂອງ super admin' })
+      .expect(200);
+  });
+
   it('refuses to let anyone delete their own account', async () => {
     const me = await api(h).get(path('/auth/me')).set(h.auth).expect(200);
     await api(h).delete(path(`/admin/users/${me.body.data.id}`)).set(h.auth).expect(403);

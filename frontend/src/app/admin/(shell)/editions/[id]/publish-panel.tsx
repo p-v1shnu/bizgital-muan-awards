@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader, FoilRule } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { ErrorNote, Note } from '@/components/ui/feedback';
-import { Field, Input, Switch } from '@/components/ui/field';
+import { Field, Input, Switch, Textarea } from '@/components/ui/field';
 import { PHASE_LABEL } from '@/components/ui/badge';
 import { PHASE_ORDER } from '@/components/admin/phase-steps';
 import { fromVientianeInput, toVientianeInput } from '@/lib/dates';
 import { useApiMutation } from '@/lib/api/hooks';
+import { useIsSuperAdmin } from '@/lib/auth-context';
 import type { Category, Edition, EditionPhase } from '@/types/api';
 
 /**
@@ -149,6 +150,8 @@ export function PublishPanel({
         ໂດຍ<b>ບໍ່ເຄີຍເປີດຟອມ</b>ເລີຍ — ສອງເລື່ອງນີ້ຈຶ່ງບໍ່ຄວນເປັນປຸ່ມດຽວກັນ
       </Note>
 
+      <RollbackPanel edition={edition} />
+
       {nextPhase && (
         <ConfirmDialog
           open={confirming}
@@ -234,6 +237,108 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
         </Note>
       </CardBody>
     </Card>
+  );
+}
+
+/**
+ * The escape hatch `changePhase` refuses on purpose — reversing an
+ * announcement made by mistake. Only SUPER_ADMIN sees this box at all, so a
+ * plain admin never mistakes it for the everyday "move forward" control
+ * right above it, and there is nothing to show a draft edition, which has
+ * no announcement to pull back.
+ */
+function RollbackPanel({ edition }: { edition: Edition }) {
+  const isSuperAdmin = useIsSuperAdmin();
+  const priorPhases = PHASE_ORDER.slice(0, PHASE_ORDER.indexOf(edition.phase));
+  const fallback = priorPhases[priorPhases.length - 1];
+
+  const [target, setTarget] = useState<EditionPhase | undefined>(fallback);
+  const [reason, setReason] = useState('');
+  const [confirming, setConfirming] = useState(false);
+
+  const rollback = useApiMutation<{ phase: EditionPhase; reason: string }>(
+    `/admin/editions/${edition.id}/phase/rollback`,
+    'PATCH',
+    ['/admin/editions', '/admin/dashboard'],
+  );
+
+  if (!isSuperAdmin || !fallback) return null;
+
+  const targetPhase = target && priorPhases.includes(target) ? target : fallback;
+  const reasonReady = reason.trim().length >= 5;
+
+  return (
+    <>
+      <Card className="border-[#e4c1b7]">
+        <CardHeader title="ຖອນການປະກາດ (ສຸກເສີນ)" aside="SUPER_ADMIN ເທົ່ານັ້ນ" />
+        <CardBody>
+          <div className="mb-3 rounded-[var(--radius-ui-sm)] border border-[#e4c1b7] bg-stop-soft px-3 py-2 text-[13px] text-stop">
+            ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ — <b>ຊ່ອນຈາກຄົນທີ່ຍັງບໍ່ເຫັນເທົ່ານັ້ນ</b> ແຕ່ລຶບສິ່ງທີ່ມີຄົນເຫັນ
+            ແຄບ ຫຼື ແຊຣ໌ໄປແລ້ວບໍ່ໄດ້
+          </div>
+
+          <div className="mb-3">
+            <Field label="ຖອນກັບໄປຂັ້ນໃດ">
+              <select
+                value={targetPhase}
+                onChange={(event) => setTarget(event.target.value as EditionPhase)}
+                className="w-full rounded-[var(--radius-ui-sm)] border border-rule bg-white px-3 py-2 text-[13px] text-ink"
+              >
+                {priorPhases.map((phase) => (
+                  <option key={phase} value={phase}>
+                    {PHASE_LABEL[phase]}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <Field label="ເຫດຜົນ" help="ບັນທຶກໄວ້ໃນປະຫວັດ — ຈຳເປັນຕ້ອງໃສ່">
+            <Textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="ອະທິບາຍວ່າຜິດພາດຫຍັງ ແລະ ເປັນຫຍັງຈຶ່ງຕ້ອງຖອນ…"
+            />
+          </Field>
+
+          <Button
+            variant="danger"
+            className="mt-3 w-full"
+            disabled={!reasonReady || rollback.isPending}
+            onClick={() => setConfirming(true)}
+          >
+            {rollback.isPending ? 'ກຳລັງຖອນ…' : `ຖອນກັບໄປ “${PHASE_LABEL[targetPhase]}”`}
+          </Button>
+
+          {rollback.error && (
+            <div className="mt-2">
+              <ErrorNote error={rollback.error} />
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      <ConfirmDialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={() =>
+          rollback.mutate(
+            { phase: targetPhase, reason: reason.trim() },
+            {
+              onSuccess: () => {
+                setConfirming(false);
+                setReason('');
+              },
+            },
+          )
+        }
+        pending={rollback.isPending}
+        danger
+        title={`ຖອນກັບໄປ “${PHASE_LABEL[targetPhase]}”?`}
+        description="ຈະຊ່ອນຈາກຄົນທີ່ຍັງບໍ່ເຫັນທັນທີ ແຕ່ລຶບສິ່ງທີ່ມີຄົນເຫັນ ແຄບ ຫຼື ແຊຣ໌ໄປແລ້ວບໍ່ໄດ້ — ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດເທົ່ານັ້ນ"
+        confirmLabel="ຖອນການປະກາດ"
+      />
+    </>
   );
 }
 

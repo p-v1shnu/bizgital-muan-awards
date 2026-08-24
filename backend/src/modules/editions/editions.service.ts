@@ -10,6 +10,7 @@ import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ChangePhaseDto } from './dto/change-phase.dto';
 import { CreateEditionDto } from './dto/create-edition.dto';
+import { RollbackPhaseDto } from './dto/rollback-phase.dto';
 import { SubmissionsSwitchDto } from './dto/submissions-switch.dto';
 import { UpdateEditionDto } from './dto/update-edition.dto';
 
@@ -214,6 +215,60 @@ export class EditionsService {
       ipAddress,
     });
     if (autoCloses) {
+      await this.audit.log({
+        userId: actorId,
+        action: 'edition.submissions.autoclosed',
+        targetType: 'Edition',
+        targetId: id,
+        before: { submissionsOpen: true },
+        after: { submissionsOpen: false },
+        ipAddress,
+      });
+    }
+    return after;
+  }
+
+  /**
+   * The escape hatch `changePhase` deliberately refuses (PRD §4.4 rule 2):
+   * pulling an announcement back after a mistake. Kept a separate method
+   * and route rather than a flag on `changePhase`, on purpose — a control
+   * this consequential should never look like the everyday "move forward"
+   * button, and the controller restricts it to SUPER_ADMIN.
+   *
+   * Only `phase` moves. Nominees and winners stay exactly as they were —
+   * they were never gated by phase to begin with (see `NominationsService`),
+   * so there is nothing to restore. And a rollback un-reveals nothing that
+   * has already reached a real visitor: it only stops the next one from
+   * seeing it, which is the whole reason a reason is required and logged.
+   */
+  async rollbackPhase(id: string, dto: RollbackPhaseDto, actorId: string, ipAddress?: string) {
+    const edition = await this.findById(id);
+    if (PHASE_ORDER[dto.phase] >= PHASE_ORDER[edition.phase]) {
+      throw new BadRequestException(
+        `Cannot roll back from ${edition.phase} to ${dto.phase} — rollback only moves to an earlier phase`,
+      );
+    }
+
+    // DRAFT has no page of its own (PUBLIC_PHASES excludes it) — a form
+    // still collecting names for a year nobody can see is its own kind of
+    // inconsistency, so pulling back that far closes it too.
+    const closesSubmissions = dto.phase === EditionPhase.DRAFT && edition.submissionsOpen;
+
+    const after = await this.prisma.edition.update({
+      where: { id },
+      data: { phase: dto.phase, ...(closesSubmissions ? { submissionsOpen: false } : {}) },
+    });
+
+    await this.audit.log({
+      userId: actorId,
+      action: 'edition.phase.rolledback',
+      targetType: 'Edition',
+      targetId: id,
+      before: { phase: edition.phase },
+      after: { phase: after.phase, reason: dto.reason },
+      ipAddress,
+    });
+    if (closesSubmissions) {
       await this.audit.log({
         userId: actorId,
         action: 'edition.submissions.autoclosed',

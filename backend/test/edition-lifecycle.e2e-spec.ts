@@ -510,4 +510,120 @@ describe('edition lifecycle', () => {
       );
     });
   });
+
+  describe('rolling back an announcement', () => {
+    it('jumps back across multiple phases at once, requires a reason, and leaves nominees intact', async () => {
+      const editionId = (await createEdition({ year: 2051, slug: '2051', titleLo: 'ງານ 2051' })).body
+        .data.id;
+      const templateId = await categoryTemplate(h, 'rollback', 'ສາຂາທົດສອບການຖອນ');
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+      const creator = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທົດສອບຖອນ', slug: 'test-rollback' })
+          .expect(201)
+      ).body.data;
+      const nomination = (
+        await api(h)
+          .post(path(`/admin/categories/${categoryId}/nominations`))
+          .set(h.auth)
+          .send({ creatorId: creator.id })
+          .expect(201)
+      ).body.data;
+      await api(h)
+        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      for (const phase of ['PUBLISHED', 'NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED']) {
+        await api(h)
+          .patch(path(`/admin/editions/${editionId}/phase`))
+          .set(h.auth)
+          .send({ phase })
+          .expect(200);
+      }
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(400);
+
+      // Forward or sideways is refused — rollback only moves backward, that
+      // is what `changePhase` is for.
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+        .set(h.auth)
+        .send({ phase: 'WINNERS_ANNOUNCED', reason: 'ທົດສອບການປະຕິເສດ' })
+        .expect(400);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED', reason: 'ປະກາດຜິດປີ ຕ້ອງແກ້ໄຂກ່ອນ' })
+        .expect(200);
+
+      const after = await api(h).get(path(`/admin/editions/${editionId}`)).set(h.auth).expect(200);
+      expect(after.body.data.phase).toBe('PUBLISHED');
+
+      // The winner picked earlier is untouched — a rollback only hides the
+      // announcement, it never rewrites what was decided.
+      const nominations = await api(h)
+        .get(path(`/admin/categories/${categoryId}/nominations`))
+        .set(h.auth)
+        .expect(200);
+      expect(nominations.body.data).toHaveLength(1);
+      expect(nominations.body.data[0].isWinner).toBe(true);
+
+      const audit = await api(h)
+        .get(path('/admin/audit?perPage=100&action=edition.phase.rolledback'))
+        .set(h.auth)
+        .expect(200);
+      const entry = audit.body.data.find(
+        (row: { targetId: string; after: { reason?: string } }) => row.targetId === editionId,
+      );
+      expect(entry?.after?.reason).toBe('ປະກາດຜິດປີ ຕ້ອງແກ້ໄຂກ່ອນ');
+    });
+
+    it('closes the submission switch automatically when rolling all the way back to draft', async () => {
+      const editionId = (await createEdition({ year: 2052, slug: '2052', titleLo: 'ງານ 2052' })).body
+        .data.id;
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .set(h.auth)
+        .send({ submissionsOpen: true })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+        .set(h.auth)
+        .send({ phase: 'DRAFT', reason: 'ປະກາດຜິດ edition ຕ້ອງເອົາອອກຈາກສາທາລະນະທັງໝົດ' })
+        .expect(200);
+
+      const after = await api(h).get(path(`/admin/editions/${editionId}`)).set(h.auth).expect(200);
+      expect(after.body.data.phase).toBe('DRAFT');
+      expect(after.body.data.submissionsOpen).toBe(false);
+
+      const audit = await api(h)
+        .get(path('/admin/audit?perPage=100&action=edition.submissions.autoclosed'))
+        .set(h.auth)
+        .expect(200);
+      expect(audit.body.data.some((entry: { targetId: string }) => entry.targetId === editionId)).toBe(
+        true,
+      );
+    });
+  });
 });

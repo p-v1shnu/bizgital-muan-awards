@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Req } from '@nestjs/common';
+import { AdminRole } from '@prisma/client';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 
@@ -8,6 +9,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { EditionsService } from './editions.service';
 import { PreviewService } from '../public-site/preview.service';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RollbackPhaseDto } from './dto/rollback-phase.dto';
 import { SubmissionsSwitchDto } from './dto/submissions-switch.dto';
 import { UpdateEditionDto } from './dto/update-edition.dto';
 
@@ -74,6 +77,18 @@ export class EditionsAdminController {
     @Req() req: Request,
   ) {
     return this.editions.changePhase(id, dto, actor.id, req.ip);
+  }
+
+  @Roles(AdminRole.SUPER_ADMIN)
+  @Patch(':id/phase/rollback')
+  @ApiOperation({ summary: 'Move the edition backward through its phases — SUPER_ADMIN only, requires a reason' })
+  rollbackPhase(
+    @Param('id') id: string,
+    @Body() dto: RollbackPhaseDto,
+    @CurrentUser() actor: AuthenticatedUser,
+    @Req() req: Request,
+  ) {
+    return this.editions.rollbackPhase(id, dto, actor.id, req.ip);
   }
 
   @Patch(':id/submissions')
