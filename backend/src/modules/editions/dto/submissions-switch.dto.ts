@@ -1,7 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsDateString, IsOptional } from 'class-validator';
 
-/** The submission form switch, independent of phase (PRD §4.2). */
+/**
+ * The submission form switch. Its own timing (PRD §4.2), but not independent
+ * of phase any more: it may only be turned on for a PUBLISHED edition — never
+ * a draft nobody can see yet, and never one whose nominees are already
+ * announced.
+ */
 export class SubmissionsSwitchDto {
   @ApiProperty()
   @IsBoolean()

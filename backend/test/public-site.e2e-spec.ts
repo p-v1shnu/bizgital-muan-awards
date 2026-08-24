@@ -288,34 +288,77 @@ describe('public site', () => {
    * already been and gone.
    */
   describe('the submission form endpoint', () => {
+    // editionId (2027) is already WINNERS_ANNOUNCED by this point, and a
+    // switch may only turn on for a PUBLISHED year — so these run against
+    // editions of their own instead of reusing it.
+    let openId: string;
+
     it('says nothing has ever opened, when nothing has', async () => {
       const response = await api(h).get(path('/submission-form')).expect(200);
       expect(response.body.data.state).toBe('never-opened');
     });
 
     it('returns the open year and its categories once opened', async () => {
+      openId = (
+        await api(h)
+          .post(path('/admin/editions'))
+          .set(h.auth)
+          .send({ year: 2050, slug: '2050', titleLo: 'ມ່ວນອາວອດສ໌ 2050' })
+          .expect(201)
+      ).body.data.id;
+      const templateId = await categoryTemplate(h, 'form-test', 'ສາຂາທົດສອບຟອມ');
       await api(h)
-        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .post(path(`/admin/editions/${openId}/categories`))
+        .set(h.auth)
+        .send({ templateId })
+        .expect(201);
+      await api(h)
+        .patch(path(`/admin/editions/${openId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+      await api(h)
+        .patch(path(`/admin/editions/${openId}/submissions`))
         .set(h.auth)
         .send({ submissionsOpen: true })
         .expect(200);
 
       const response = await api(h).get(path('/submission-form')).expect(200);
       expect(response.body.data.state).toBe('open');
-      expect(response.body.data.edition.year).toBe(2027);
+      expect(response.body.data.edition.year).toBe(2050);
       expect(response.body.data.categories).toHaveLength(1);
     });
 
     it('names the year that closed, rather than saying it never opened', async () => {
       await api(h)
-        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .patch(path(`/admin/editions/${openId}/submissions`))
         .set(h.auth)
         .send({ submissionsOpen: false })
         .expect(200);
 
       const response = await api(h).get(path('/submission-form')).expect(200);
       expect(response.body.data.state).toBe('closed');
-      expect(response.body.data.edition.year).toBe(2027);
+      expect(response.body.data.edition.year).toBe(2050);
+    });
+
+    it('points forward to a newer published year instead, once one exists', async () => {
+      const upcomingId = (
+        await api(h)
+          .post(path('/admin/editions'))
+          .set(h.auth)
+          .send({ year: 2051, slug: '2051', titleLo: 'ມ່ວນອາວອດສ໌ 2051' })
+          .expect(201)
+      ).body.data.id;
+      await api(h)
+        .patch(path(`/admin/editions/${upcomingId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+
+      const response = await api(h).get(path('/submission-form')).expect(200);
+      expect(response.body.data.state).toBe('upcoming');
+      expect(response.body.data.edition.year).toBe(2051);
+      expect(response.body.data.previousClosed.year).toBe(2050);
     });
   });
 

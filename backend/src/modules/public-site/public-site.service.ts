@@ -245,12 +245,31 @@ export class PublicSiteService {
   async submissionForm() {
     const edition = await this.editions.findAcceptingSubmissions();
     if (!edition) {
-      // The most recent year that ever took entries, if there is one — its
-      // deadline is what a late arrival is looking for.
-      const closed = await this.prisma.edition.findFirst({
-        where: { phase: { in: VISIBLE }, submissionsOpenedAt: { not: null } },
-        orderBy: { year: 'desc' },
-      });
+      // A newer year already published but never yet opened outranks any
+      // older one that has already been through its own cycle — someone
+      // arriving between two editions is looking forward to the next one,
+      // not back at a cycle that has nothing left to do with them.
+      const [upcoming, closed] = await Promise.all([
+        this.prisma.edition.findFirst({
+          where: { phase: { in: VISIBLE }, submissionsOpenedAt: null },
+          orderBy: { year: 'asc' },
+        }),
+        // The most recent year that ever took entries, if there is one — its
+        // deadline is what a late arrival is looking for.
+        this.prisma.edition.findFirst({
+          where: { phase: { in: VISIBLE }, submissionsOpenedAt: { not: null } },
+          orderBy: { year: 'desc' },
+        }),
+      ]);
+
+      if (upcoming) {
+        return {
+          state: 'upcoming' as const,
+          edition: this.editionShape(upcoming),
+          previousClosed: closed ? this.editionShape(closed) : null,
+        };
+      }
+
       return closed
         ? {
             state: 'closed' as const,

@@ -121,19 +121,29 @@ describe('edition lifecycle', () => {
     });
   });
 
-  describe('the submission switch is independent of phase', () => {
+  describe('the submission switch requires a published edition', () => {
     let firstId: string;
     let secondId: string;
 
     beforeAll(async () => {
       firstId = (await createEdition({ year: 2031, slug: '2031', titleLo: 'ງານ 2031' })).body.data.id;
       secondId = (await createEdition({ year: 2032, slug: '2032', titleLo: 'ງານ 2032' })).body.data.id;
+      for (const id of [firstId, secondId]) {
+        await api(h).patch(path(`/admin/editions/${id}/phase`)).set(h.auth).send({ phase: 'PUBLISHED' }).expect(200);
+      }
     });
 
     const setSubmissions = (id: string, body: Record<string, unknown>) =>
       api(h).patch(path(`/admin/editions/${id}/submissions`)).set(h.auth).send(body);
 
-    it('opens on a draft year — phase is not involved', async () => {
+    it('refuses to open on a draft year', async () => {
+      const draftId = (await createEdition({ year: 2033, slug: '2033', titleLo: 'ງານ 2033' })).body.data
+        .id;
+      const response = await setSubmissions(draftId, { submissionsOpen: true }).expect(400);
+      expect(response.body.message).toContain('PUBLISHED');
+    });
+
+    it('opens on a published year', async () => {
       await setSubmissions(firstId, { submissionsOpen: true }).expect(200);
       const open = await api(h).get(path('/editions/accepting-submissions')).expect(200);
       expect(open.body.data.year).toBe(2031);
@@ -170,6 +180,52 @@ describe('edition lifecycle', () => {
       });
       const open = await api(h).get(path('/editions/accepting-submissions')).expect(200);
       expect(open.body.data).toBeNull();
+    });
+
+    it('closes automatically once nominees are announced, and refuses to reopen', async () => {
+      // secondId's raw switch is still `true` from above — only the elapsed
+      // close date makes it read as shut — so this is exactly the case of a
+      // switch left on that announcing has to catch.
+      const templateId = await categoryTemplate(h, 'auto-close', 'ສາຂາທົດສອບການປິດອັດຕະໂນມັດ');
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${secondId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+      const creator = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທົດສອບ', slug: 'test-auto-close' })
+          .expect(201)
+      ).body.data;
+      await api(h)
+        .post(path(`/admin/categories/${categoryId}/nominations`))
+        .set(h.auth)
+        .send({ creatorId: creator.id })
+        .expect(201);
+
+      await api(h)
+        .patch(path(`/admin/editions/${secondId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(200);
+
+      const after = await api(h).get(path(`/admin/editions/${secondId}`)).set(h.auth).expect(200);
+      expect(after.body.data.submissionsOpen).toBe(false);
+
+      const reopen = await setSubmissions(secondId, { submissionsOpen: true }).expect(400);
+      expect(reopen.body.message).toContain('PUBLISHED');
+
+      const audit = await api(h)
+        .get(path('/admin/audit?perPage=100&action=edition.submissions.autoclosed'))
+        .set(h.auth)
+        .expect(200);
+      expect(audit.body.data.some((entry: { targetId: string }) => entry.targetId === secondId)).toBe(
+        true,
+      );
     });
   });
 
