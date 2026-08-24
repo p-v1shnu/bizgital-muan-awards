@@ -24,9 +24,13 @@ ENV NODE_ENV=production
 ENV TZ=Asia/Vientiane
 RUN apk add --no-cache tzdata
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# `--chown` on every line: without it these land owned by root, and the
+# `node` user below can create files nowhere under /app — including its own
+# `.next/cache`, which Next tries to create at runtime and silently fails to
+# on every request, logged as "Failed to update prerender cache".
+COPY --from=builder --chown=node:node /app/public ./public
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
 USER node
 EXPOSE 3000
