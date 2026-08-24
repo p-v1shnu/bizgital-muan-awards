@@ -136,4 +136,5 @@ export interface OpenSubmissionForm {
 export type SubmissionForm =
   | OpenSubmissionForm
   | { state: 'closed'; edition: PublicEditionSummary; closedAt: string | null }
+  | { state: 'upcoming'; edition: PublicEditionSummary; previousClosed: PublicEditionSummary | null }
   | { state: 'never-opened' };

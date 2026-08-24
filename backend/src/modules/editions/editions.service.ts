@@ -192,7 +192,18 @@ export class EditionsService {
 
     await this.assertAnnouncable(edition.id, dto.phase);
 
-    const after = await this.prisma.edition.update({ where: { id }, data: { phase: dto.phase } });
+    // Announcing nominees makes the submission window meaningless — nobody
+    // should still be able to send in a name for a shortlist that already
+    // exists. A switch left on past that point is a forgotten step, not a
+    // choice, so it is turned off here rather than merely warned about.
+    const autoCloses =
+      edition.submissionsOpen &&
+      (dto.phase === EditionPhase.NOMINEES_ANNOUNCED || dto.phase === EditionPhase.WINNERS_ANNOUNCED);
+
+    const after = await this.prisma.edition.update({
+      where: { id },
+      data: { phase: dto.phase, ...(autoCloses ? { submissionsOpen: false } : {}) },
+    });
     await this.audit.log({
       userId: actorId,
       action: 'edition.phase.changed',
@@ -202,12 +213,26 @@ export class EditionsService {
       after: { phase: after.phase },
       ipAddress,
     });
+    if (autoCloses) {
+      await this.audit.log({
+        userId: actorId,
+        action: 'edition.submissions.autoclosed',
+        targetType: 'Edition',
+        targetId: id,
+        before: { submissionsOpen: true },
+        after: { submissionsOpen: false },
+        ipAddress,
+      });
+    }
     return after;
   }
 
   /**
    * Opening entries on one year closes them everywhere else: at most one
-   * edition may collect submissions at a time (PRD §4.2).
+   * edition may collect submissions at a time (PRD §4.2). And only a
+   * PUBLISHED edition may open at all — not a draft nobody can see yet, and
+   * not one whose nominees are already announced, which closes the window
+   * automatically (see `changePhase`) and must not be reopened behind it.
    */
   async setSubmissions(
     id: string,
@@ -218,6 +243,11 @@ export class EditionsService {
     const edition = await this.findById(id);
     const closeAt = dto.submissionsCloseAt ? new Date(dto.submissionsCloseAt) : null;
 
+    if (dto.submissionsOpen && edition.phase !== EditionPhase.PUBLISHED) {
+      throw new BadRequestException(
+        `Cannot open submissions while the edition is ${edition.phase} — only a PUBLISHED edition may accept entries`,
+      );
+    }
     if (dto.submissionsOpen && closeAt && closeAt.getTime() <= Date.now()) {
       throw new BadRequestException('submissionsCloseAt must be in the future');
     }
