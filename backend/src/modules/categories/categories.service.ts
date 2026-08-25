@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { EditionPhase } from '@prisma/client';
 
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -36,7 +37,7 @@ export class CategoriesService {
   }
 
   async create(editionId: string, dto: CreateCategoryDto, actorId: string, ipAddress?: string) {
-    await this.assertEditionExists(editionId);
+    await this.assertCanAddCategories(editionId);
 
     const template = await this.prisma.categoryTemplate.findFirst({
       where: { id: dto.templateId, deletedAt: null },
@@ -155,7 +156,7 @@ export class CategoriesService {
    * already present are skipped rather than failing the whole copy.
    */
   async copyFrom(editionId: string, dto: CopyCategoriesDto, actorId: string, ipAddress?: string) {
-    await this.assertEditionExists(editionId);
+    await this.assertCanAddCategories(editionId);
     if (dto.fromEditionId === editionId) {
       throw new BadRequestException('Pick a different edition to copy from');
     }
@@ -211,9 +212,23 @@ export class CategoriesService {
     return { copied: fresh.length, skipped: source.length - fresh.length };
   }
 
-  private async assertEditionExists(editionId: string) {
+  /**
+   * The shortlist is fixed the moment it goes public: a category appearing
+   * after nominees are announced would be a prize nobody was told about
+   * until it already had a result. Deleting one is guarded a different way
+   * already — `remove` refuses a category that still holds a nominee, and
+   * every category is required to have one before NOMINEES_ANNOUNCED — so
+   * only adding needs a phase check of its own. Reopening the list means
+   * rolling the edition back first (SUPER_ADMIN), not editing around it.
+   */
+  private async assertCanAddCategories(editionId: string) {
     const edition = await this.prisma.edition.findUnique({ where: { id: editionId } });
     if (!edition) throw new NotFoundException('Edition not found');
+    if (edition.phase !== EditionPhase.DRAFT && edition.phase !== EditionPhase.PUBLISHED) {
+      throw new BadRequestException(
+        `Cannot add a category once nominees are announced (edition is ${edition.phase}) — roll the phase back first`,
+      );
+    }
   }
 
   private async assertSlugFree(editionId: string, slug: string) {
