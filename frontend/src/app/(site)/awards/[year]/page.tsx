@@ -241,8 +241,13 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               )}
               {/* Outlined rather than filled, as the homepage hero's highlight
                   button is: three quiet chips beside the submit button would
-                  compete with it for the same attention. */}
-              {safeHttpUrl(edition.ticketUrl) && (
+                  compete with it for the same attention.
+
+                  Both gated on phase, not only on the URL being set: buying a
+                  ticket or casting a vote for a night that has already
+                  happened and announced its winners is not a live action any
+                  more, whatever the field still holds. */}
+              {edition.phase !== 'WINNERS_ANNOUNCED' && safeHttpUrl(edition.ticketUrl) && (
                 <ActionLink
                   href={safeHttpUrl(edition.ticketUrl) as string}
                   tone="quiet"
@@ -252,7 +257,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   ຊື້ບັດ
                 </ActionLink>
               )}
-              {safeHttpUrl(edition.voteUrl) && (
+              {edition.phase !== 'WINNERS_ANNOUNCED' && safeHttpUrl(edition.voteUrl) && (
                 <ActionLink
                   href={safeHttpUrl(edition.voteUrl) as string}
                   tone="quiet"

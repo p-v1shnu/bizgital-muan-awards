@@ -611,8 +611,10 @@ function CurrentEditionCard({
           </ActionLink>
         )}
         {/* Ticketing and voting are run elsewhere, so these are secondary and
-            marked as leaving the site (PRD §7.4). */}
-        {safeHttpUrl(edition.ticketUrl) && (
+            marked as leaving the site (PRD §7.4) — and gone once winners are
+            announced, the same as on the year's own page: a link to buy a
+            ticket for a night that already happened is not live any more. */}
+        {edition.phase !== 'WINNERS_ANNOUNCED' && safeHttpUrl(edition.ticketUrl) && (
           <ActionLink
             href={safeHttpUrl(edition.ticketUrl) as string}
             tone="quiet"
@@ -622,7 +624,7 @@ function CurrentEditionCard({
             ຊື້ບັດ
           </ActionLink>
         )}
-        {safeHttpUrl(edition.voteUrl) && (
+        {edition.phase !== 'WINNERS_ANNOUNCED' && safeHttpUrl(edition.voteUrl) && (
           <ActionLink
             href={safeHttpUrl(edition.voteUrl) as string}
             tone="quiet"
