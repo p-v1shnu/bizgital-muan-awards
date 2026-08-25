@@ -668,10 +668,20 @@ describe('edition lifecycle', () => {
       // Still allowed while PUBLISHED — the checklist is only assembled up
       // to this point.
       const secondTemplateId = await categoryTemplate(h, 'lock-test-2', 'ສາຂາທົດສອບການລັອກ 2');
+      const secondCategoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId: secondTemplateId })
+          .expect(201)
+      ).body.data.id;
+      // Every category needs a nominee before the edition can announce at
+      // all — otherwise the pre-existing empty-category rule blocks the
+      // phase move below for a reason that has nothing to do with this test.
       await api(h)
-        .post(path(`/admin/editions/${editionId}/categories`))
+        .post(path(`/admin/categories/${secondCategoryId}/nominations`))
         .set(h.auth)
-        .send({ templateId: secondTemplateId })
+        .send({ creatorId: creator.id })
         .expect(201);
 
       await api(h)
