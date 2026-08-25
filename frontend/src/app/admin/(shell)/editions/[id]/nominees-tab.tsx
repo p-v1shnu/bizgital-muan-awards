@@ -30,15 +30,19 @@ export function NomineesTab({ edition }: { edition: Edition }) {
 
   // Only mounted once the list is here, which is what lets the panel choose the
   // category it opens on without an effect — see the comment below.
-  return <CategoryPanel categories={categories} categoriesPath={categoriesPath} />;
+  return (
+    <CategoryPanel categories={categories} categoriesPath={categoriesPath} phase={edition.phase} />
+  );
 }
 
 function CategoryPanel({
   categories,
   categoriesPath,
+  phase,
 }: {
   categories: Category[];
   categoriesPath: string;
+  phase: Edition['phase'];
 }) {
   /**
    * Opens on the first category that still needs work, since that is why the
@@ -95,7 +99,7 @@ function CategoryPanel({
         </div>
 
         {selected ? (
-          <NomineeList category={selected} categoriesPath={categoriesPath} />
+          <NomineeList category={selected} categoriesPath={categoriesPath} phase={phase} />
         ) : (
           <EmptyState title="ເລືອກສາຂາຢູ່ຊ້າຍມື" />
         )}
@@ -104,7 +108,16 @@ function CategoryPanel({
   );
 }
 
-function NomineeList({ category, categoriesPath }: { category: Category; categoriesPath: string }) {
+function NomineeList({
+  category,
+  categoriesPath,
+  phase,
+}: {
+  category: Category;
+  categoriesPath: string;
+  phase: Edition['phase'];
+}) {
+  const winnersLocked = phase === 'WINNERS_ANNOUNCED';
   const path = `/admin/categories/${category.id}/nominations`;
   const { data, isLoading, error } = useApi<Nomination[]>(path);
   const [removing, setRemoving] = useState<Nomination | null>(null);
@@ -224,12 +237,17 @@ function NomineeList({ category, categoriesPath }: { category: Category; categor
             <div className="ml-auto flex items-center gap-3">
               <button
                 type="button"
-                disabled={setWinner.isPending}
+                disabled={setWinner.isPending || (winnersLocked && nomination.isWinner)}
+                title={
+                  winnersLocked && nomination.isWinner
+                    ? 'ປະກາດຜູ້ຊະນະໄປແລ້ວ ຈະຖອນອອກໃຫ້ບໍ່ມີຜູ້ຊະນະບໍ່ໄດ້ — ຕິດຄົນອື່ນແທນ ຫຼື ຖອຍເຟສກ່ອນ'
+                    : undefined
+                }
                 onClick={() =>
                   setWinner.mutate({ id: nomination.id, isWinner: !nomination.isWinner })
                 }
                 className={cn(
-                  'flex items-center gap-2 whitespace-nowrap text-xs',
+                  'flex items-center gap-2 whitespace-nowrap text-xs disabled:cursor-not-allowed disabled:opacity-60',
                   nomination.isWinner ? 'font-bold text-brand-deep' : 'text-ink-3 hover:text-ink',
                 )}
               >

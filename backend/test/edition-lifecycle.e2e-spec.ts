@@ -722,4 +722,133 @@ describe('edition lifecycle', () => {
         .expect(201);
     });
   });
+
+  describe('a crowned winner cannot be un-crowned to nobody once announced', () => {
+    it('refuses to un-crown once winners are announced, but crowning someone else still works', async () => {
+      const editionId = (await createEdition({ year: 2055, slug: '2055', titleLo: 'ງານ 2055' })).body
+        .data.id;
+      const templateId = await categoryTemplate(h, 'crown-lock', 'ສາຂາທົດສອບການຖອນຜູ້ຊະນະ');
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+
+      const first = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທີ 1', slug: 'crown-lock-1' })
+          .expect(201)
+      ).body.data;
+      const second = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທີ 2', slug: 'crown-lock-2' })
+          .expect(201)
+      ).body.data;
+
+      const firstNomination = (
+        await api(h)
+          .post(path(`/admin/categories/${categoryId}/nominations`))
+          .set(h.auth)
+          .send({ creatorId: first.id })
+          .expect(201)
+      ).body.data;
+      await api(h)
+        .post(path(`/admin/categories/${categoryId}/nominations`))
+        .set(h.auth)
+        .send({ creatorId: second.id })
+        .expect(201);
+
+      await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      // Before the announcement, nothing has been shown to anyone yet — free
+      // to un-crown here.
+      await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: false })
+        .expect(200);
+      await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(200);
+
+      // Nominees are public now but winners are not yet — still free to
+      // un-crown here.
+      await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: false })
+        .expect(200);
+      await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'WINNERS_ANNOUNCED' })
+        .expect(200);
+
+      const refused = await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: false })
+        .expect(400);
+      expect(refused.body.message).toContain('roll the phase back');
+
+      const nominations = await api(h)
+        .get(path(`/admin/categories/${categoryId}/nominations`))
+        .set(h.auth)
+        .expect(200);
+      expect(nominations.body.data.find((n: { id: string }) => n.id === firstNomination.id)?.isWinner).toBe(
+        true,
+      );
+
+      // Switching the crown to someone else is a different action — it never
+      // leaves the category with nobody — so it stays allowed.
+      const secondNominationId = nominations.body.data.find(
+        (n: { creatorId: string }) => n.creatorId === second.id,
+      ).id;
+      await api(h)
+        .patch(path(`/admin/nominations/${secondNominationId}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      const afterSwitch = await api(h)
+        .get(path(`/admin/categories/${categoryId}/nominations`))
+        .set(h.auth)
+        .expect(200);
+      expect(
+        afterSwitch.body.data.find((n: { id: string }) => n.id === firstNomination.id)?.isWinner,
+      ).toBe(false);
+      expect(afterSwitch.body.data.find((n: { id: string }) => n.id === secondNominationId)?.isWinner).toBe(
+        true,
+      );
+    });
+  });
 });

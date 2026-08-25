@@ -1,4 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { EditionPhase } from '@prisma/client';
 
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -79,13 +80,31 @@ export class NominationsService {
   /**
    * At most one winner per category. Crowning someone un-crowns whoever held
    * it, in the same transaction, so the category is never briefly showing two.
+   *
+   * Un-crowning outright — leaving the category with nobody, rather than
+   * crowning someone else — is refused once winners are public: that
+   * category would suddenly show no result for a prize the public already
+   * saw one for. Switching to a different nominee is unaffected, since that
+   * crowns the replacement in this same call and never leaves the category
+   * empty even for a moment. Earlier than WINNERS_ANNOUNCED, nothing has
+   * been shown to anyone yet, so un-crowning stays as free as it always was.
    */
   async setWinner(id: string, dto: SetWinnerDto, actorId: string, ipAddress?: string) {
     const nomination = await this.prisma.nomination.findUnique({
       where: { id },
-      include: { creator: true },
+      include: { creator: true, category: { include: { edition: true } } },
     });
     if (!nomination) throw new NotFoundException('Nomination not found');
+
+    if (
+      !dto.isWinner &&
+      nomination.isWinner &&
+      nomination.category.edition.phase === EditionPhase.WINNERS_ANNOUNCED
+    ) {
+      throw new BadRequestException(
+        'Cannot remove the winner once winners are announced — crown a different nominee instead, or roll the phase back first',
+      );
+    }
 
     const { after, dethroned } = await this.prisma.$transaction(async (tx) => {
       let previous: { id: string; creatorId: string }[] = [];
