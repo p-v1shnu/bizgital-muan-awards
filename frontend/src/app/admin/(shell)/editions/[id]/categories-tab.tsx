@@ -18,6 +18,11 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
   const path = `/admin/editions/${edition.id}/categories`;
   const { data, isLoading, error } = useApi<Category[]>(path);
 
+  // The shortlist is fixed the moment nominees go public — the API refuses
+  // an addition past this point too, but disabling it here means the admin
+  // sees why before clicking rather than after.
+  const locked = edition.phase !== 'DRAFT' && edition.phase !== 'PUBLISHED';
+
   const [editing, setEditing] = useState<Category | null>(null);
   const [creating, setCreating] = useState(false);
   const [copying, setCopying] = useState(false);
@@ -53,10 +58,10 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
           aside={
             <>
               <span>{data?.length ?? 0} ສາຂາ</span>
-              <Button size="sm" onClick={() => setCopying(true)}>
+              <Button size="sm" disabled={locked} onClick={() => setCopying(true)}>
                 <Copy className="size-3.5" /> ຄັດລອກຈາກປີກ່ອນ
               </Button>
-              <Button size="sm" variant="primary" onClick={() => setCreating(true)}>
+              <Button size="sm" variant="primary" disabled={locked} onClick={() => setCreating(true)}>
                 <Plus className="size-3.5" /> ເພີ່ມສາຂາ
               </Button>
             </>
@@ -74,6 +79,15 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
           </div>
         )}
 
+        {locked && (
+          <div className="p-4 pb-0">
+            <Note>
+              ປະກາດຜູ້ເຂົ້າຊີງໄປແລ້ວ — <b className="text-ink-2">ລາຍການສາຂາຄົງທີ່</b> ຈົນກວ່າຈະ
+              ຖອນການປະກາດ (ໜ້າ “ຈັດການປີ”)
+            </Note>
+          </div>
+        )}
+
         {isLoading ? (
           <LoadingBlock />
         ) : !data?.length ? (
@@ -81,7 +95,7 @@ export function CategoriesTab({ edition }: { edition: Edition }) {
             title="ຍັງບໍ່ມີສາຂາ"
             description="ເພີ່ມເອງ ຫຼື ຄັດລອກລາຍການທັງໝົດຈາກປີກ່ອນມາໃນຄລິກດຽວ"
             action={
-              <Button variant="primary" onClick={() => setCopying(true)}>
+              <Button variant="primary" disabled={locked} onClick={() => setCopying(true)}>
                 ຄັດລອກຈາກປີກ່ອນ
               </Button>
             }

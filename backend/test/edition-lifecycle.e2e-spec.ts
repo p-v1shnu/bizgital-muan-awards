@@ -626,4 +626,100 @@ describe('edition lifecycle', () => {
       );
     });
   });
+
+  describe('the category list is fixed once nominees are announced', () => {
+    it('blocks adding a category — one at a time or copied — and un-blocks it after rolling back', async () => {
+      const editionId = (await createEdition({ year: 2053, slug: '2053', titleLo: 'ງານ 2053' })).body
+        .data.id;
+      const templateId = await categoryTemplate(h, 'lock-test', 'ສາຂາທົດສອບການລັອກ');
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+      const creator = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທົດສອບລັອກ', slug: 'test-lock' })
+          .expect(201)
+      ).body.data;
+      const nomination = (
+        await api(h)
+          .post(path(`/admin/categories/${categoryId}/nominations`))
+          .set(h.auth)
+          .send({ creatorId: creator.id })
+          .expect(201)
+      ).body.data;
+      await api(h)
+        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+
+      // Still allowed while PUBLISHED — the checklist is only assembled up
+      // to this point.
+      const secondTemplateId = await categoryTemplate(h, 'lock-test-2', 'ສາຂາທົດສອບການລັອກ 2');
+      const secondCategoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId: secondTemplateId })
+          .expect(201)
+      ).body.data.id;
+      // Every category needs a nominee before the edition can announce at
+      // all — otherwise the pre-existing empty-category rule blocks the
+      // phase move below for a reason that has nothing to do with this test.
+      await api(h)
+        .post(path(`/admin/categories/${secondCategoryId}/nominations`))
+        .set(h.auth)
+        .send({ creatorId: creator.id })
+        .expect(201);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(200);
+
+      const thirdTemplateId = await categoryTemplate(h, 'lock-test-3', 'ສາຂາທົດສອບການລັອກ 3');
+      const blocked = await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ templateId: thirdTemplateId })
+        .expect(400);
+      expect(blocked.body.message).toContain('roll the phase back');
+
+      // The bulk "copy from another year" path is the same list-changing
+      // action under a different button, so it is refused the same way.
+      const otherId = (await createEdition({ year: 2054, slug: '2054', titleLo: 'ງານ 2054' })).body.data
+        .id;
+      const blockedCopy = await api(h)
+        .post(path(`/admin/editions/${editionId}/categories/copy`))
+        .set(h.auth)
+        .send({ fromEditionId: otherId })
+        .expect(400);
+      expect(blockedCopy.body.message).toContain('roll the phase back');
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase/rollback`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED', reason: 'ທົດສອບການປົດລັອກຫຼັງຈາກຖອນການປະກາດ' })
+        .expect(200);
+
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ templateId: thirdTemplateId })
+        .expect(201);
+    });
+  });
 });
