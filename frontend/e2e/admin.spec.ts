@@ -275,8 +275,12 @@ test.describe('the edition page', () => {
     const categoryId = (await category.json()).data.id;
 
     for (const [slug, nameLo] of [
-      ['crown-test-1', 'ຄົນທົດສອບຕິດຜູ້ຊະນະ 1'],
-      ['crown-test-2', 'ຄົນທົດສອບຕິດຜູ້ຊະນະ 2'],
+      // Deliberately not containing "ຜູ້ຊະນະ" — that word plus the winner
+      // count is exactly what the assertion below searches for, and a
+      // creator name containing it as a substring makes the search match
+      // twice.
+      ['crown-test-1', 'ຄົນທົດສອບ ກ'],
+      ['crown-test-2', 'ຄົນທົດສອບ ຂ'],
     ]) {
       const creator = await request.post(`${api}/admin/creators`, { headers: auth, data: { slug, nameLo } });
       await request.post(`${api}/admin/categories/${categoryId}/nominations`, {
