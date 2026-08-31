@@ -243,9 +243,58 @@ test.describe('the edition page', () => {
     await expect(page.getByRole('button', { name: /ໄປຂັ້ນ/ })).toBeEnabled();
   });
 
-  test('crowning a winner un-crowns the previous one', async ({ page }) => {
-    const url = page.url().split('?')[0];
-    await page.goto(`${url}?tab=nominees`);
+  /**
+   * A winner can only be picked once nominees are announced, so this cannot
+   * run against the seed's own 2026 — kept at PUBLISHED for the tests above —
+   * without derailing every other spec that expects 2026 to still be
+   * accepting submissions. A throwaway edition, already past that phase,
+   * keeps the two concerns apart.
+   */
+  test('crowning a winner un-crowns the previous one', async ({ page, request }) => {
+    const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
+    const login = await request.post(`${api}/auth/login`, {
+      data: { email: 'admin@muanawards.com', password: 'a-very-long-password' },
+    });
+    const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+
+    const edition = await request.post(`${api}/admin/editions`, {
+      headers: auth,
+      // Deliberately older than every other seeded year (2025/2026), so this
+      // never becomes "the latest edition" the homepage and nav point at.
+      data: { year: 2010, slug: '2010', titleLo: 'ມ່ວນອາວອດສ໌ 2010' },
+    });
+    const editionId = (await edition.json()).data.id;
+    const template = await request.post(`${api}/admin/category-templates`, {
+      headers: auth,
+      data: { slug: 'crown-test', nameLo: 'ສາຂາທົດສອບການຕິດຜູ້ຊະນະ' },
+    });
+    const category = await request.post(`${api}/admin/editions/${editionId}/categories`, {
+      headers: auth,
+      data: { templateId: (await template.json()).data.id },
+    });
+    const categoryId = (await category.json()).data.id;
+
+    for (const [slug, nameLo] of [
+      ['crown-test-1', 'ຄົນທົດສອບຕິດຜູ້ຊະນະ 1'],
+      ['crown-test-2', 'ຄົນທົດສອບຕິດຜູ້ຊະນະ 2'],
+    ]) {
+      const creator = await request.post(`${api}/admin/creators`, { headers: auth, data: { slug, nameLo } });
+      await request.post(`${api}/admin/categories/${categoryId}/nominations`, {
+        headers: auth,
+        data: { creatorId: (await creator.json()).data.id },
+      });
+    }
+
+    await request.patch(`${api}/admin/editions/${editionId}/phase`, {
+      headers: auth,
+      data: { phase: 'PUBLISHED' },
+    });
+    await request.patch(`${api}/admin/editions/${editionId}/phase`, {
+      headers: auth,
+      data: { phase: 'NOMINEES_ANNOUNCED' },
+    });
+
+    await page.goto(`/admin/editions/${editionId}?tab=nominees`);
     await page.waitForSelector('input[placeholder*="ຄົ້ນຫາຄຣີເອເຕີ"]');
 
     const winnerButtons = page.locator('button:has-text("ຜູ້ຊະນະ")');
