@@ -253,6 +253,11 @@ test.describe('the edition page', () => {
   test('crowning a winner un-crowns the previous one', async ({ page, request }) => {
     const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
     const login = await request.post(`${api}/auth/login`, {
+      // A login off this file's own shared address (203.0.113.11, set above)
+      // would be one more attempt on a budget every other test in the file
+      // already draws from — this setup needs its own address, the same
+      // reason each spec file has one.
+      headers: { 'X-Forwarded-For': '203.0.113.14' },
       data: { email: 'admin@muanawards.com', password: 'a-very-long-password' },
     });
     const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
