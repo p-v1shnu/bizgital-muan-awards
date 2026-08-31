@@ -537,19 +537,27 @@ describe('edition lifecycle', () => {
           .send({ creatorId: creator.id })
           .expect(201)
       ).body.data;
-      await api(h)
-        .patch(path(`/admin/nominations/${nomination.id}/winner`))
-        .set(h.auth)
-        .send({ isWinner: true })
-        .expect(200);
 
-      for (const phase of ['PUBLISHED', 'NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED']) {
+      for (const phase of ['PUBLISHED', 'NOMINEES_ANNOUNCED']) {
         await api(h)
           .patch(path(`/admin/editions/${editionId}/phase`))
           .set(h.auth)
           .send({ phase })
           .expect(200);
       }
+
+      // A winner can only be picked once the shortlist is locked in.
+      await api(h)
+        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'WINNERS_ANNOUNCED' })
+        .expect(200);
 
       await api(h)
         .patch(path(`/admin/editions/${editionId}/phase/rollback`))
@@ -646,18 +654,11 @@ describe('edition lifecycle', () => {
           .send({ nameLo: 'ຄົນທົດສອບລັອກ', slug: 'test-lock' })
           .expect(201)
       ).body.data;
-      const nomination = (
-        await api(h)
-          .post(path(`/admin/categories/${categoryId}/nominations`))
-          .set(h.auth)
-          .send({ creatorId: creator.id })
-          .expect(201)
-      ).body.data;
       await api(h)
-        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .post(path(`/admin/categories/${categoryId}/nominations`))
         .set(h.auth)
-        .send({ isWinner: true })
-        .expect(200);
+        .send({ creatorId: creator.id })
+        .expect(201);
 
       await api(h)
         .patch(path(`/admin/editions/${editionId}/phase`))
@@ -765,25 +766,6 @@ describe('edition lifecycle', () => {
         .expect(201);
 
       await api(h)
-        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
-        .set(h.auth)
-        .send({ isWinner: true })
-        .expect(200);
-
-      // Before the announcement, nothing has been shown to anyone yet — free
-      // to un-crown here.
-      await api(h)
-        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
-        .set(h.auth)
-        .send({ isWinner: false })
-        .expect(200);
-      await api(h)
-        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
-        .set(h.auth)
-        .send({ isWinner: true })
-        .expect(200);
-
-      await api(h)
         .patch(path(`/admin/editions/${editionId}/phase`))
         .set(h.auth)
         .send({ phase: 'PUBLISHED' })
@@ -794,8 +776,13 @@ describe('edition lifecycle', () => {
         .send({ phase: 'NOMINEES_ANNOUNCED' })
         .expect(200);
 
-      // Nominees are public now but winners are not yet — still free to
-      // un-crown here.
+      // The shortlist is locked in now — crowning, un-crowning, and
+      // re-crowning are all free in this window, before winners are public.
+      await api(h)
+        .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
       await api(h)
         .patch(path(`/admin/nominations/${firstNomination.id}/winner`))
         .set(h.auth)
@@ -849,6 +836,67 @@ describe('edition lifecycle', () => {
       expect(afterSwitch.body.data.find((n: { id: string }) => n.id === secondNominationId)?.isWinner).toBe(
         true,
       );
+    });
+  });
+
+  describe('a winner cannot be picked before nominees are announced', () => {
+    it('refuses while draft or published, and allows it from nominees-announced onward', async () => {
+      const editionId = (await createEdition({ year: 2056, slug: '2056', titleLo: 'ງານ 2056' })).body
+        .data.id;
+      const templateId = await categoryTemplate(h, 'early-crown', 'ສາຂາທົດສອບການຕັດສິນກ່ອນເວລາ');
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+      const creator = (
+        await api(h)
+          .post(path('/admin/creators'))
+          .set(h.auth)
+          .send({ nameLo: 'ຄົນທົດສອບຕັດສິນກ່ອນເວລາ', slug: 'early-crown' })
+          .expect(201)
+      ).body.data;
+      const nomination = (
+        await api(h)
+          .post(path(`/admin/categories/${categoryId}/nominations`))
+          .set(h.auth)
+          .send({ creatorId: creator.id })
+          .expect(201)
+      ).body.data;
+
+      const whileDraft = await api(h)
+        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(400);
+      expect(whileDraft.body.message).toContain('shortlist is not locked');
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'PUBLISHED' })
+        .expect(200);
+
+      const whilePublished = await api(h)
+        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(400);
+      expect(whilePublished.body.message).toContain('shortlist is not locked');
+
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/phase`))
+        .set(h.auth)
+        .send({ phase: 'NOMINEES_ANNOUNCED' })
+        .expect(200);
+
+      await api(h)
+        .patch(path(`/admin/nominations/${nomination.id}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
     });
   });
 });

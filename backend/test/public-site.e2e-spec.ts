@@ -48,13 +48,6 @@ describe('public site', () => {
       ),
     );
     winnerNominationId = nominations[0].body.data.id;
-
-    // The winner is decided now, long before it is announced.
-    await api(h)
-      .patch(path(`/admin/nominations/${winnerNominationId}/winner`))
-      .set(h.auth)
-      .send({ isWinner: true })
-      .expect(200);
   });
 
   afterAll(() => h.close());
@@ -212,7 +205,18 @@ describe('public site', () => {
   });
 
   describe('once nominees are announced', () => {
-    beforeAll(() => advance('NOMINEES_ANNOUNCED'));
+    beforeAll(async () => {
+      await advance('NOMINEES_ANNOUNCED');
+
+      // The winner is decided now, long before it is announced — this is the
+      // one window where a winner can be chosen at all: the shortlist is
+      // locked in, but the result itself is still unpublished.
+      await api(h)
+        .patch(path(`/admin/nominations/${winnerNominationId}/winner`))
+        .set(h.auth)
+        .send({ isWinner: true })
+        .expect(200);
+    });
 
     it('lists the nominees', async () => {
       const response = await api(h).get(path('/editions/2027')).expect(200);
