@@ -285,7 +285,7 @@ describe('edition lifecycle', () => {
           .send({ slug: 'library-description-no-copy', nameLo: 'ສາຂາທົດສອບບໍ່ຄັດລອກ', descriptionLo: 'ຄຳອະທິບາຍໃນຄັງ' })
           .expect(201)
       ).body.data.id;
-      const editionId = (await createEdition({ year: 2055, slug: '2055', titleLo: 'ງານ 2055' })).body.data.id;
+      const editionId = (await createEdition({ year: 2057, slug: '2057', titleLo: 'ງານ 2057' })).body.data.id;
 
       const category = await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
