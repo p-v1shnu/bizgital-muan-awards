@@ -102,6 +102,12 @@ export class EditionsAdminController {
     return this.editions.setSubmissions(id, dto, actor.id, req.ip);
   }
 
+  @Patch(':id/submissions/reset')
+  @ApiOperation({ summary: 'Put the submission form back to "never opened" — any admin' })
+  resetSubmissions(@Param('id') id: string, @CurrentUser() actor: AuthenticatedUser, @Req() req: Request) {
+    return this.editions.resetSubmissions(id, actor.id, req.ip);
+  }
+
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({ summary: 'Delete a draft edition' })

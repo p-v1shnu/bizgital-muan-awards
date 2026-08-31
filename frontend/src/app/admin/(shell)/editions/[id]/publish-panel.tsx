@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader, FoilRule } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/dialog';
 import { ErrorNote, Note } from '@/components/ui/feedback';
-import { Field, Input, Switch, Textarea } from '@/components/ui/field';
+import { Field, Input, Textarea } from '@/components/ui/field';
 import { PHASE_LABEL } from '@/components/ui/badge';
 import { PHASE_ORDER } from '@/components/admin/phase-steps';
 import { fromVientianeInput, toVientianeInput } from '@/lib/dates';
 import { useApiMutation } from '@/lib/api/hooks';
 import { useIsSuperAdmin } from '@/lib/auth-context';
+import { cn } from '@/lib/utils';
 import type { Category, Edition, EditionPhase } from '@/types/api';
 
 /**
@@ -183,38 +184,60 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
     'PATCH',
     ['/admin/editions', '/admin/dashboard'],
   );
+  const resetSubmissions = useApiMutation<undefined>(
+    `/admin/editions/${edition.id}/submissions/reset`,
+    'PATCH',
+    ['/admin/editions', '/admin/dashboard'],
+  );
 
   function save(open: boolean, closeIso: string | null) {
     setSubmissions.mutate({ submissionsOpen: open, submissionsCloseAt: closeIso });
   }
 
+  const pending = setSubmissions.isPending || resetSubmissions.isPending;
+  const current: 'never' | 'open' | 'closed' = edition.submissionsOpen
+    ? 'open'
+    : edition.submissionsOpenedAt
+      ? 'closed'
+      : 'never';
+  const canOpen = edition.phase === 'PUBLISHED';
+
   return (
     <Card>
       <CardHeader title="ສະຫວິດ 2 · ຟອມສົ່ງລາຍຊື່" aside="ແຍກຈາກສະຫວິດ 1" />
       <CardBody>
-        <div className="mb-3 flex items-center gap-3">
-          <Switch
-            checked={edition.submissionsOpen}
-            disabled={setSubmissions.isPending}
-            label="ເປີດ/ປິດຟອມສົ່ງລາຍຊື່"
-            onChange={(next) => save(next, fromVientianeInput(closeAt))}
-          />
-          <span>
-            <span className="block text-[13px] font-semibold text-ink">
-              {/* Three labels, not two — "never opened" reads the same as
-                  "closed" off the switch alone, and a backfilled year that
-                  is done for good must not be told it is merely closed. */}
-              {edition.submissionsOpen
-                ? 'ເປີດຢູ່'
-                : edition.submissionsOpenedAt
-                  ? 'ປິດຢູ່'
-                  : 'ຍັງບໍ່ເປີດຮັບ'}
-            </span>
-            <span className="block text-[11.5px] text-ink-3">
-              {edition.submissionsOpen ? 'ຄົນນອກສົ່ງລາຍຊື່ໄດ້' : 'ຄົນນອກສົ່ງລາຍຊື່ບໍ່ໄດ້'}
-            </span>
-          </span>
+        <div className="mb-1 flex gap-1.5" role="radiogroup" aria-label="ສະຖານະຟອມສົ່ງລາຍຊື່">
+          <StateButton
+            active={current === 'never'}
+            disabled={pending || current === 'never'}
+            onClick={() => resetSubmissions.mutate(undefined)}
+          >
+            ຍັງບໍ່ເປີດຮັບ
+          </StateButton>
+          <StateButton
+            active={current === 'open'}
+            disabled={pending || current === 'open' || !canOpen}
+            title={!canOpen ? 'ຕ້ອງ “ເຜີຍແຜ່” ປີນີ້ກ່ອນ ຈຶ່ງຈະເປີດຮັບໄດ້' : undefined}
+            onClick={() => save(true, fromVientianeInput(closeAt))}
+          >
+            ເປີດຮັບ
+          </StateButton>
+          <StateButton
+            active={current === 'closed'}
+            disabled={pending || current === 'closed' || current === 'never'}
+            title={current === 'never' ? 'ຍັງບໍ່ເຄີຍເປີດຮັບ ຈຶ່ງປິດບໍ່ໄດ້' : undefined}
+            onClick={() => save(false, fromVientianeInput(closeAt))}
+          >
+            ປິດຮັບ
+          </StateButton>
         </div>
+        <p className="mb-3 text-[11.5px] text-ink-3">
+          {current === 'open'
+            ? 'ຄົນນອກສົ່ງລາຍຊື່ໄດ້'
+            : current === 'closed'
+              ? 'ຄົນນອກສົ່ງລາຍຊື່ບໍ່ໄດ້ — ເຄີຍເປີດມາກ່ອນແລ້ວ'
+              : 'ຄົນນອກສົ່ງລາຍຊື່ບໍ່ໄດ້ — ຍັງບໍ່ເຄີຍເປີດເລີຍ'}
+        </p>
 
         <Field label="ວັນປິດຮັບອັດຕະໂນມັດ" hint="— ບໍ່ບັງຄັບ · ເວລາລາວ (UTC+7)">
           <Input
@@ -230,13 +253,55 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
         </Field>
 
         {setSubmissions.error && <ErrorNote error={setSubmissions.error} />}
+        {resetSubmissions.error && <ErrorNote error={resetSubmissions.error} />}
 
         <Note>
           ເປີດຟອມໄດ້ <b className="text-ink-2">ປີດຽວໃນເວລາດຽວ</b> — ເປີດປີນີ້
           ລະບົບຈະປິດປີອື່ນໃຫ້ອັດຕະໂນມັດ ແລະ ບັນທຶກໄວ້ໃນປະຫວັດ
         </Note>
+        {current !== 'never' && (
+          <Note>
+            ກົດ <b className="text-ink-2">“ຍັງບໍ່ເປີດຮັບ”</b> ຄືນ — ລຶບຮ່ອງຮອຍວ່າເຄີຍເປີດມາກ່ອນອອກໝົດ
+            (ລວມທັງວັນປິດຮັບອັດຕະໂນມັດ) ເຖິງຈະມີຄົນສົ່ງລາຍຊື່ມາແລ້ວກໍ່ຕາມ — ໜ້າເວັບຈະບອກຄົນນອກວ່າ “ຍັງບໍ່ເປີດ”
+            ບໍ່ແມ່ນ “ປິດແລ້ວ”
+          </Note>
+        )}
       </CardBody>
     </Card>
+  );
+}
+
+function StateButton({
+  active,
+  disabled,
+  title,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  disabled?: boolean;
+  title?: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={active}
+      disabled={disabled}
+      title={title}
+      onClick={onClick}
+      className={cn(
+        'rounded-[var(--radius-ui-sm)] border px-3 py-1.5 text-[12.5px] font-semibold transition-colors',
+        'disabled:cursor-not-allowed disabled:opacity-60',
+        active
+          ? 'border-brand-deep bg-brand-deep text-white'
+          : 'border-rule bg-white text-ink-2 hover:bg-panel-2',
+      )}
+    >
+      {children}
+    </button>
   );
 }
 

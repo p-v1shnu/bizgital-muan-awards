@@ -371,6 +371,44 @@ export class EditionsService {
   }
 
   /**
+   * Puts the form back to "never opened" — an explicit admin call, not
+   * something `setSubmissions` does on its own. `submissionsOpenedAt`
+   * otherwise only ever gets set once and is never cleared, which is what
+   * lets the public site tell a year that is truly closed apart from one
+   * that never took entries; this is the one deliberate exception, for an
+   * admin correcting a year that should never have looked like it had a
+   * submission history at all — even if entries were in fact received under
+   * it.
+   */
+  async resetSubmissions(id: string, actorId: string, ipAddress?: string) {
+    const edition = await this.findById(id);
+
+    const after = await this.prisma.edition.update({
+      where: { id },
+      data: { submissionsOpen: false, submissionsOpenedAt: null, submissionsCloseAt: null },
+    });
+
+    await this.audit.log({
+      userId: actorId,
+      action: 'edition.submissions.reset',
+      targetType: 'Edition',
+      targetId: id,
+      before: {
+        submissionsOpen: edition.submissionsOpen,
+        submissionsOpenedAt: edition.submissionsOpenedAt,
+        submissionsCloseAt: edition.submissionsCloseAt,
+      },
+      after: {
+        submissionsOpen: after.submissionsOpen,
+        submissionsOpenedAt: after.submissionsOpenedAt,
+        submissionsCloseAt: after.submissionsCloseAt,
+      },
+      ipAddress,
+    });
+    return after;
+  }
+
+  /**
    * A preview link hands an outsider a way in, so who minted one and when it
    * lapses belongs in the trail even though nothing about the year changed.
    */

@@ -44,6 +44,7 @@ const WORDS: Record<string, string> = {
   changed: 'ປ່ຽນ',
   opened: 'ເປີດ',
   closed: 'ປິດ',
+  reset: 'ຕັ້ງຄືນ',
   added: 'ເພີ່ມ',
   assigned: 'ມອບໝາຍ',
   unassigned: 'ຍົກເລີກມອບໝາຍ',
