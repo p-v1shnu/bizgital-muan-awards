@@ -202,6 +202,57 @@ describe('edition lifecycle', () => {
     });
   });
 
+  describe('the submission form can be put back to "never opened"', () => {
+    let editionId: string;
+
+    beforeAll(async () => {
+      editionId = (await createEdition({ year: 2034, slug: '2034', titleLo: 'ງານ 2034' })).body.data.id;
+      await api(h).patch(path(`/admin/editions/${editionId}/phase`)).set(h.auth).send({ phase: 'PUBLISHED' }).expect(200);
+    });
+
+    const reset = (id: string) =>
+      api(h).patch(path(`/admin/editions/${id}/submissions/reset`)).set(h.auth).send({});
+
+    it('is a no-op on a year that was never opened', async () => {
+      await reset(editionId).expect(200);
+      const fetched = await api(h).get(path(`/admin/editions/${editionId}`)).set(h.auth).expect(200);
+      expect(fetched.body.data.submissionsOpen).toBe(false);
+      expect(fetched.body.data.submissionsOpenedAt).toBeNull();
+    });
+
+    it('clears the opened-at and close-at stamps even with real entries taken', async () => {
+      const future = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+      await api(h)
+        .patch(path(`/admin/editions/${editionId}/submissions`))
+        .set(h.auth)
+        .send({ submissionsOpen: true, submissionsCloseAt: future })
+        .expect(200);
+
+      const opened = await api(h).get(path(`/admin/editions/${editionId}`)).set(h.auth).expect(200);
+      expect(opened.body.data.submissionsOpenedAt).not.toBeNull();
+
+      await reset(editionId).expect(200);
+
+      const after = await api(h).get(path(`/admin/editions/${editionId}`)).set(h.auth).expect(200);
+      expect(after.body.data.submissionsOpen).toBe(false);
+      expect(after.body.data.submissionsOpenedAt).toBeNull();
+      expect(after.body.data.submissionsCloseAt).toBeNull();
+
+      // The public side must read this the same as a year that never opened,
+      // not as one that is merely closed — that is the whole point of the reset.
+      const form = await api(h).get(path('/submission-form')).expect(200);
+      expect(form.body.data.state).not.toBe('closed');
+    });
+
+    it('records the reset in the audit trail', async () => {
+      const audit = await api(h)
+        .get(path('/admin/audit?perPage=100&action=edition.submissions.reset'))
+        .set(h.auth)
+        .expect(200);
+      expect(audit.body.data.some((entry: { targetId: string }) => entry.targetId === editionId)).toBe(true);
+    });
+  });
+
   /**
    * Both lists are shown in an order the team chooses, so both need a way to
    * save one. The API had the field but no endpoint to set it in bulk, and the
