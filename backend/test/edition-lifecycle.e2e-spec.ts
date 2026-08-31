@@ -254,6 +254,49 @@ describe('edition lifecycle', () => {
   });
 
   /**
+   * A category's description used to be typed fresh every year, even for a
+   * template reused from a prior edition — the library had nowhere to hold
+   * one. Now it does, and the admin UI copies it down the moment a template
+   * is picked; the API itself stays exactly as decoupled as slug/nameLo
+   * already are, so this only checks the copy is not a live link.
+   */
+  describe('a category template description is a starting point, not a live link', () => {
+    it('is returned once set on the template', async () => {
+      const created = await api(h)
+        .post(path('/admin/category-templates'))
+        .set(h.auth)
+        .send({ slug: 'library-description-test', nameLo: 'ສາຂາທົດສອບຄຳອະທິບາຍ', descriptionLo: 'ຄຳອະທິບາຍໃນຄັງ' })
+        .expect(201);
+      expect(created.body.data.descriptionLo).toBe('ຄຳອະທິບາຍໃນຄັງ');
+
+      const updated = await api(h)
+        .patch(path(`/admin/category-templates/${created.body.data.id}`))
+        .set(h.auth)
+        .send({ descriptionLo: 'ຄຳອະທິບາຍໃໝ່' })
+        .expect(200);
+      expect(updated.body.data.descriptionLo).toBe('ຄຳອະທິບາຍໃໝ່');
+    });
+
+    it('is not copied server-side into a category created from it — that is the admin UI job', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/category-templates'))
+          .set(h.auth)
+          .send({ slug: 'library-description-no-copy', nameLo: 'ສາຂາທົດສອບບໍ່ຄັດລອກ', descriptionLo: 'ຄຳອະທິບາຍໃນຄັງ' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2055, slug: '2055', titleLo: 'ງານ 2055' })).body.data.id;
+
+      const category = await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ templateId })
+        .expect(201);
+      expect(category.body.data.descriptionLo).toBeNull();
+    });
+  });
+
+  /**
    * Both lists are shown in an order the team chooses, so both need a way to
    * save one. The API had the field but no endpoint to set it in bulk, and the
    * back office had no control at all — the order was whatever creation order

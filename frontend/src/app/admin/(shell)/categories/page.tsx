@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState, ErrorNote, LoadingBlock } from '@/components/ui/feedback';
-import { Field, Input } from '@/components/ui/field';
+import { Field, Input, Textarea } from '@/components/ui/field';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
@@ -169,6 +169,7 @@ function CategoryTemplateDialog({
     nameLo: template?.nameLo ?? '',
     nameEn: template?.nameEn ?? '',
     slug: template ? template.slug : randomSlug('category'),
+    descriptionLo: template?.descriptionLo ?? '',
   }));
   // Once the slug field itself has been typed into, the name fields no
   // longer overwrite it — a deliberate edit should stick.
@@ -186,6 +187,7 @@ function CategoryTemplateDialog({
         nameLo: template?.nameLo ?? '',
         nameEn: template?.nameEn ?? '',
         slug: template ? template.slug : randomSlug('category'),
+        descriptionLo: template?.descriptionLo ?? '',
       });
       setSlugTouched(template !== null);
     }
@@ -215,7 +217,7 @@ function CategoryTemplateDialog({
       title={template ? 'ແກ້ໄຂສາຂາ' : 'ເພີ່ມສາຂາເຂົ້າຄັງ'}
       description={
         template
-          ? 'ບໍ່ກະທົບສາຂາທີ່ຖືກໃສ່ເຂົ້າປີໃດໆໄປແລ້ວ — ປີເຫຼົ່ານັ້ນຍັງໃຊ້ຊື່ເກົ່າຂອງຕົນເອງ'
+          ? 'ບໍ່ກະທົບສາຂາທີ່ຖືກໃສ່ເຂົ້າປີໃດໆໄປແລ້ວ — ປີເຫຼົ່ານັ້ນຍັງໃຊ້ຊື່/ຄຳອະທິບາຍເກົ່າຂອງຕົນເອງ'
           : undefined
       }
       footer={
@@ -235,7 +237,12 @@ function CategoryTemplateDialog({
         onSubmit={(event) => {
           event.preventDefault();
           action.mutate(
-            { nameLo: form.nameLo, nameEn: emptyToNull(form.nameEn), slug: form.slug },
+            {
+              nameLo: form.nameLo,
+              nameEn: emptyToNull(form.nameEn),
+              slug: form.slug,
+              descriptionLo: emptyToNull(form.descriptionLo),
+            },
             { onSuccess: onClose },
           );
         }}
@@ -258,6 +265,16 @@ function CategoryTemplateDialog({
               setSlugTouched(true);
               setForm({ ...form, slug: slugify(event.target.value) });
             }}
+          />
+        </Field>
+        <Field
+          label="ຄຳອະທິບາຍ"
+          hint="— ບໍ່ບັງຄັບ"
+          help="ຄັດລອກເຂົ້າສາຂາໃໝ່ໆທີ່ໃສ່ຈາກຄັງນີ້ — ແກ້ຕໍ່ໄດ້ຄືນຢູ່ແຕ່ລະປີ"
+        >
+          <Textarea
+            value={form.descriptionLo}
+            onChange={(event) => setForm({ ...form, descriptionLo: event.target.value })}
           />
         </Field>
 

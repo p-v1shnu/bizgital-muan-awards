@@ -19,6 +19,13 @@ export class CreateCategoryTemplateDto {
   @IsString()
   @MaxLength(160)
   nameEn?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Copied into descriptionLo the moment a category picks this template',
+  })
+  @IsOptional()
+  @IsString()
+  descriptionLo?: string | null;
 }
 
 export class UpdateCategoryTemplateDto extends PartialType(CreateCategoryTemplateDto) {}

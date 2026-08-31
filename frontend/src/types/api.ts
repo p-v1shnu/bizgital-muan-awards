@@ -58,6 +58,7 @@ export interface CategoryTemplate {
   slug: string;
   nameLo: string;
   nameEn: string | null;
+  descriptionLo: string | null;
   _count?: { categories: number };
 }
 

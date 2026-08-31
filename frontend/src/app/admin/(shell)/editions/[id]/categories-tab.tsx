@@ -247,6 +247,14 @@ function CategoryDialog({
   );
   const action = category ? update : create;
 
+  // The one place the library's own descriptionLo is read at all — copied in
+  // as a starting point the moment a template is picked, editable from here
+  // same as groupLo, never written back to the template itself.
+  function pickTemplate(picked: CategoryTemplate) {
+    setTemplate(picked);
+    setForm((f) => ({ ...f, descriptionLo: picked.descriptionLo ?? '' }));
+  }
+
   function submit(event: React.FormEvent) {
     event.preventDefault();
     if (category) {
@@ -281,7 +289,7 @@ function CategoryDialog({
   if (!category && !template) {
     return (
       <Dialog open={open} onClose={onClose} title="ເພີ່ມສາຂາ" description="ເລືອກສາຂາຈາກຄັງ">
-        <CategoryTemplatePicker exclude={existingTemplateIds} onPick={setTemplate} />
+        <CategoryTemplatePicker exclude={existingTemplateIds} onPick={pickTemplate} />
       </Dialog>
     );
   }
