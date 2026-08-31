@@ -266,7 +266,10 @@ test.describe('the edition page', () => {
     const editionId = (await edition.json()).data.id;
     const template = await request.post(`${api}/admin/category-templates`, {
       headers: auth,
-      data: { slug: 'crown-test', nameLo: 'ສາຂາທົດສອບການຕິດຜູ້ຊະນະ' },
+      // Same reason the creators below avoid "ຜູ້ຊະນະ" — a category name
+      // containing it is itself a sidebar nav button whose text also
+      // matches, and it sits before both winner-toggle buttons in DOM order.
+      data: { slug: 'crown-test', nameLo: 'ສາຂາທົດສອບ ຄ' },
     });
     const category = await request.post(`${api}/admin/editions/${editionId}/categories`, {
       headers: auth,
@@ -289,14 +292,16 @@ test.describe('the edition page', () => {
       });
     }
 
-    await request.patch(`${api}/admin/editions/${editionId}/phase`, {
+    const published = await request.patch(`${api}/admin/editions/${editionId}/phase`, {
       headers: auth,
       data: { phase: 'PUBLISHED' },
     });
-    await request.patch(`${api}/admin/editions/${editionId}/phase`, {
+    expect(published.status(), 'setup: publishing the throwaway edition').toBe(200);
+    const announced = await request.patch(`${api}/admin/editions/${editionId}/phase`, {
       headers: auth,
       data: { phase: 'NOMINEES_ANNOUNCED' },
     });
+    expect(announced.status(), 'setup: announcing nominees, which unlocks the winner toggle').toBe(200);
 
     await page.goto(`/admin/editions/${editionId}?tab=nominees`);
     await page.waitForSelector('input[placeholder*="ຄົ້ນຫາຄຣີເອເຕີ"]');
