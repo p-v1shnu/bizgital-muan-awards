@@ -81,6 +81,11 @@ export class NominationsService {
    * At most one winner per category. Crowning someone un-crowns whoever held
    * it, in the same transaction, so the category is never briefly showing two.
    *
+   * Crowning anyone at all needs the shortlist to be locked in first — before
+   * nominees are announced, a category's nominee list is still shifting, so a
+   * winner picked against it can go stale without anyone touching the winner
+   * flag itself.
+   *
    * Un-crowning outright — leaving the category with nobody, rather than
    * crowning someone else — is refused once winners are public: that
    * category would suddenly show no result for a prize the public already
@@ -96,11 +101,15 @@ export class NominationsService {
     });
     if (!nomination) throw new NotFoundException('Nomination not found');
 
-    if (
-      !dto.isWinner &&
-      nomination.isWinner &&
-      nomination.category.edition.phase === EditionPhase.WINNERS_ANNOUNCED
-    ) {
+    const phase = nomination.category.edition.phase;
+
+    if (dto.isWinner && (phase === EditionPhase.DRAFT || phase === EditionPhase.PUBLISHED)) {
+      throw new BadRequestException(
+        'Cannot pick a winner before nominees are announced — the shortlist is not locked in yet',
+      );
+    }
+
+    if (!dto.isWinner && nomination.isWinner && phase === EditionPhase.WINNERS_ANNOUNCED) {
       throw new BadRequestException(
         'Cannot remove the winner once winners are announced — crown a different nominee instead, or roll the phase back first',
       );

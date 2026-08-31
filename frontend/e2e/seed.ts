@@ -217,6 +217,10 @@ export default async function seed() {
     });
     const editionId = (await edition.json()).data.id;
 
+    // Collected now, set once nominees are announced — a winner can only be
+    // picked against a shortlist that is already locked in.
+    const winnerNominationIds: string[] = [];
+
     for (const [slug, , isFeatured, groupLo] of [
       ['creator-of-the-year', 'ຜູ້ສ້າງສັນເນື້ອຫາແຫ່ງປີ', true, 'ສາຍເນື້ອຫາ'],
       ['video-of-the-year', 'ວິດີໂອແຫ່ງປີ', true, 'ສາຍເນື້ອຫາ'],
@@ -242,13 +246,8 @@ export default async function seed() {
         nominationIds.push((await nomination.json()).data.id);
       }
 
-      // The winner is decided now, well before it is announced — which is
-      // exactly what the phase-gating specs need to catch.
       if (finalPhase === 'WINNERS_ANNOUNCED') {
-        await api.patch(`admin/nominations/${nominationIds[0]}/winner`, {
-          headers: auth,
-          data: { isWinner: true },
-        });
+        winnerNominationIds.push(nominationIds[0]);
       }
     }
 
@@ -274,10 +273,7 @@ export default async function seed() {
         data: { creatorId: Object.values(creators)[index % 4] },
       });
       if (finalPhase === 'WINNERS_ANNOUNCED') {
-        await api.patch(`admin/nominations/${(await nomination.json()).data.id}/winner`, {
-          headers: auth,
-          data: { isWinner: true },
-        });
+        winnerNominationIds.push((await nomination.json()).data.id);
       }
     }
 
@@ -298,6 +294,19 @@ export default async function seed() {
 
     for (const phase of ['PUBLISHED', 'NOMINEES_ANNOUNCED', 'WINNERS_ANNOUNCED']) {
       await api.patch(`admin/editions/${editionId}/phase`, { headers: auth, data: { phase } });
+
+      // The winner is decided now, well before it is announced — which is
+      // exactly what the phase-gating specs need to catch. Nominees are
+      // locked in, so a winner can be picked; the public still can't see it.
+      if (phase === 'NOMINEES_ANNOUNCED') {
+        for (const nominationId of winnerNominationIds) {
+          await api.patch(`admin/nominations/${nominationId}/winner`, {
+            headers: auth,
+            data: { isWinner: true },
+          });
+        }
+      }
+
       if (phase === finalPhase) break;
     }
 

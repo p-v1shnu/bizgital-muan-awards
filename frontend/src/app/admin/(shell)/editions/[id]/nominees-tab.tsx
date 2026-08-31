@@ -118,6 +118,7 @@ function NomineeList({
   phase: Edition['phase'];
 }) {
   const winnersLocked = phase === 'WINNERS_ANNOUNCED';
+  const shortlistNotLocked = phase === 'DRAFT' || phase === 'PUBLISHED';
   const path = `/admin/categories/${category.id}/nominations`;
   const { data, isLoading, error } = useApi<Nomination[]>(path);
   const [removing, setRemoving] = useState<Nomination | null>(null);
@@ -237,11 +238,17 @@ function NomineeList({
             <div className="ml-auto flex items-center gap-3">
               <button
                 type="button"
-                disabled={setWinner.isPending || (winnersLocked && nomination.isWinner)}
+                disabled={
+                  setWinner.isPending ||
+                  (winnersLocked && nomination.isWinner) ||
+                  (shortlistNotLocked && !nomination.isWinner)
+                }
                 title={
                   winnersLocked && nomination.isWinner
                     ? 'ປະກາດຜູ້ຊະນະໄປແລ້ວ ຈະຖອນອອກໃຫ້ບໍ່ມີຜູ້ຊະນະບໍ່ໄດ້ — ຕິດຄົນອື່ນແທນ ຫຼື ຖອຍເຟສກ່ອນ'
-                    : undefined
+                    : shortlistNotLocked && !nomination.isWinner
+                      ? 'ຕ້ອງປະກາດຜູ້ເຂົ້າຊີງກ່ອນ ຈຶ່ງຈະຕິດຜູ້ຊະນະໄດ້'
+                      : undefined
                 }
                 onClick={() =>
                   setWinner.mutate({ id: nomination.id, isWinner: !nomination.isWinner })
