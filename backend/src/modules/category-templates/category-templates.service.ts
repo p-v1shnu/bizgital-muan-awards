@@ -52,12 +52,54 @@ export class CategoryTemplatesService {
     return template;
   }
 
+  /**
+   * A templated category is a live copy now, not a one-time stamp — every
+   * edition that picked this template moves with it (nameLo/nameEn/slug/
+   * descriptionLo), which is the whole reason CategoriesService.update()
+   * refuses those same fields on the category side. The slug is the one
+   * field that can collide: two categories in the same edition can't share
+   * one, so a rename that would land on top of something an edition already
+   * has is refused outright, rather than silently leaving that one edition
+   * out of sync with the rest.
+   */
   async update(id: string, dto: UpdateCategoryTemplateDto, actorId: string, ipAddress?: string) {
     const before = await this.prisma.categoryTemplate.findFirst({ where: { id, deletedAt: null } });
     if (!before) throw new NotFoundException('Category template not found');
-    if (dto.slug && dto.slug !== before.slug) await this.assertSlugFree(dto.slug);
+    if (dto.slug && dto.slug !== before.slug) {
+      await this.assertSlugFree(dto.slug);
 
-    const after = await this.prisma.categoryTemplate.update({ where: { id }, data: dto });
+      const linked = await this.prisma.category.findMany({
+        where: { templateId: id },
+        select: { id: true, editionId: true },
+      });
+      const conflicts = await this.prisma.category.findMany({
+        where: {
+          slug: dto.slug,
+          editionId: { in: linked.map((category) => category.editionId) },
+          id: { notIn: linked.map((category) => category.id) },
+        },
+        select: { editionId: true },
+      });
+      if (conflicts.length > 0) {
+        throw new ConflictException(
+          `That slug is already used by a different category in ${conflicts.length} edition(s) this template is assigned to`,
+        );
+      }
+    }
+
+    const [after] = await this.prisma.$transaction([
+      this.prisma.categoryTemplate.update({ where: { id }, data: dto }),
+      this.prisma.category.updateMany({
+        where: { templateId: id },
+        data: {
+          ...(dto.nameLo !== undefined ? { nameLo: dto.nameLo } : {}),
+          ...(dto.nameEn !== undefined ? { nameEn: dto.nameEn } : {}),
+          ...(dto.slug !== undefined ? { slug: dto.slug } : {}),
+          ...(dto.descriptionLo !== undefined ? { descriptionLo: dto.descriptionLo } : {}),
+        },
+      }),
+    ]);
+
     await this.audit.log({
       userId: actorId,
       action: 'category-template.updated',

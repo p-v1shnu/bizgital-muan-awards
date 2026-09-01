@@ -202,9 +202,7 @@ function CategoryDialog({
   existingTemplateIds: Set<string>;
   onClose: () => void;
 }) {
-  // Only asked when adding a category the edition does not have yet — editing
-  // works on this edition's own copy of the name, which the library has
-  // nothing to do with (see CreateCategoryDto/UpdateCategoryDto).
+  // Only asked when adding a category the edition does not have yet.
   const [template, setTemplate] = useState<CategoryTemplate | null>(null);
 
   const [form, setForm] = useState({
@@ -247,24 +245,24 @@ function CategoryDialog({
   );
   const action = category ? update : create;
 
-  // The one place the library's own descriptionLo is read at all — copied in
-  // as a starting point the moment a template is picked, editable from here
-  // same as groupLo, never written back to the template itself.
-  function pickTemplate(picked: CategoryTemplate) {
-    setTemplate(picked);
-    setForm((f) => ({ ...f, descriptionLo: picked.descriptionLo ?? '' }));
-  }
+  // A category picked from the library — every one added through this
+  // dialog is — has its name/slug/description live-linked to that library
+  // entry (CategoryTemplatesService.update() cascades to it). Only a
+  // category with no template of its own, from before the library existed,
+  // still owns these fields directly and can edit them here.
+  const locked = category ? category.templateId != null : Boolean(template);
+  const descriptionPreview = category ? (category.descriptionLo ?? '') : (template?.descriptionLo ?? '');
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
     if (category) {
       update.mutate(
         {
-          slug: form.slug,
-          nameLo: form.nameLo,
           groupLo: emptyToNull(form.groupLo),
-          descriptionLo: emptyToNull(form.descriptionLo),
           isFeatured: form.isFeatured,
+          ...(category.templateId
+            ? {}
+            : { slug: form.slug, nameLo: form.nameLo, descriptionLo: emptyToNull(form.descriptionLo) }),
         },
         { onSuccess: onClose },
       );
@@ -272,12 +270,7 @@ function CategoryDialog({
     }
     if (!template) return;
     create.mutate(
-      {
-        templateId: template.id,
-        groupLo: emptyToNull(form.groupLo),
-        descriptionLo: emptyToNull(form.descriptionLo),
-        isFeatured: form.isFeatured,
-      },
+      { templateId: template.id, groupLo: emptyToNull(form.groupLo), isFeatured: form.isFeatured },
       { onSuccess: onClose },
     );
   }
@@ -289,7 +282,7 @@ function CategoryDialog({
   if (!category && !template) {
     return (
       <Dialog open={open} onClose={onClose} title="ເພີ່ມສາຂາ" description="ເລືອກສາຂາຈາກຄັງ">
-        <CategoryTemplatePicker exclude={existingTemplateIds} onPick={pickTemplate} />
+        <CategoryTemplatePicker exclude={existingTemplateIds} onPick={setTemplate} />
       </Dialog>
     );
   }
@@ -311,7 +304,7 @@ function CategoryDialog({
       }
     >
       <form id="category-form" onSubmit={submit} noValidate>
-        {category ? (
+        {category && !locked && (
           <>
             <Field label="ຊື່ສາຂາ (ລາວ)">
               <Input
@@ -329,20 +322,29 @@ function CategoryDialog({
               />
             </Field>
           </>
-        ) : (
-          template && (
-            <Field label="ສາຂາ">
-              <div className="flex items-center gap-2 rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2 px-3 py-2">
-                <span className="min-w-0 flex-1 truncate">
-                  <span className="font-serif text-[15px] text-ink">{template.nameLo}</span>
-                  <span className="ml-2 text-[11.5px] text-ink-3">/{template.slug}</span>
-                </span>
-                <Button type="button" size="sm" onClick={() => setTemplate(null)}>
-                  ປ່ຽນ
-                </Button>
-              </div>
+        )}
+        {category && locked && (
+          <>
+            <Field label="ຊື່ສາຂາ (ລາວ)" help="ມາຈາກຄັງສາຂາ — ໄປແກ້ທີ່ນັ້ນແທນ">
+              <Input disabled value={category.nameLo} />
             </Field>
-          )
+            <Field label="slug" help="ມາຈາກຄັງສາຂາ — ໄປແກ້ທີ່ນັ້ນແທນ">
+              <Input disabled value={category.slug} />
+            </Field>
+          </>
+        )}
+        {!category && template && (
+          <Field label="ສາຂາ">
+            <div className="flex items-center gap-2 rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2 px-3 py-2">
+              <span className="min-w-0 flex-1 truncate">
+                <span className="font-serif text-[15px] text-ink">{template.nameLo}</span>
+                <span className="ml-2 text-[11.5px] text-ink-3">/{template.slug}</span>
+              </span>
+              <Button type="button" size="sm" onClick={() => setTemplate(null)}>
+                ປ່ຽນ
+              </Button>
+            </div>
+          </Field>
         )}
         <Field label="ກຸ່ມ" hint="— ບໍ່ບັງຄັບ" help="ໃຊ້ຕອນສາຂາຫຼາຍ ຢາກແບ່ງເປັນຫົວຂໍ້">
           <Input
@@ -350,12 +352,18 @@ function CategoryDialog({
             onChange={(event) => setForm({ ...form, groupLo: event.target.value })}
           />
         </Field>
-        <Field label="ຄຳອະທິບາຍ" hint="— ບໍ່ບັງຄັບ">
-          <Textarea
-            value={form.descriptionLo}
-            onChange={(event) => setForm({ ...form, descriptionLo: event.target.value })}
-          />
-        </Field>
+        {locked ? (
+          <Field label="ຄຳອະທິບາຍ" help="ມາຈາກຄັງສາຂາ — ໄປແກ້ທີ່ນັ້ນແທນ">
+            <Textarea disabled value={descriptionPreview} />
+          </Field>
+        ) : (
+          <Field label="ຄຳອະທິບາຍ" hint="— ບໍ່ບັງຄັບ">
+            <Textarea
+              value={form.descriptionLo}
+              onChange={(event) => setForm({ ...form, descriptionLo: event.target.value })}
+            />
+          </Field>
+        )}
 
         <div className="mb-4 flex items-center gap-3">
           <Switch

@@ -232,7 +232,6 @@ export default async function seed() {
           templateId: namedCategoryTemplateIds[slug],
           isFeatured,
           groupLo,
-          descriptionLo: 'ມອບໃຫ້ຜົນງານທີ່ໂດດເດັ່ນທີ່ສຸດຂອງປີ',
         },
       });
       const categoryId = (await category.json()).data.id;
