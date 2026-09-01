@@ -59,7 +59,7 @@ export function PublishPanel({
     <>
       <Card className="overflow-hidden border-brand-edge">
         <FoilRule className="rounded-none" />
-        <CardHeader title="ສະຫວິດ 1 · ໜ້າປີສະແດງຫຍັງ" />
+        <CardHeader title="ໜ້າປີສະແດງຫຍັງ" />
         <CardBody>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-deep">
             ຢູ່ບ່ອນນີ້
@@ -204,7 +204,7 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
 
   return (
     <Card>
-      <CardHeader title="ສະຫວິດ 2 · ຟອມສົ່ງລາຍຊື່" aside="ແຍກຈາກສະຫວິດ 1" />
+      <CardHeader title="ຟອມສົ່ງລາຍຊື່" aside="ແຍກຈາກຂັ້ນຕອນປີຂ້າງເທິງ" />
       <CardBody>
         <div className="mb-1 flex gap-1.5" role="radiogroup" aria-label="ສະຖານະຟອມສົ່ງລາຍຊື່">
           <StateButton
