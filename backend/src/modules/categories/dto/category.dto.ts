@@ -16,22 +16,13 @@ import { Type } from 'class-transformer';
 /**
  * Assigns a library category (category-templates.dto.ts) into this edition —
  * picked or freshly created there first, never typed here, which is what
- * keeps the slug and name from drifting one year to the next.
+ * keeps the slug, name and description from drifting one year to the next.
+ * Only the edition-specific bits are asked for here.
  */
 export class CreateCategoryDto {
   @ApiProperty({ description: 'Category template id from the library' })
   @IsString()
   templateId!: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  descriptionLo?: string | null;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  descriptionEn?: string | null;
 
   @ApiPropertyOptional({ description: 'Grouping heading, used when a year runs long (PRD §7.6)' })
   @IsOptional()
@@ -46,9 +37,11 @@ export class CreateCategoryDto {
 }
 
 /**
- * Edits this edition's own copy of the name — a deliberate one-off fix, not
- * the repeated retyping CreateCategoryDto avoids, so it is allowed straight
- * through without going back to the library.
+ * Only a category with no template of its own may set nameLo/nameEn/slug/
+ * descriptionLo/descriptionEn here — CategoriesService.update() refuses
+ * them otherwise, since a templated category's identity now lives in the
+ * library and is kept in sync from there. groupLo/isFeatured stay allowed
+ * either way: those are always per-edition, template or not.
  */
 export class UpdateCategoryDto {
   @ApiPropertyOptional()

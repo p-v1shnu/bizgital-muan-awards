@@ -59,8 +59,7 @@ export class CategoriesService {
         slug: template.slug,
         nameLo: template.nameLo,
         nameEn: template.nameEn,
-        descriptionLo: dto.descriptionLo,
-        descriptionEn: dto.descriptionEn,
+        descriptionLo: template.descriptionLo,
         groupLo: dto.groupLo,
         isFeatured: dto.isFeatured,
         sortOrder: (last?.sortOrder ?? -1) + 1,
@@ -78,8 +77,29 @@ export class CategoriesService {
     return category;
   }
 
+  /**
+   * A templated category's identity now lives in the library, not here — a
+   * cascade from CategoryTemplatesService.update() keeps nameLo/slug/
+   * descriptionLo in sync, so an edit landing here instead would just be
+   * overwritten by the next library change, or drift silently out of sync
+   * with it in the meantime. Only a category with no template of its own —
+   * never assigned one, or made before the library existed — still owns
+   * these fields directly, and keeps editing them here.
+   */
   async update(id: string, dto: UpdateCategoryDto, actorId: string, ipAddress?: string) {
     const before = await this.findById(id);
+
+    if (before.templateId) {
+      const blocked = (['nameLo', 'nameEn', 'slug', 'descriptionLo', 'descriptionEn'] as const).filter(
+        (field) => dto[field] !== undefined,
+      );
+      if (blocked.length > 0) {
+        throw new BadRequestException(
+          `This category comes from the library — edit ${blocked.join(', ')} there instead, not per edition`,
+        );
+      }
+    }
+
     if (dto.slug && dto.slug !== before.slug) {
       await this.assertSlugFree(before.editionId, dto.slug);
     }

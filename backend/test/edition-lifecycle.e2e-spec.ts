@@ -254,14 +254,14 @@ describe('edition lifecycle', () => {
   });
 
   /**
-   * A category's description used to be typed fresh every year, even for a
-   * template reused from a prior edition — the library had nowhere to hold
-   * one. Now it does, and the admin UI copies it down the moment a template
-   * is picked; the API itself stays exactly as decoupled as slug/nameLo
-   * already are, so this only checks the copy is not a live link.
+   * A templated category's nameLo/slug/descriptionLo are a live copy of the
+   * library entry now, not a one-time stamp an edition could then diverge
+   * from — this team runs one calendar, not many tenants each wanting their
+   * own wording, so a genuinely different name belongs to a new template, not
+   * a per-edition edit of this one.
    */
-  describe('a category template description is a starting point, not a live link', () => {
-    it('is returned once set on the template', async () => {
+  describe('a templated category is a live copy of the library, not a one-off stamp', () => {
+    it('returns descriptionLo once set on the template, and again once changed', async () => {
       const created = await api(h)
         .post(path('/admin/category-templates'))
         .set(h.auth)
@@ -277,12 +277,12 @@ describe('edition lifecycle', () => {
       expect(updated.body.data.descriptionLo).toBe('ຄຳອະທິບາຍໃໝ່');
     });
 
-    it('is not copied server-side into a category created from it — that is the admin UI job', async () => {
+    it('copies nameLo/slug/descriptionLo onto a category created from it', async () => {
       const templateId = (
         await api(h)
           .post(path('/admin/category-templates'))
           .set(h.auth)
-          .send({ slug: 'library-description-no-copy', nameLo: 'ສາຂາທົດສອບບໍ່ຄັດລອກ', descriptionLo: 'ຄຳອະທິບາຍໃນຄັງ' })
+          .send({ slug: 'library-description-copy', nameLo: 'ສາຂາທົດສອບການຄັດລອກ', descriptionLo: 'ຄຳອະທິບາຍໃນຄັງ' })
           .expect(201)
       ).body.data.id;
       const editionId = (await createEdition({ year: 2057, slug: '2057', titleLo: 'ງານ 2057' })).body.data.id;
@@ -292,7 +292,106 @@ describe('edition lifecycle', () => {
         .set(h.auth)
         .send({ templateId })
         .expect(201);
-      expect(category.body.data.descriptionLo).toBeNull();
+      expect(category.body.data.nameLo).toBe('ສາຂາທົດສອບການຄັດລອກ');
+      expect(category.body.data.slug).toBe('library-description-copy');
+      expect(category.body.data.descriptionLo).toBe('ຄຳອະທິບາຍໃນຄັງ');
+    });
+
+    it('cascades a library edit onto every category already created from it', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/category-templates'))
+          .set(h.auth)
+          .send({ slug: 'library-cascade-test', nameLo: 'ສາຂາທົດສອບການແຜ່' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2058, slug: '2058', titleLo: 'ງານ 2058' })).body.data.id;
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+
+      await api(h)
+        .patch(path(`/admin/category-templates/${templateId}`))
+        .set(h.auth)
+        .send({ nameLo: 'ສາຂາໃໝ່ຫຼັງແກ້', slug: 'library-cascade-renamed', descriptionLo: 'ອະທິບາຍໃໝ່' })
+        .expect(200);
+
+      const category = await api(h).get(path(`/admin/editions/${editionId}/categories`)).set(h.auth).expect(200);
+      const found = category.body.data.find((c: { id: string }) => c.id === categoryId);
+      expect(found.nameLo).toBe('ສາຂາໃໝ່ຫຼັງແກ້');
+      expect(found.slug).toBe('library-cascade-renamed');
+      expect(found.descriptionLo).toBe('ອະທິບາຍໃໝ່');
+    });
+
+    it('refuses a library slug rename that would collide with another category in an edition already using it', async () => {
+      const firstTemplateId = (
+        await api(h)
+          .post(path('/admin/category-templates'))
+          .set(h.auth)
+          .send({ slug: 'collision-first', nameLo: 'ສາຂາທົດສອບການຂັດກັນ ກ' })
+          .expect(201)
+      ).body.data.id;
+      const secondTemplateId = (
+        await api(h)
+          .post(path('/admin/category-templates'))
+          .set(h.auth)
+          .send({ slug: 'collision-second', nameLo: 'ສາຂາທົດສອບການຂັດກັນ ຂ' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2059, slug: '2059', titleLo: 'ງານ 2059' })).body.data.id;
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ templateId: firstTemplateId })
+        .expect(201);
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/categories`))
+        .set(h.auth)
+        .send({ templateId: secondTemplateId })
+        .expect(201);
+
+      const response = await api(h)
+        .patch(path(`/admin/category-templates/${secondTemplateId}`))
+        .set(h.auth)
+        .send({ slug: 'collision-first' })
+        .expect(409);
+      expect(response.body.message).toContain('already used');
+    });
+
+    it('refuses nameLo/slug/descriptionLo edits on a templated category through the per-edition endpoint', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/category-templates'))
+          .set(h.auth)
+          .send({ slug: 'library-lock-test', nameLo: 'ສາຂາທົດສອບການລ໋ອກ' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2060, slug: '2060', titleLo: 'ງານ 2060' })).body.data.id;
+      const categoryId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/categories`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+
+      const response = await api(h)
+        .patch(path(`/admin/categories/${categoryId}`))
+        .set(h.auth)
+        .send({ nameLo: 'ພະຍາຍາມແກ້ຊື່' })
+        .expect(400);
+      expect(response.body.message).toContain('library');
+
+      // groupLo and isFeatured stay editable regardless of a template.
+      await api(h)
+        .patch(path(`/admin/categories/${categoryId}`))
+        .set(h.auth)
+        .send({ groupLo: 'ກຸ່ມທົດສອບ', isFeatured: true })
+        .expect(200);
     });
   });
 
