@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   ClipboardList,
   Clock,
+  Heart,
   Image as ImageIcon,
   LayoutGrid,
   ListOrdered,
@@ -41,6 +42,7 @@ const SECTIONS: { heading?: string; items: NavItem[] }[] = [
       { href: '/admin/categories', label: 'ຄັງສາຂາ', icon: Tag },
       { href: '/admin/creators', label: 'ຄັງຄຣີເອເຕີ', icon: Users },
       { href: '/admin/judges', label: 'ຄັງກຳມະການ', icon: Star },
+      { href: '/admin/sponsor-tiers', label: 'ຄັງຜູ້ສະໜັບສະໜູນ', icon: Heart },
       {
         href: '/admin/submissions',
         label: 'ຄິວລາຍຊື່',

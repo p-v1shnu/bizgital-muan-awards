@@ -442,11 +442,14 @@ describe('edition lifecycle', () => {
     });
 
     it('reorders sponsors within one edition', async () => {
+      const templateId = (
+        await api(h).post(path('/admin/sponsor-tier-templates')).set(h.auth).send({ nameLo: 'ລະດັບຄຳ' }).expect(201)
+      ).body.data.id;
       const tierId = (
         await api(h)
           .post(path(`/admin/editions/${hostId}/sponsor-tiers`))
           .set(h.auth)
-          .send({ nameLo: 'ລະດັບຄຳ' })
+          .send({ templateId })
           .expect(201)
       ).body.data.id;
 
@@ -480,11 +483,12 @@ describe('edition lifecycle', () => {
    * entirely and Prisma reads as "leave this column alone".
    */
   /**
-   * Sponsor groups are the year's own rows, named by the team. The rules worth
+   * The tier name comes from the library now, but which tiers an edition has
+   * and which logos sit in them are still that edition's own. The rules worth
    * holding are the ones that protect a paying sponsor: a logo cannot end up in
    * another year's group, and deleting a group cannot take its logos with it.
    */
-  describe('sponsor groups are the year\'s own', () => {
+  describe('a sponsor tier assignment is the year\'s own', () => {
     let yearId: string;
     let otherYearId: string;
 
@@ -493,12 +497,17 @@ describe('edition lifecycle', () => {
       otherYearId = (await createEdition({ year: 2044, slug: '2044', titleLo: 'ງານ 2044' })).body.data.id;
     });
 
-    const addTier = (editionId: string, nameLo: string) =>
-      api(h)
+    /** Every tier comes from the library now — a fresh template per call, same as picking a new one from the library each time. */
+    const addTier = async (editionId: string, nameLo: string) => {
+      const templateId = (
+        await api(h).post(path('/admin/sponsor-tier-templates')).set(h.auth).send({ nameLo }).expect(201)
+      ).body.data.id;
+      return api(h)
         .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
         .set(h.auth)
-        .send({ nameLo })
+        .send({ templateId })
         .expect(201);
+    };
 
     it('names its own groups and keeps them in the order they were arranged', async () => {
       const gold = (await addTier(yearId, 'ລະດັບຄຳ')).body.data;
@@ -509,10 +518,9 @@ describe('edition lifecycle', () => {
         .set(h.auth)
         .send({ items: [{ id: media.id, sortOrder: 0 }, { id: gold.id, sortOrder: 1 }] })
         .expect(200);
-      expect(reordered.body.data.map((row: { nameLo: string }) => row.nameLo)).toEqual([
-        'ສື່ມວນຊົນ',
-        'ລະດັບຄຳ',
-      ]);
+      expect(
+        reordered.body.data.map((row: { template: { nameLo: string } }) => row.template.nameLo),
+      ).toEqual(['ສື່ມວນຊົນ', 'ລະດັບຄຳ']);
     });
 
     it('refuses a logo pointed at another year\'s group', async () => {
@@ -568,10 +576,9 @@ describe('edition lifecycle', () => {
         .set(h.auth)
         .expect(200);
       // 2044 is the year before it, and it has the two groups added above.
-      expect(copied.body.data.map((row: { nameLo: string }) => row.nameLo)).toEqual([
-        'ລະດັບຄຳ',
-        'ພາດເນີ',
-      ]);
+      expect(
+        copied.body.data.map((row: { template: { nameLo: string } }) => row.template.nameLo),
+      ).toEqual(['ລະດັບຄຳ', 'ພາດເນີ']);
 
       // Refused the second time: this is a starting point, not a merge into
       // something the team has already begun arranging.
@@ -579,6 +586,116 @@ describe('edition lifecycle', () => {
         .post(path(`/admin/editions/${fresh}/sponsor-tiers/copy-from-previous`))
         .set(h.auth)
         .expect(400);
+    });
+  });
+
+  /**
+   * A sponsor tier template is a live copy now, the same shape as
+   * CategoryTemplate — every edition that assigned it moves with it.
+   */
+  describe('a sponsor tier template is a live copy of the library', () => {
+    it('cascades a rename onto every edition already assigned it', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/sponsor-tier-templates'))
+          .set(h.auth)
+          .send({ nameLo: 'ໝວດທົດສອບການແຜ່' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2061, slug: '2061', titleLo: 'ງານ 2061' })).body.data.id;
+      const tierId = (
+        await api(h)
+          .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+
+      await api(h)
+        .patch(path(`/admin/sponsor-tier-templates/${templateId}`))
+        .set(h.auth)
+        .send({ nameLo: 'ໝວດໃໝ່ຫຼັງແກ້' })
+        .expect(200);
+
+      const tiers = await api(h).get(path(`/admin/editions/${editionId}/sponsor-tiers`)).set(h.auth).expect(200);
+      const found = tiers.body.data.find((row: { id: string }) => row.id === tierId);
+      expect(found.template.nameLo).toBe('ໝວດໃໝ່ຫຼັງແກ້');
+    });
+
+    it('refuses assigning the same tier to one edition twice', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/sponsor-tier-templates'))
+          .set(h.auth)
+          .send({ nameLo: 'ໝວດທົດສອບການຊ້ຳ' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2062, slug: '2062', titleLo: 'ງານ 2062' })).body.data.id;
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ templateId })
+        .expect(201);
+
+      const response = await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ templateId })
+        .expect(409);
+      expect(response.body.message).toContain('already assigned');
+    });
+
+    it('refuses deleting a library tier still assigned to an edition', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/sponsor-tier-templates'))
+          .set(h.auth)
+          .send({ nameLo: 'ໝວດທົດສອບການລຶບ' })
+          .expect(201)
+      ).body.data.id;
+      const editionId = (await createEdition({ year: 2063, slug: '2063', titleLo: 'ງານ 2063' })).body.data.id;
+      await api(h)
+        .post(path(`/admin/editions/${editionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ templateId })
+        .expect(201);
+
+      await api(h).delete(path(`/admin/sponsor-tier-templates/${templateId}`)).set(h.auth).expect(400);
+    });
+
+    it('leaves the library entry and other editions untouched when unassigned from one edition', async () => {
+      const templateId = (
+        await api(h)
+          .post(path('/admin/sponsor-tier-templates'))
+          .set(h.auth)
+          .send({ nameLo: 'ໝວດທົດສອບການເອົາອອກ' })
+          .expect(201)
+      ).body.data.id;
+      const [firstEditionId, secondEditionId] = await Promise.all([
+        createEdition({ year: 2064, slug: '2064', titleLo: 'ງານ 2064' }).then((r) => r.body.data.id),
+        createEdition({ year: 2065, slug: '2065', titleLo: 'ງານ 2065' }).then((r) => r.body.data.id),
+      ]);
+      const firstTierId = (
+        await api(h)
+          .post(path(`/admin/editions/${firstEditionId}/sponsor-tiers`))
+          .set(h.auth)
+          .send({ templateId })
+          .expect(201)
+      ).body.data.id;
+      await api(h)
+        .post(path(`/admin/editions/${secondEditionId}/sponsor-tiers`))
+        .set(h.auth)
+        .send({ templateId })
+        .expect(201);
+
+      await api(h).delete(path(`/admin/sponsor-tiers/${firstTierId}`)).set(h.auth).expect(204);
+
+      const secondTiers = await api(h)
+        .get(path(`/admin/editions/${secondEditionId}/sponsor-tiers`))
+        .set(h.auth)
+        .expect(200);
+      expect(secondTiers.body.data).toHaveLength(1);
+      expect(secondTiers.body.data[0].template.nameLo).toBe('ໝວດທົດສອບການເອົາອອກ');
     });
   });
 

@@ -1,12 +1,7 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
-import {
-  CreateSponsorTierDto,
-  DeleteSponsorTierDto,
-  ReorderSponsorTiersDto,
-  UpdateSponsorTierDto,
-} from './dto/sponsor-tier.dto';
+import { AssignSponsorTierDto, DeleteSponsorTierDto, ReorderSponsorTiersDto } from './dto/sponsor-tier.dto';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -20,13 +15,23 @@ export class SponsorTiersService {
     return this.prisma.editionSponsorTier.findMany({
       where: { editionId },
       orderBy: { sortOrder: 'asc' },
-      include: { _count: { select: { sponsors: true } } },
+      include: { template: true, _count: { select: { sponsors: true } } },
     });
   }
 
-  async create(editionId: string, dto: CreateSponsorTierDto, actorId: string, ipAddress?: string) {
-    const edition = await this.prisma.edition.findUnique({ where: { id: editionId } });
+  /** Puts a library tier onto this edition — see the schema comment on SponsorTierTemplate for why there is no `create`/`update` for the name itself any more. */
+  async assign(editionId: string, dto: AssignSponsorTierDto, actorId: string, ipAddress?: string) {
+    const [edition, template] = await Promise.all([
+      this.prisma.edition.findUnique({ where: { id: editionId } }),
+      this.prisma.sponsorTierTemplate.findFirst({ where: { id: dto.templateId, deletedAt: null } }),
+    ]);
     if (!edition) throw new NotFoundException('Edition not found');
+    if (!template) throw new NotFoundException('Sponsor tier template not found');
+
+    const already = await this.prisma.editionSponsorTier.findUnique({
+      where: { editionId_templateId: { editionId, templateId: dto.templateId } },
+    });
+    if (already) throw new ConflictException('That tier is already assigned to this edition');
 
     const last = await this.prisma.editionSponsorTier.findFirst({
       where: { editionId },
@@ -35,34 +40,18 @@ export class SponsorTiersService {
     });
 
     const tier = await this.prisma.editionSponsorTier.create({
-      data: { ...dto, editionId, sortOrder: dto.sortOrder ?? (last?.sortOrder ?? -1) + 1 },
+      data: { editionId, templateId: dto.templateId, sortOrder: dto.sortOrder ?? (last?.sortOrder ?? -1) + 1 },
+      include: { template: true },
     });
     await this.audit.log({
       userId: actorId,
-      action: 'sponsorTier.created',
+      action: 'sponsorTier.assigned',
       targetType: 'Edition',
       targetId: editionId,
-      after: { nameLo: tier.nameLo },
+      after: { templateId: dto.templateId, nameLo: template.nameLo },
       ipAddress,
     });
     return tier;
-  }
-
-  async update(id: string, dto: UpdateSponsorTierDto, actorId: string, ipAddress?: string) {
-    const before = await this.prisma.editionSponsorTier.findUnique({ where: { id } });
-    if (!before) throw new NotFoundException('Sponsor group not found');
-
-    const after = await this.prisma.editionSponsorTier.update({ where: { id }, data: dto });
-    await this.audit.log({
-      userId: actorId,
-      action: 'sponsorTier.updated',
-      targetType: 'Edition',
-      targetId: before.editionId,
-      before,
-      after,
-      ipAddress,
-    });
-    return after;
   }
 
   async reorder(
@@ -100,14 +89,15 @@ export class SponsorTiersService {
   }
 
   /**
-   * Deleting a group that still holds logos takes those logos with it, so it is
-   * refused unless the caller says where they go. The back office asks; this is
-   * what makes an unanswered question impossible to save through.
+   * Unassigning a group that still holds logos takes those logos with it, so it
+   * is refused unless the caller says where they go. The back office asks; this
+   * is what makes an unanswered question impossible to save through. The
+   * library entry itself is untouched either way.
    */
   async remove(id: string, dto: DeleteSponsorTierDto, actorId: string, ipAddress?: string) {
     const tier = await this.prisma.editionSponsorTier.findUnique({
       where: { id },
-      include: { _count: { select: { sponsors: true } } },
+      include: { template: true, _count: { select: { sponsors: true } } },
     });
     if (!tier) throw new NotFoundException('Sponsor group not found');
 
@@ -132,10 +122,10 @@ export class SponsorTiersService {
     await this.prisma.editionSponsorTier.delete({ where: { id } });
     await this.audit.log({
       userId: actorId,
-      action: 'sponsorTier.deleted',
+      action: 'sponsorTier.unassigned',
       targetType: 'Edition',
       targetId: tier.editionId,
-      before: { nameLo: tier.nameLo, sponsors: tier._count.sponsors },
+      before: { nameLo: tier.template.nameLo, sponsors: tier._count.sponsors },
       after: dto.moveToTierId ? { movedTo: dto.moveToTierId } : undefined,
       ipAddress,
     });
@@ -148,7 +138,9 @@ export class SponsorTiersService {
    * the longer half of the job undone.
    *
    * Refuses to run on a year that already has groups: this adds a starting point,
-   * it does not merge into something the team has begun arranging.
+   * it does not merge into something the team has begun arranging. A tier
+   * already assigned to the new edition (unusual, but possible if it was added
+   * by hand first) is skipped rather than failing the whole copy.
    */
   async copyFromPrevious(editionId: string, actorId: string, ipAddress?: string) {
     const edition = await this.prisma.edition.findUnique({ where: { id: editionId } });
@@ -179,8 +171,7 @@ export class SponsorTiersService {
       await this.prisma.editionSponsorTier.create({
         data: {
           editionId,
-          nameLo: tier.nameLo,
-          nameEn: tier.nameEn,
+          templateId: tier.templateId,
           sortOrder: tier.sortOrder,
           sponsors: {
             create: tier.sponsors.map((sponsor) => ({

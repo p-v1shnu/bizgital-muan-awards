@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Copy, ExternalLink, Plus, Search, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader } from '@/components/ui/card';
@@ -9,18 +9,16 @@ import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState, ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
 import { Field, Input, Select } from '@/components/ui/field';
 import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
-import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { Edition, Sponsor, SponsorTier } from '@/types/api';
+import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
+import { useDebounced } from '@/lib/use-debounced';
+import type { Edition, Sponsor, SponsorTier, SponsorTierTemplate } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 /**
- * Sponsors of one year, in groups the team names itself.
- *
- * The groups used to be an enum of six with their Lao names written into this
- * file, so a year that sold a package nobody had thought of needed a migration
- * and a deploy. They are the year's own rows now: add a group, name it, put logos
- * in it. Bound to the year rather than shared, because renaming a shared group
- * would rewrite what a finished year says it sold.
+ * Sponsors of one year, grouped by a tier picked from the library
+ * (ຄັງຜູ້ສະໜັບສະໜູນ), the same live-assignment shape the judge panel uses:
+ * renaming a tier there reaches every edition that assigned it. Only the
+ * logos in each group, and the order both are shown in, belong to this year.
  */
 export function SponsorsTab({ edition }: { edition: Edition }) {
   const tiersPath = `/admin/editions/${edition.id}/sponsor-tiers`;
@@ -30,7 +28,7 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
   const tiers = useApi<SponsorTier[]>(tiersPath);
   const sponsors = useApi<Sponsor[]>(sponsorsPath);
 
-  const [tierDialog, setTierDialog] = useState<{ tier: SponsorTier | null } | null>(null);
+  const [picking, setPicking] = useState(false);
   const [deletingTier, setDeletingTier] = useState<SponsorTier | null>(null);
   const [sponsorDialog, setSponsorDialog] = useState<{
     sponsor: Sponsor | null;
@@ -114,8 +112,8 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
                   {copyPrevious.isPending ? 'ກຳລັງຄັດລອກ…' : 'ຄັດລອກຈາກປີກ່ອນ'}
                 </Button>
               )}
-              <Button size="sm" variant="primary" onClick={() => setTierDialog({ tier: null })}>
-                <Plus className="size-3.5" /> ເພີ່ມໝວດ
+              <Button size="sm" variant="primary" onClick={() => setPicking(true)}>
+                <Plus className="size-3.5" /> ເລືອກຈາກຄັງ
               </Button>
             </>
           }
@@ -132,10 +130,10 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
         ) : rows.length === 0 ? (
           <EmptyState
             title="ຍັງບໍ່ມີໝວດຜູ້ສະໜັບສະໜູນ"
-            description="ຕັ້ງໝວດເອງໄດ້ຕາມແພັກເກັດທີ່ຂາຍປີນີ້ ແລ້ວຄ່ອຍໃສ່ໂລໂກ້ · ຖ້າປີນີ້ຄືປີກ່ອນ ກົດຄັດລອກມາທັງໝວດ ແລະ ໂລໂກ້ ແລ້ວລຶບລາຍທີ່ບໍ່ຕໍ່ອອກ"
+            description="ເລືອກໝວດຈາກຄັງຕາມແພັກເກັດທີ່ຂາຍປີນີ້ ແລ້ວຄ່ອຍໃສ່ໂລໂກ້ · ຖ້າປີນີ້ຄືປີກ່ອນ ກົດຄັດລອກມາທັງໝວດ ແລະ ໂລໂກ້ ແລ້ວລຶບລາຍທີ່ບໍ່ຕໍ່ອອກ"
             action={
-              <Button variant="primary" onClick={() => setTierDialog({ tier: null })}>
-                ເພີ່ມໝວດ
+              <Button variant="primary" onClick={() => setPicking(true)}>
+                ເລືອກຈາກຄັງ
               </Button>
             }
           />
@@ -149,7 +147,7 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
                     <div className="flex flex-col">
                       <button
                         type="button"
-                        aria-label={`ຍ້າຍໝວດ ${tier.nameLo} ຂຶ້ນ`}
+                        aria-label={`ຍ້າຍໝວດ ${tier.template.nameLo} ຂຶ້ນ`}
                         disabled={index === 0 || reorderTiers.isPending}
                         onClick={() => moveTier(index, -1)}
                         className="text-ink-3 hover:text-ink disabled:opacity-25"
@@ -158,7 +156,7 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
                       </button>
                       <button
                         type="button"
-                        aria-label={`ຍ້າຍໝວດ ${tier.nameLo} ລົງ`}
+                        aria-label={`ຍ້າຍໝວດ ${tier.template.nameLo} ລົງ`}
                         disabled={index === rows.length - 1 || reorderTiers.isPending}
                         onClick={() => moveTier(index, 1)}
                         className="text-ink-3 hover:text-ink disabled:opacity-25"
@@ -166,16 +164,13 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
                         <ChevronDown className="size-4" />
                       </button>
                     </div>
-                    <p className="font-serif text-[17px] text-ink">{tier.nameLo}</p>
+                    <p className="font-serif text-[17px] text-ink">{tier.template.nameLo}</p>
                     <span className="text-[11.5px] text-ink-3">{inTier.length} ໂລໂກ້</span>
                     <div className="ml-auto flex items-center gap-2">
-                      <Button size="sm" onClick={() => setTierDialog({ tier })}>
-                        ປ່ຽນຊື່
-                      </Button>
                       <Button
                         size="sm"
                         variant="danger"
-                        aria-label={`ລຶບໝວດ ${tier.nameLo}`}
+                        aria-label={`ເອົາໝວດ ${tier.template.nameLo} ອອກ`}
                         onClick={() => setDeletingTier(tier)}
                       >
                         <Trash2 className="size-3.5" />
@@ -271,14 +266,12 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
         )}
       </Card>
 
-      {tierDialog && (
-        <TierDialog
-          key={tierDialog.tier?.id ?? 'new-tier'}
-          tier={tierDialog.tier}
-          editionId={edition.id}
-          onClose={() => setTierDialog(null)}
-        />
-      )}
+      <PickSponsorTierDialog
+        open={picking}
+        editionId={edition.id}
+        assigned={new Set(rows.map((tier) => tier.templateId))}
+        onClose={() => setPicking(false)}
+      />
 
       {sponsorDialog && (
         <SponsorDialog
@@ -320,72 +313,126 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
   );
 }
 
-/** Adding or renaming a group. */
-function TierDialog({
-  tier,
+/** Assigning a library tier to this edition, or adding a new one to the library first. */
+function PickSponsorTierDialog({
+  open,
   editionId,
+  assigned,
   onClose,
 }: {
-  tier: SponsorTier | null;
+  open: boolean;
   editionId: string;
+  assigned: Set<string>;
   onClose: () => void;
 }) {
-  const [nameLo, setNameLo] = useState(tier?.nameLo ?? '');
-  const invalidate = [`/admin/editions/${editionId}/sponsor-tiers`];
-  const create = useApiMutation<Record<string, unknown>>(
-    `/admin/editions/${editionId}/sponsor-tiers`,
+  const [term, setTerm] = useState('');
+  const debounced = useDebounced(term, 250);
+  const { data } = useApiPage<SponsorTierTemplate>(
+    `/admin/sponsor-tier-templates?perPage=20${debounced.trim() ? `&q=${encodeURIComponent(debounced.trim())}` : ''}`,
+  );
+
+  const tiersPath = `/admin/editions/${editionId}/sponsor-tiers`;
+  const assign = useApiMutation<{ templateId: string }>(tiersPath, 'POST', [
+    tiersPath,
+    '/admin/dashboard',
+  ]);
+
+  // Half the tiers a year sells will not be in the library yet — sending the
+  // team to another page to type one field and come back is how a year gets
+  // left half set up.
+  const [nameLo, setNameLo] = useState('');
+  const create = useApiMutation<Record<string, unknown>, SponsorTierTemplate>(
+    '/admin/sponsor-tier-templates',
     'POST',
-    invalidate,
+    ['/admin/sponsor-tier-templates'],
   );
-  const update = useApiMutation<Record<string, unknown>>(
-    `/admin/sponsor-tiers/${tier?.id}`,
-    'PATCH',
-    invalidate,
-  );
-  const action = tier ? update : create;
+
+  function createAndAssign() {
+    create.mutate(
+      { nameLo },
+      {
+        onSuccess: (template) => {
+          assign.mutate({ templateId: template.id }, { onSuccess: () => setNameLo('') });
+        },
+      },
+    );
+  }
 
   return (
-    <Dialog
-      open
-      onClose={onClose}
-      title={tier ? 'ປ່ຽນຊື່ໝວດ' : 'ເພີ່ມໝວດຜູ້ສະໜັບສະໜູນ'}
-      footer={
-        <>
-          <Button type="button" onClick={onClose} disabled={action.isPending}>
-            ຍົກເລີກ
-          </Button>
-          <Button type="submit" form="tier-form" variant="primary" disabled={action.isPending}>
-            {action.isPending ? 'ກຳລັງບັນທຶກ…' : 'ບັນທຶກ'}
-          </Button>
-        </>
-      }
-    >
-      <form
-        id="tier-form"
-        noValidate
-        onSubmit={(event) => {
-          event.preventDefault();
-          action.mutate({ nameLo }, { onSuccess: onClose });
-        }}
-      >
-        <Field label="ຊື່ໝວດ" help="ຂຶ້ນເປັນຫົວຂໍ້ຂອງກຸ່ມໂລໂກ້ໃນໜ້າປີ">
-          <Input
-            required
-            autoFocus
-            placeholder="ຜູ້ສະໜັບສະໜູນຫຼັກ"
-            value={nameLo}
-            onChange={(event) => setNameLo(event.target.value)}
-          />
+    <Dialog open={open} onClose={onClose} title="ເລືອກໝວດຈາກຄັງ" width="lg">
+      <div className="relative mb-3">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
+        <Input
+          className="pl-9"
+          placeholder="ຄົ້ນຫາຊື່ໝວດ…"
+          value={term}
+          onChange={(event) => setTerm(event.target.value)}
+        />
+      </div>
+
+      {assign.error && (
+        <div className="mb-3">
+          <ErrorNote error={assign.error} />
+        </div>
+      )}
+
+      <ul className="max-h-80 overflow-y-auto rounded-[var(--radius-ui-sm)] border border-rule bg-white">
+        {!data?.data.length ? (
+          <li className="px-3 py-3 text-[12.5px] text-ink-3">ບໍ່ພົບໃນຄັງ — ສ້າງໝວດໃໝ່ຂ້າງລຸ່ມໄດ້ເລີຍ</li>
+        ) : (
+          data.data.map((template) => {
+            const already = assigned.has(template.id);
+            return (
+              <li key={template.id} className="border-b border-hairline last:border-b-0">
+                <div className="flex items-center gap-3 px-3 py-2">
+                  <p className="min-w-0 truncate font-serif text-[15px] text-ink">{template.nameLo}</p>
+                  <div className="ml-auto">
+                    {already ? (
+                      <span className="text-[11px] text-ink-3">ຢູ່ໃນປີນີ້ແລ້ວ</span>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        disabled={assign.isPending}
+                        onClick={() => assign.mutate({ templateId: template.id })}
+                      >
+                        ເລືອກ
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })
+        )}
+      </ul>
+
+      <div className="mt-4 rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2 p-3">
+        <p className="mb-2 text-[12px] font-semibold text-ink-2">ບໍ່ມີໃນຄັງ? ສ້າງໃໝ່ໄດ້ເລີຍ</p>
+        <Field label="ຊື່ໝວດ">
+          <Input value={nameLo} onChange={(event) => setNameLo(event.target.value)} />
         </Field>
-        {action.error && <ErrorNote error={action.error} />}
-      </form>
+
+        {create.error && <ErrorNote error={create.error} />}
+
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={!nameLo || create.isPending || assign.isPending}
+          onClick={createAndAssign}
+        >
+          ສ້າງ ແລະ ເລືອກໃຊ້
+        </Button>
+        <p className="mt-2 text-[11px] text-ink-3">ແກ້ຊື່ພາຍຫຼັງໄດ້ທີ່ໜ້າ “ຄັງຜູ້ສະໜັບສະໜູນ”</p>
+      </div>
     </Dialog>
   );
 }
 
 /**
- * Deleting a group that still holds logos asks where they go first. The logos are
- * a year's paying sponsors; losing one to a click is not a recoverable mistake.
+ * Unassigning a group that still holds logos asks where they go first. The
+ * logos are a year's paying sponsors; losing one to a click is not a
+ * recoverable mistake. The library entry itself is never touched here.
  */
 function DeleteTierDialog({
   tier,
@@ -412,7 +459,7 @@ function DeleteTierDialog({
     <Dialog
       open
       onClose={onClose}
-      title={`ລຶບໝວດ “${tier.nameLo}”?`}
+      title={`ເອົາໝວດ “${tier.template.nameLo}” ອອກ?`}
       footer={
         <>
           <Button type="button" onClick={onClose} disabled={remove.isPending}>
@@ -429,16 +476,16 @@ function DeleteTierDialog({
               )
             }
           >
-            {remove.isPending ? 'ກຳລັງລຶບ…' : 'ລຶບ'}
+            {remove.isPending ? 'ກຳລັງເອົາອອກ…' : 'ເອົາອອກ'}
           </Button>
         </>
       }
     >
       {holds === 0 ? (
-        <Note>ໝວດນີ້ວ່າງຢູ່ ລຶບໄດ້ເລີຍ</Note>
+        <Note>ໝວດນີ້ວ່າງຢູ່ — ຂໍ້ມູນໃນຄັງຍັງຢູ່ຄືເກົ່າ</Note>
       ) : blocked ? (
         <Note tone="brand">
-          ໝວດນີ້ມີ {holds} ໂລໂກ້ ແລະ ຍັງບໍ່ມີໝວດອື່ນໃຫ້ຍ້າຍໄປ — ສ້າງໝວດໃໝ່ກ່ອນ ຫຼື ລຶບໂລໂກ້ອອກເອງ
+          ໝວດນີ້ມີ {holds} ໂລໂກ້ ແລະ ຍັງບໍ່ມີໝວດອື່ນໃຫ້ຍ້າຍໄປ — ເລືອກໝວດອື່ນຈາກຄັງກ່ອນ ຫຼື ລຶບໂລໂກ້ອອກເອງ
         </Note>
       ) : (
         <>
@@ -450,7 +497,7 @@ function DeleteTierDialog({
               <Select value={moveTo} onChange={(event) => setMoveTo(event.target.value)}>
                 {others.map((option) => (
                   <option key={option.id} value={option.id}>
-                    {option.nameLo}
+                    {option.template.nameLo}
                   </option>
                 ))}
               </Select>
@@ -546,7 +593,7 @@ function SponsorDialog({
           >
             {tiers.map((tier) => (
               <option key={tier.id} value={tier.id}>
-                {tier.nameLo}
+                {tier.template.nameLo}
               </option>
             ))}
           </Select>

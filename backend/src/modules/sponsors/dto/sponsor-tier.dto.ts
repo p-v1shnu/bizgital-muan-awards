@@ -1,37 +1,18 @@
-import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import {
-  ArrayMaxSize,
-  IsArray,
-  IsInt,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-  ValidateNested,
-} from 'class-validator';
+import { ArrayMaxSize, IsArray, IsInt, IsOptional, IsString, ValidateNested } from 'class-validator';
 
-/** A sponsor group of one year, named by the team. */
-export class CreateSponsorTierDto {
-  @ApiProperty({ example: 'ຜູ້ສະໜັບສະໜູນຫຼັກ' })
+/** Assigns a library sponsor tier (sponsor-tier-templates.dto.ts) into this edition. */
+export class AssignSponsorTierDto {
+  @ApiProperty({ description: 'Sponsor tier template id from the library' })
   @IsString()
-  @MinLength(1)
-  @MaxLength(80)
-  nameLo!: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(80)
-  nameEn?: string | null;
+  templateId!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsInt()
   sortOrder?: number;
 }
-
-export class UpdateSponsorTierDto extends PartialType(CreateSponsorTierDto) {}
 
 class TierOrderItem {
   @ApiProperty()
