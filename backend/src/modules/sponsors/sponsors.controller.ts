@@ -14,12 +14,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 
 import { CreateSponsorDto, ReorderSponsorsDto, UpdateSponsorDto } from './dto/sponsor.dto';
-import {
-  CreateSponsorTierDto,
-  DeleteSponsorTierDto,
-  ReorderSponsorTiersDto,
-  UpdateSponsorTierDto,
-} from './dto/sponsor-tier.dto';
+import { AssignSponsorTierDto, DeleteSponsorTierDto, ReorderSponsorTiersDto } from './dto/sponsor-tier.dto';
 import { SponsorTiersService } from './sponsor-tiers.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
@@ -96,14 +91,14 @@ export class SponsorTiersAdminController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Add a sponsor group' })
-  create(
+  @ApiOperation({ summary: 'Assign a library sponsor tier to this edition' })
+  assign(
     @Param('editionId') editionId: string,
-    @Body() dto: CreateSponsorTierDto,
+    @Body() dto: AssignSponsorTierDto,
     @CurrentUser() actor: AuthenticatedUser,
     @Req() req: Request,
   ) {
-    return this.tiers.create(editionId, dto, actor.id, req.ip);
+    return this.tiers.assign(editionId, dto, actor.id, req.ip);
   }
 
   @Post('reorder')
@@ -135,17 +130,6 @@ export class SponsorTiersAdminController {
 export class SponsorTierActionsController {
   constructor(private readonly tiers: SponsorTiersService) {}
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Rename a sponsor group' })
-  update(
-    @Param('id') id: string,
-    @Body() dto: UpdateSponsorTierDto,
-    @CurrentUser() actor: AuthenticatedUser,
-    @Req() req: Request,
-  ) {
-    return this.tiers.update(id, dto, actor.id, req.ip);
-  }
-
   /**
    * Where the logos go is a query parameter rather than a body: the back office's
    * fetch layer sends no body on a DELETE, and a rule the client cannot express
@@ -153,7 +137,7 @@ export class SponsorTierActionsController {
    */
   @Delete(':id')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Remove a sponsor group, moving any logos it holds' })
+  @ApiOperation({ summary: 'Unassign a sponsor tier from this edition, moving any logos it holds' })
   remove(
     @Param('id') id: string,
     @Query() dto: DeleteSponsorTierDto,

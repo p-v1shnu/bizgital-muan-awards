@@ -116,7 +116,7 @@ export class PublicSiteService {
       this.prisma.editionSponsor.findMany({
         where: { editionId: edition.id },
         orderBy: [{ tier: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
-        include: { tier: { select: { id: true, nameLo: true } } },
+        include: { tier: { select: { id: true, template: { select: { nameLo: true } } } } },
       }),
     ]);
 
@@ -158,7 +158,7 @@ export class PublicSiteService {
         logoKey: sponsor.logoKey,
         websiteUrl: sponsor.websiteUrl,
         tierId: sponsor.tier.id,
-        tierNameLo: sponsor.tier.nameLo,
+        tierNameLo: sponsor.tier.template.nameLo,
       })),
     };
   }

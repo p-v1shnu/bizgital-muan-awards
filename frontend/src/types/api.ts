@@ -93,13 +93,21 @@ export interface EditionJudge {
   judge: Judge;
 }
 
-/** A sponsor group of one year — named by the team, not a fixed list. */
+/** A reusable sponsor-tier name, shared like Judge — see SponsorTier. */
+export interface SponsorTierTemplate {
+  id: string;
+  nameLo: string;
+  nameEn: string | null;
+  _count?: { tiers: number };
+}
+
+/** One edition's assignment of a SponsorTierTemplate — the name lives on `template`. */
 export interface SponsorTier {
   id: string;
   editionId: string;
-  nameLo: string;
-  nameEn: string | null;
+  templateId: string;
   sortOrder: number;
+  template: SponsorTierTemplate;
   _count?: { sponsors: number };
 }
 

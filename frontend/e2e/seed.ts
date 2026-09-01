@@ -197,6 +197,15 @@ export default async function seed() {
     extraCategoryTemplateIds.push((await created.json()).data.id);
   }
 
+  // A sponsor tier template, made once here for the same reason the category
+  // templates above are: a tier assigned to both 2025 and 2026 is the same
+  // library entry picked twice, not two templates with the same name.
+  const sponsorTierTemplate = await api.post('admin/sponsor-tier-templates', {
+    headers: auth,
+    data: { nameLo: 'ຜູ້ສະໜັບສະໜູນຫຼັກ' },
+  });
+  const sponsorTierTemplateId = (await sponsorTierTemplate.json()).data.id;
+
   for (const [year, finalPhase] of [
     [2025, 'WINNERS_ANNOUNCED'],
     [2026, 'PUBLISHED'],
@@ -280,11 +289,11 @@ export default async function seed() {
       headers: auth,
       data: { judgeId, role: 'CHAIR' },
     });
-    // Sponsor groups are the year's own rows now, named by the team, so the seed
-    // makes one and puts the logo in it — the same two steps the back office does.
+    // The sponsor tier is picked from the library, then the logo goes in it —
+    // the same two steps the back office does.
     const tier = await api.post(`admin/editions/${editionId}/sponsor-tiers`, {
       headers: auth,
-      data: { nameLo: 'ຜູ້ສະໜັບສະໜູນຫຼັກ' },
+      data: { templateId: sponsorTierTemplateId },
     });
     await api.post(`admin/editions/${editionId}/sponsors`, {
       headers: auth,

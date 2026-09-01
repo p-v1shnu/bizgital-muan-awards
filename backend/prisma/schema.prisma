@@ -177,11 +177,10 @@ model Category {
 
 /// What a Category is stamped from at creation time — so "creator of the
 /// year" gets the same slug every time it is picked instead of being retyped.
-/// Not a live link the year page reads through: renaming a template only
-/// changes what the *next* pick copies down, the same reasoning
-/// EditionSponsorTier documents for why that table isn't shared either. A
-/// slug already assigned to some edition stays exactly as assigned even if
-/// this row changes later.
+/// A live link now, not a one-time stamp: CategoryTemplatesService.update()
+/// cascades nameLo/nameEn/slug/descriptionLo onto every Category already
+/// created from a template, the same live-assignment shape
+/// SponsorTierTemplate/EditionSponsorTier use.
 model CategoryTemplate {
   id     String  @id @default(cuid())
   slug   String  @unique
@@ -269,27 +268,47 @@ model EditionJudge {
   @@map("edition_judges")
 }
 
-/// A sponsor group of one year — "ຜູ້ສະໜັບສະໜູນຫຼັກ", "ລະດັບຄຳ", or whatever that
-/// year sold. The team names them and puts logos in them, so a year that invents
-/// a group nobody thought of does not need a migration; the six that used to be
-/// an enum are seeded per year by migration 20 from what each year actually used.
+/// A reusable sponsor-tier name — "ຜູ້ສະໜັບສະໜູນຫຼັກ", "ລະດັບຄຳ", whatever the
+/// team calls the package it sold — assigned into whichever editions sold
+/// it, the same live-assignment shape as Judge/EditionJudge: the name lives
+/// on the template, and EditionSponsorTier only records that this edition
+/// picked it up and where it sits in that edition's own order.
 ///
-/// Bound to the edition rather than shared, like Category and unlike the creator
-/// and judge libraries. The reason is the archive: renaming a shared tier in 2027
-/// would silently rewrite what the 2025 page says it sold, and those pages are
-/// the record of a year that already happened. Copying last year's groups —
-/// logos included — is one button in the back office instead.
+/// This used to be a plain per-edition row instead, on purpose (renaming a
+/// shared tier would silently rewrite what an already-finished year says it
+/// sold). The team asked for the shared, live-linked shape anyway, the same
+/// as CategoryTemplate — a genuinely different tier belongs to a new
+/// template, not an edit of an existing one.
+model SponsorTierTemplate {
+  id     String  @id @default(cuid())
+  nameLo String
+  nameEn String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tiers EditionSponsorTier[]
+
+  @@index([deletedAt])
+  @@map("sponsor_tier_templates")
+}
+
+/// One edition's assignment of a SponsorTierTemplate — which year sold that
+/// tier, and where it sits among that edition's other tiers. The tier's own
+/// name is never copied down here; it is read through `template`.
 model EditionSponsorTier {
-  id        String @id @default(cuid())
-  editionId String
+  id         String @id @default(cuid())
+  editionId  String
+  templateId String
 
-  nameLo    String
-  nameEn    String?
-  sortOrder Int     @default(0)
+  sortOrder Int @default(0)
 
-  edition  Edition          @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  edition  Edition             @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  template SponsorTierTemplate @relation(fields: [templateId], references: [id], onDelete: Restrict)
   sponsors EditionSponsor[]
 
+  @@unique([editionId, templateId])
   @@index([editionId, sortOrder])
   @@map("edition_sponsor_tiers")
 }

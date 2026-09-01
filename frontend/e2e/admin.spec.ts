@@ -162,7 +162,7 @@ test.describe('the edition page', () => {
 
     // The group heading is data now, not one of six labels in the code.
     await expect(page.getByText('ຜູ້ສະໜັບສະໜູນຫຼັກ')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'ເພີ່ມໝວດ' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'ເລືອກຈາກຄັງ' })).toBeVisible();
 
     const up = page.locator('[aria-label^="ຍ້າຍ"][aria-label$="ຂຶ້ນ"]');
     await expect(up.first()).toBeVisible();

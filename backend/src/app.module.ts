@@ -21,6 +21,7 @@ import { NominationsModule } from './modules/nominations/nominations.module';
 import { PublicSiteModule } from './modules/public-site/public-site.module';
 import { SiteSettingsModule } from './modules/site-settings/site-settings.module';
 import { SponsorsModule } from './modules/sponsors/sponsors.module';
+import { SponsorTierTemplatesModule } from './modules/sponsor-tier-templates/sponsor-tier-templates.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { SubmissionsModule } from './modules/submissions/submissions.module';
 
@@ -42,6 +43,7 @@ import { SubmissionsModule } from './modules/submissions/submissions.module';
     JudgesModule,
     NominationsModule,
     SponsorsModule,
+    SponsorTierTemplatesModule,
     SubmissionsModule,
     PublicSiteModule,
     SiteSettingsModule,
