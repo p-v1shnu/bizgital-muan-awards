@@ -79,6 +79,18 @@ export class ListSubmissionsDto extends PaginationDto {
   editionId?: string;
 }
 
+export class CountSubmissionsDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  editionId?: string;
+}
+
 /**
  * Fold one pending group into another, for the case the automatic grouping
  * cannot see: the same person sent in under two spellings (PRD §7.2).

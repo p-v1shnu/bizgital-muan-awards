@@ -14,7 +14,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { randomSlug, safeHttpUrl, slugify } from '@/lib/utils';
 import { useDebounced } from '@/lib/use-debounced';
-import type { SubmissionGroup, SubmissionStatus } from '@/types/api';
+import type { Category, Edition, SubmissionGroup, SubmissionStatus } from '@/types/api';
 import { formatDateTime } from '@/lib/dates';
 
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
@@ -27,14 +27,28 @@ const STATUS_LABEL: Record<SubmissionStatus, string> = {
 export default function SubmissionsPage() {
   const [status, setStatus] = useState<SubmissionStatus>('PENDING');
   const [term, setTerm] = useState('');
+  const [editionId, setEditionId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [page, setPage] = useState(1);
   const debounced = useDebounced(term, 250);
 
-  const query = `/admin/submissions?status=${status}&page=${page}&perPage=25${
+  const { data: editions } = useApi<Edition[]>('/admin/editions');
+  const { data: categories } = useApi<Category[]>(
+    editionId ? `/admin/editions/${editionId}/categories` : null,
+  );
+
+  const filterParams = `${editionId ? `&editionId=${editionId}` : ''}${
+    categoryId ? `&categoryId=${categoryId}` : ''
+  }`;
+  const query = `/admin/submissions?status=${status}&page=${page}&perPage=25${filterParams}${
     debounced.trim() ? `&q=${encodeURIComponent(debounced.trim())}` : ''
   }`;
   const { data, isLoading, error } = useApiPage<SubmissionGroup>(query);
-  const { data: counts } = useApi<Record<string, number>>('/admin/submissions/counts');
+  const { data: counts } = useApi<Record<string, number>>(
+    filterParams ? `/admin/submissions/counts?${filterParams.slice(1)}` : '/admin/submissions/counts',
+  );
+
+  const hasFilters = editionId || categoryId || term;
 
   return (
     <>
@@ -75,15 +89,68 @@ export default function SubmissionsPage() {
             }
           />
 
-          <div className="border-b border-rule p-3">
-            <Input
-              placeholder="ຄົ້ນຫາຕາມຊື່ທີ່ຖືກສົ່ງເຂົ້າມາ…"
-              value={term}
-              onChange={(event) => {
-                setTerm(event.target.value);
-                setPage(1);
-              }}
-            />
+          <div className="flex flex-wrap items-center gap-2 border-b border-rule p-3">
+            <div className="w-full sm:w-auto sm:min-w-[9rem]">
+              <Select
+                value={editionId}
+                onChange={(event) => {
+                  setEditionId(event.target.value);
+                  setCategoryId('');
+                  setPage(1);
+                }}
+              >
+                <option value="">ທຸກປີ</option>
+                {editions?.map((edition) => (
+                  <option key={edition.id} value={edition.id}>
+                    ປີ {edition.year}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="w-full sm:w-auto sm:min-w-[11rem]">
+              <Select
+                value={categoryId}
+                disabled={!editionId}
+                onChange={(event) => {
+                  setCategoryId(event.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">{editionId ? 'ທຸກສາຂາ' : 'ເລືອກປີກ່ອນ'}</option>
+                {categories?.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.nameLo}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="w-full flex-1 sm:w-auto">
+              <Input
+                placeholder="ຄົ້ນຫາຕາມຊື່ທີ່ຖືກສົ່ງເຂົ້າມາ…"
+                value={term}
+                onChange={(event) => {
+                  setTerm(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </div>
+
+            {hasFilters ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setEditionId('');
+                  setCategoryId('');
+                  setTerm('');
+                  setPage(1);
+                }}
+              >
+                ລ້າງຕົວກອງ
+              </Button>
+            ) : null}
           </div>
 
           {isLoading ? (

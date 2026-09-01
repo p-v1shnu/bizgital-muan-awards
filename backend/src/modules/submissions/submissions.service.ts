@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 
 import { AuditService } from '../audit/audit.service';
 import {
+  CountSubmissionsDto,
   CreateSubmissionDto,
   ListSubmissionsDto,
   MergeSubmissionDto,
@@ -186,9 +187,14 @@ export class SubmissionsService {
     return paginate(groups, totalGroups, page, perPage);
   }
 
-  async counts() {
+  async counts(query: CountSubmissionsDto = {}) {
+    const where: Prisma.PublicSubmissionWhereInput = {
+      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      ...(query.editionId ? { category: { editionId: query.editionId } } : {}),
+    };
     const grouped = await this.prisma.publicSubmission.groupBy({
       by: ['status'],
+      where,
       _count: { _all: true },
     });
     const out: Record<string, number> = { PENDING: 0, ACCEPTED: 0, REJECTED: 0, MERGED: 0 };

@@ -3,7 +3,13 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Request } from 'express';
 
-import { CreateSubmissionDto, ListSubmissionsDto, MergeSubmissionDto, ReviewSubmissionDto } from './dto/submission.dto';
+import {
+  CountSubmissionsDto,
+  CreateSubmissionDto,
+  ListSubmissionsDto,
+  MergeSubmissionDto,
+  ReviewSubmissionDto,
+} from './dto/submission.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -47,8 +53,8 @@ export class SubmissionsAdminController {
 
   @Get('counts')
   @ApiOperation({ summary: 'How many entries sit in each status' })
-  counts() {
-    return this.submissions.counts();
+  counts(@Query() query: CountSubmissionsDto) {
+    return this.submissions.counts(query);
   }
 
   @Post(':id/accept')

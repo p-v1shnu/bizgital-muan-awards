@@ -118,6 +118,61 @@ describe('public submissions and the screening queue', () => {
     expect(counts.body.data).toMatchObject({ ACCEPTED: 1, MERGED: 3, REJECTED: 1, PENDING: 0 });
   });
 
+  it('scopes the queue and its counts to one edition, and further to one category', async () => {
+    const otherEditionId = (
+      await api(h)
+        .post(path('/admin/editions'))
+        .set(h.auth)
+        .send({ year: 2030, slug: '2030', titleLo: 'ງານ 2030' })
+        .expect(201)
+    ).body.data.id;
+    const otherTemplateId = await categoryTemplate(h, 'other', 'ສາຂາອື່ນ');
+    const otherCategoryId = (
+      await api(h)
+        .post(path(`/admin/editions/${otherEditionId}/categories`))
+        .set(h.auth)
+        .send({ templateId: otherTemplateId })
+        .expect(201)
+    ).body.data.id;
+    await api(h)
+      .patch(path(`/admin/editions/${otherEditionId}/phase`))
+      .set(h.auth)
+      .send({ phase: 'PUBLISHED' })
+      .expect(200);
+    await api(h)
+      .patch(path(`/admin/editions/${otherEditionId}/submissions`))
+      .set(h.auth)
+      .send({ submissionsOpen: true })
+      .expect(200);
+    await send({ categoryId: otherCategoryId, creatorNameRaw: 'ຄົນຂອງອີກປີ' }, '203.0.113.90').expect(201);
+
+    const scopedQueue = await api(h)
+      .get(path(`/admin/submissions?editionId=${otherEditionId}`))
+      .set(h.auth)
+      .expect(200);
+    expect(scopedQueue.body.data).toHaveLength(1);
+    expect(scopedQueue.body.data[0].creatorNameRaw).toBe('ຄົນຂອງອີກປີ');
+
+    const scopedCounts = await api(h)
+      .get(path(`/admin/submissions/counts?editionId=${otherEditionId}`))
+      .set(h.auth)
+      .expect(200);
+    expect(scopedCounts.body.data).toMatchObject({ PENDING: 1, ACCEPTED: 0, REJECTED: 0, MERGED: 0 });
+
+    // The original edition's counts are untouched by the new one existing.
+    const originalCounts = await api(h)
+      .get(path(`/admin/submissions/counts?editionId=${editionId}`))
+      .set(h.auth)
+      .expect(200);
+    expect(originalCounts.body.data).toMatchObject({ ACCEPTED: 1, MERGED: 3, REJECTED: 1, PENDING: 0 });
+
+    const scopedByCategory = await api(h)
+      .get(path(`/admin/submissions/counts?categoryId=${otherCategoryId}`))
+      .set(h.auth)
+      .expect(200);
+    expect(scopedByCategory.body.data).toMatchObject({ PENDING: 1, ACCEPTED: 0, REJECTED: 0, MERGED: 0 });
+  });
+
   it('stores the submitter IP hashed, never in the clear', async () => {
     const row = await h.prisma.publicSubmission.findFirst();
     expect(row?.ipHash).toMatch(/^[a-f0-9]{64}$/);
