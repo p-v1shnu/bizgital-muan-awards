@@ -171,6 +171,15 @@ describe('public submissions and the screening queue', () => {
       .set(h.auth)
       .expect(200);
     expect(scopedByCategory.body.data).toMatchObject({ PENDING: 1, ACCEPTED: 0, REJECTED: 0, MERGED: 0 });
+
+    // Opening the other edition closed this one as a side effect (PRD §4.2:
+    // only one edition accepts entries at a time) — reopen it, since the
+    // rest of this file still sends into it.
+    await api(h)
+      .patch(path(`/admin/editions/${editionId}/submissions`))
+      .set(h.auth)
+      .send({ submissionsOpen: true })
+      .expect(200);
   });
 
   it('stores the submitter IP hashed, never in the clear', async () => {
