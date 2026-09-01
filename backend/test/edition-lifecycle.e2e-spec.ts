@@ -328,36 +328,32 @@ describe('edition lifecycle', () => {
     });
 
     it('refuses a library slug rename that would collide with another category in an edition already using it', async () => {
-      const firstTemplateId = (
+      const templateId = (
         await api(h)
           .post(path('/admin/category-templates'))
           .set(h.auth)
-          .send({ slug: 'collision-first', nameLo: 'ສາຂາທົດສອບການຂັດກັນ ກ' })
-          .expect(201)
-      ).body.data.id;
-      const secondTemplateId = (
-        await api(h)
-          .post(path('/admin/category-templates'))
-          .set(h.auth)
-          .send({ slug: 'collision-second', nameLo: 'ສາຂາທົດສອບການຂັດກັນ ຂ' })
+          .send({ slug: 'collision-template', nameLo: 'ສາຂາທົດສອບການຂັດກັນ' })
           .expect(201)
       ).body.data.id;
       const editionId = (await createEdition({ year: 2059, slug: '2059', titleLo: 'ງານ 2059' })).body.data.id;
       await api(h)
         .post(path(`/admin/editions/${editionId}/categories`))
         .set(h.auth)
-        .send({ templateId: firstTemplateId })
-        .expect(201);
-      await api(h)
-        .post(path(`/admin/editions/${editionId}/categories`))
-        .set(h.auth)
-        .send({ templateId: secondTemplateId })
+        .send({ templateId })
         .expect(201);
 
+      // Every template has a globally unique slug, so no rename can ever
+      // collide with another template's category that way — the only
+      // category whose slug can already sit outside that space is one with
+      // no template of its own (legacy, pre-dating the library).
+      await h.prisma.category.create({
+        data: { editionId, slug: 'collision-target', nameLo: 'ສາຂາບໍ່ມີແມ່ແບບ', sortOrder: 99 },
+      });
+
       const response = await api(h)
-        .patch(path(`/admin/category-templates/${secondTemplateId}`))
+        .patch(path(`/admin/category-templates/${templateId}`))
         .set(h.auth)
-        .send({ slug: 'collision-first' })
+        .send({ slug: 'collision-target' })
         .expect(409);
       expect(response.body.message).toContain('already used');
     });
