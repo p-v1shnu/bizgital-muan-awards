@@ -333,8 +333,7 @@ function RollbackPanel({ edition }: { edition: Edition }) {
         <CardHeader title="ຖອນການປະກາດ (ສຸກເສີນ)" aside="SUPER_ADMIN ເທົ່ານັ້ນ" />
         <CardBody>
           <div className="mb-3 rounded-[var(--radius-ui-sm)] border border-[#e4c1b7] bg-stop-soft px-3 py-2 text-[13px] text-stop">
-            ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ — <b>ຊ່ອນຈາກຄົນທີ່ຍັງບໍ່ເຫັນເທົ່ານັ້ນ</b> ແຕ່ລຶບສິ່ງທີ່ມີຄົນເຫັນ
-            ແຄບ ຫຼື ແຊຣ໌ໄປແລ້ວບໍ່ໄດ້
+            ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ ແຕ່ຂໍ້ມູນທີ່ປະກາດໄປກ່ອນໜ້ານັ້ນອາດຈະມີຄົນເຫັນໄປແລ້ວ
           </div>
 
           <div className="mb-3">
@@ -395,7 +394,7 @@ function RollbackPanel({ edition }: { edition: Edition }) {
         pending={rollback.isPending}
         danger
         title={`ຖອນກັບໄປ “${PHASE_LABEL[targetPhase]}”?`}
-        description="ຈະຊ່ອນຈາກຄົນທີ່ຍັງບໍ່ເຫັນທັນທີ ແຕ່ລຶບສິ່ງທີ່ມີຄົນເຫັນ ແຄບ ຫຼື ແຊຣ໌ໄປແລ້ວບໍ່ໄດ້ — ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດເທົ່ານັ້ນ"
+        description="ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ ແຕ່ຂໍ້ມູນທີ່ປະກາດໄປກ່ອນໜ້ານັ້ນອາດຈະມີຄົນເຫັນໄປແລ້ວ"
         confirmLabel="ຖອນການປະກາດ"
       />
     </>
