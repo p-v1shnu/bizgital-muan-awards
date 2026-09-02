@@ -53,23 +53,25 @@ interface WinnerRowData {
 function WinnerRow({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
   const { category, winner } = row;
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-5 py-4 last:border-b-0">
-      <span className="w-full text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3 sm:w-56">
+    <div className="border-b border-hairline px-5 py-4 last:border-b-0">
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">
         {category.nameLo}
-      </span>
-      <Link
-        href={`/creators/${winner.creator.slug}`}
-        className="flex items-center gap-3 font-serif text-xl text-ink hover:underline"
-      >
-        <Avatar creator={winner.creator} size="md" />
-        {winner.creator.nameLo}
-      </Link>
-      <Link
-        href={`/awards/${editionSlug}/${category.slug}`}
-        className="ml-auto text-[13px] text-brand-deep hover:underline"
-      >
-        ເບິ່ງຜູ້ເຂົ້າຊີງ →
-      </Link>
+      </p>
+      <div className="flex items-center gap-3">
+        <Link
+          href={`/creators/${winner.creator.slug}`}
+          className="flex min-w-0 items-center gap-3 font-serif text-xl text-ink hover:underline"
+        >
+          <Avatar creator={winner.creator} size="md" />
+          <span className="truncate">{winner.creator.nameLo}</span>
+        </Link>
+        <Link
+          href={`/awards/${editionSlug}/${category.slug}`}
+          className="ml-auto shrink-0 text-[13px] text-brand-deep hover:underline"
+        >
+          ເບິ່ງຜູ້ເຂົ້າຊີງ →
+        </Link>
+      </div>
     </div>
   );
 }

@@ -141,7 +141,7 @@ export function Avatar({
         alt={alt}
         width={px}
         height={px}
-        className={cn(box, 'shrink-0 rounded-full border border-rule object-cover')}
+        className={cn(box, 'shrink-0 rounded-[20%] border border-rule object-cover')}
       />
     );
   }
@@ -149,7 +149,7 @@ export function Avatar({
     <span
       className={cn(
         box,
-        'grid shrink-0 place-items-center rounded-full border border-rule bg-panel-2 font-serif text-ink-3',
+        'grid shrink-0 place-items-center rounded-[20%] border border-rule bg-panel-2 font-serif text-ink-3',
         size === 'lg' ? 'text-3xl' : 'text-xl',
       )}
     >
@@ -170,18 +170,18 @@ export function CreatorCard({
   const body = (
     <div
       className={cn(
-        'flex h-full flex-col items-center gap-3 rounded-[var(--radius-box)] border p-5 text-center transition-colors',
-        isWinner
-          ? 'border-brand-edge bg-brand-soft'
-          : 'border-rule bg-panel hover:border-ink-3',
+        'relative flex h-full flex-col items-center gap-3 overflow-hidden rounded-[var(--radius-box)] bg-panel p-5 pt-6 text-center',
+        'shadow-[0_1px_2px_rgba(20,14,10,.05),0_1px_10px_rgba(20,14,10,.04)] transition-shadow',
+        'hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)]',
       )}
     >
-      <Avatar creator={creator} />
+      {isWinner && <span className="foil absolute inset-x-0 top-0 h-[3px]" aria-hidden />}
+      <Avatar creator={creator} size="lg" />
       <div>
         {isWinner && (
-          <span className="mb-1.5 inline-block rounded-full border border-brand-edge bg-white px-2.5 py-0.5 text-[10.5px] font-bold tracking-wide text-brand-deep">
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-deep">
             ຜູ້ຊະນະ
-          </span>
+          </p>
         )}
         <p className="font-serif text-[19px] leading-tight text-ink">{creator.nameLo}</p>
         {creator.nameEn && <p className="mt-0.5 text-[12px] text-ink-3">{creator.nameEn}</p>}
