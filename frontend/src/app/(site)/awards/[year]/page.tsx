@@ -385,11 +385,6 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                       <p className="mt-0.5 text-[13px] text-ink-2">{category.descriptionLo}</p>
                     )}
                   </div>
-                  {category.isFeatured && (
-                    <span className="rounded-full border border-brand-edge bg-brand-soft px-2.5 py-0.5 text-[10.5px] font-bold text-brand-deep">
-                      ສາຂາເດັ່ນ
-                    </span>
-                  )}
                   {category.nominees.length > 0 && (
                     <span className="ml-auto shrink-0 text-[12px] text-ink-3">
                       ຜູ້ເຂົ້າຊີງ {category.nominees.length} ຄົນ

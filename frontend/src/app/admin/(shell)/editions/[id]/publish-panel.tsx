@@ -59,7 +59,7 @@ export function PublishPanel({
     <>
       <Card className="overflow-hidden border-brand-edge">
         <FoilRule className="rounded-none" />
-        <CardHeader title="ສະຫວິດ 1 · ໜ້າປີສະແດງຫຍັງ" />
+        <CardHeader title="ໜ້າປີສະແດງຫຍັງ" />
         <CardBody>
           <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-deep">
             ຢູ່ບ່ອນນີ້
@@ -146,11 +146,6 @@ export function PublishPanel({
 
       <SubmissionsPanel edition={edition} />
 
-      <Note tone="brand">
-        <b>ເປັນຫຍັງຈຶ່ງແຍກສອງກ່ອງ:</b> ປີເກົ່າທີ່ຍ້ອນໃສ່ຂໍ້ມູນຕ້ອງ “ປະກາດຜູ້ຊະນະແລ້ວ”
-        ໂດຍ<b>ບໍ່ເຄີຍເປີດຟອມ</b>ເລີຍ — ສອງເລື່ອງນີ້ຈຶ່ງບໍ່ຄວນເປັນປຸ່ມດຽວກັນ
-      </Note>
-
       <RollbackPanel edition={edition} />
 
       {nextPhase && (
@@ -204,7 +199,7 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
 
   return (
     <Card>
-      <CardHeader title="ສະຫວິດ 2 · ຟອມສົ່ງລາຍຊື່" aside="ແຍກຈາກສະຫວິດ 1" />
+      <CardHeader title="ຟອມສົ່ງລາຍຊື່" aside="ແຍກຈາກຂັ້ນຕອນປີຂ້າງເທິງ" />
       <CardBody>
         <div className="mb-1 flex gap-1.5" role="radiogroup" aria-label="ສະຖານະຟອມສົ່ງລາຍຊື່">
           <StateButton
@@ -338,8 +333,7 @@ function RollbackPanel({ edition }: { edition: Edition }) {
         <CardHeader title="ຖອນການປະກາດ (ສຸກເສີນ)" aside="SUPER_ADMIN ເທົ່ານັ້ນ" />
         <CardBody>
           <div className="mb-3 rounded-[var(--radius-ui-sm)] border border-[#e4c1b7] bg-stop-soft px-3 py-2 text-[13px] text-stop">
-            ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ — <b>ຊ່ອນຈາກຄົນທີ່ຍັງບໍ່ເຫັນເທົ່ານັ້ນ</b> ແຕ່ລຶບສິ່ງທີ່ມີຄົນເຫັນ
-            ແຄບ ຫຼື ແຊຣ໌ໄປແລ້ວບໍ່ໄດ້
+            ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ ແຕ່ຂໍ້ມູນທີ່ປະກາດໄປກ່ອນໜ້ານັ້ນອາດຈະມີຄົນເຫັນໄປແລ້ວ
           </div>
 
           <div className="mb-3">
@@ -400,7 +394,7 @@ function RollbackPanel({ edition }: { edition: Edition }) {
         pending={rollback.isPending}
         danger
         title={`ຖອນກັບໄປ “${PHASE_LABEL[targetPhase]}”?`}
-        description="ຈະຊ່ອນຈາກຄົນທີ່ຍັງບໍ່ເຫັນທັນທີ ແຕ່ລຶບສິ່ງທີ່ມີຄົນເຫັນ ແຄບ ຫຼື ແຊຣ໌ໄປແລ້ວບໍ່ໄດ້ — ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດເທົ່ານັ້ນ"
+        description="ໃຊ້ສະເພາະຕອນປະກາດຜິດພາດ ແຕ່ຂໍ້ມູນທີ່ປະກາດໄປກ່ອນໜ້ານັ້ນອາດຈະມີຄົນເຫັນໄປແລ້ວ"
         confirmLabel="ຖອນການປະກາດ"
       />
     </>

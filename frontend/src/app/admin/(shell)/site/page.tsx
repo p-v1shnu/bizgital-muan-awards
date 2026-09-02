@@ -199,7 +199,7 @@ function SettingsForm({
                   />
                 </Field>
                 <Field
-                  label="ຂໍ້ຄວາມແບຣນ"
+                  label="ຂໍ້ຄວາມຢູ່ກ້ອງ ຊື່ງານເທິງສຸດຂອງໜ້າຫຼັກ"
                   help="ປະໂຫຍກດຽວໃຕ້ຊື່ງານເທິງສຸດຂອງໜ້າຫຼັກ"
                 >
                   <Textarea
@@ -208,7 +208,7 @@ function SettingsForm({
                     onChange={(event) => setForm({ ...form, brandStatementLo: event.target.value })}
                   />
                 </Field>
-                <Field label="ຫົວຂໍ້ສ່ວນ “ເກີ່ຍວກັບງານ”" help="ຫົວຂໍ້ໃຫຍ່ຂອງໜ້າຫຼັກ ກ່ອນຫຍໍ້ໜ້າແນະນຳງານ">
+                <Field label="ຫົວຂໍ້ສ່ວນ “ກ່ຽວກັບງານ”" help="ຫົວຂໍ້ໃຫຍ່ຂອງໜ້າຫຼັກ ກ່ອນຫຍໍ້ໜ້າແນະນຳງານ">
                   <Input
                     required
                     value={form.aboutTitleLo}
@@ -245,10 +245,10 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">
-              <CardHeader title="ຂໍ້ຄວາມການ໌ດໃຕ້ hero ໜ້າຫຼັກ" />
+              <CardHeader title="ຂໍ້ຄວາມ Card ຢູ່ກ້ອງ Hero ໜ້າຫຼັກ" />
               <CardBody>
                 <Note>
-                  ການ໌ດຊ້າຍປ່ຽນຂໍ້ຄວາມຕາມ<b>ສະຖານະຂອງງານປີປັດຈຸບັນ</b> — ໃສ່ຂໍ້ຄວາມຂອງແຕ່ລະສະຖານະໄວ້
+                  Card ດ້ານຊ້າຍປ່ຽນຂໍ້ຄວາມຕາມ<b>ສະຖານະຂອງງານປີປັດຈຸບັນ</b> — ໃສ່ຂໍ້ຄວາມຂອງແຕ່ລະສະຖານະໄວ້
                   ລະບົບເລືອກໃຫ້ເອງ · ຊ່ອງໃດເວັ້ນວ່າງ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ ບໍ່ແມ່ນຫວ່າງເປົ່າ ·
                   ຄຳວ່າ “ງານປີນີ້” ກັບເລກປີ ລະບົບເຕີມໃຫ້ເອງ
                 </Note>
@@ -286,11 +286,11 @@ function SettingsForm({
 
                   <div className="rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2/40 p-3">
                     <p className="mb-2 text-[11px] font-semibold text-ink-3">
-                      ການ໌ດຂວາ · ທຳນຽບຜູ້ຊະນະ
+                      Card ຂວາ · ທຳນຽບຜູ້ຊະນະ
                     </p>
                     <Field
                       label="ຄຳອະທິບາຍ"
-                      help="ຫົວຂໍ້ຂອງການ໌ດນີ້ແກ້ບໍ່ໄດ້ ເພາະເປັນຊື່ໜ້າທີ່ມັນພາໄປ ແລະ ເມນູກັບ footer ກໍໃຊ້ຊື່ນັ້ນ"
+                      help="ຫົວຂໍ້ຂອງ Card ນີ້ແກ້ບໍ່ໄດ້ ເພາະເປັນຊື່ໜ້າທີ່ມັນພາໄປ ແລະ ເມນູກັບ footer ກໍໃຊ້ຊື່ນັ້ນ"
                     >
                       <Textarea
                         value={cards.hallOfWinners?.bodyLo ?? ''}
@@ -313,7 +313,7 @@ function SettingsForm({
                   onChange={setHeroImageKey}
                 />
                 <div className="mt-4">
-                  <Field label="ຄຳບັນຍາຍໃຕ້ຮູບ" hint="— ບໍ່ບັງຄັບ">
+                  <Field label="ຄຳບັນຍາຍກ້ອງຮູບ" hint="— ບໍ່ບັງຄັບ">
                     <Input
                       value={form.heroCaptionLo}
                       onChange={(event) => setForm({ ...form, heroCaptionLo: event.target.value })}
@@ -372,7 +372,7 @@ function SettingsForm({
                         key: 'bodyLo',
                         label: 'ຄຳອະທິບາຍ',
                         multiline: true,
-                        help: 'ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າຫຼັກວາງເປັນກາດແຄບ',
+                        help: 'ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າຫຼັກວາງເປັນ Card ແຄບ',
                       },
                     ]}
                   />

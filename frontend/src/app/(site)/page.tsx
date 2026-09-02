@@ -130,7 +130,7 @@ export default async function HomePage() {
               <SiteImage
                 imageKey={heroKey}
                 // Not heroCaptionLo: that field is a credit line under the
-                // picture ("ຄຳບັນຍາຍໃຕ້ຮູບ" in /admin/site) and now appears as
+                // picture ("ຄຳບັນຍາຍກ້ອງຮູບ" in /admin/site) and now appears as
                 // one, in the corner below. A credit describes where a photo came
                 // from, which is not what someone who cannot see it needs read out.
                 alt="ງານມອບລາງວັນ ມ່ວນອາວອດສ໌"
@@ -187,7 +187,7 @@ export default async function HomePage() {
               </h1>
               <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-white/85 md:text-base">
                 {site?.brandStatementLo || (
-                  <Placeholder>ຂໍ້ຄວາມແບຣນ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+                  <Placeholder>ຂໍ້ຄວາມຢູ່ກ້ອງຊື່ງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
                 )}
               </p>
               {/* The way in to this year, which docs/design/home.html puts here

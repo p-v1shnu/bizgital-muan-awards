@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -71,7 +72,13 @@ export function Sidebar() {
   return (
     <aside className="hidden w-[236px] shrink-0 flex-col gap-0.5 bg-ink p-3.5 text-[#e8e1d7] md:flex">
       <Link href="/admin" className="flex items-center gap-2.5 px-2 pt-1.5 pb-4">
-        <span className="foil size-6.5 shrink-0 rounded-[7px]" />
+        <Image
+          src="/brand/brandmark-light.svg"
+          alt=""
+          width={34}
+          height={26}
+          className="h-6.5 w-auto shrink-0"
+        />
         <span>
           <span className="block font-serif text-base leading-tight">ມ່ວນອາວອດສ໌</span>
           <span className="block text-[10px] uppercase tracking-[0.16em] text-[#9d9184]">Admin</span>
