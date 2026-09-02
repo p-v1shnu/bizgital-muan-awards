@@ -221,7 +221,7 @@ function JudgeDialog({
             onChange={(event) => setForm({ ...form, nameLo: event.target.value })}
           />
         </Field>
-        <Field label="ຕຳແໜ່ງ / ອົງກອນ" help="ຂຶ້ນໃຕ້ຊື່ໃນໜ້າປີ">
+        <Field label="ຕຳແໜ່ງ / ອົງກອນ" help="ຂຶ້ນກ້ອງຊື່ໃນໜ້າປີ">
           <Input
             required
             placeholder="ຜູ້ອຳນວຍການ, Muan Media"
