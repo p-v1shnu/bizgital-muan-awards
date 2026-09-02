@@ -89,24 +89,26 @@ export default function DashboardPage() {
                 </p>
                 <p className="font-serif text-4xl leading-none text-ink">{data.edition.year}</p>
                 <p className="mt-1 font-serif text-[17px] text-ink-2">{data.edition.titleLo}</p>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <PhaseBadge phase={data.edition.phase} />
+                  <Badge tone={data.edition.acceptingSubmissions ? 'ok' : 'neutral'} dot>
+                    {data.edition.acceptingSubmissions ? 'ຟອມເປີດຢູ່' : 'ຟອມປິດຢູ່'}
+                  </Badge>
+                </div>
                 <div className="mt-4">
                   <PhaseSteps current={data.edition.phase} />
                 </div>
               </div>
 
-              <div className="flex flex-col items-start gap-2 sm:items-end">
-                <PhaseBadge phase={data.edition.phase} />
-                <Badge tone={data.edition.acceptingSubmissions ? 'ok' : 'neutral'} dot>
-                  {data.edition.acceptingSubmissions ? 'ຟອມເປີດຢູ່' : 'ຟອມປິດຢູ່'}
-                </Badge>
-                <ButtonLink href={`/admin/editions/${data.edition.id}`} variant="primary" className="mt-1">
-                  ໄປໜ້າຈັດການປີ <ArrowRight className="size-3.5" />
-                </ButtonLink>
+              <div className="flex items-start gap-2">
                 {data.edition.phase !== 'DRAFT' && (
-                  <ButtonLink href={`/awards/${data.edition.slug}`} size="sm" target="_blank">
+                  <ButtonLink href={`/awards/${data.edition.slug}`} variant="ghost" size="sm" target="_blank">
                     <Eye className="size-3.5" /> ເບິ່ງໜ້າຈິງ
                   </ButtonLink>
                 )}
+                <ButtonLink href={`/admin/editions/${data.edition.id}`} variant="primary">
+                  ໄປໜ້າຈັດການປີ <ArrowRight className="size-3.5" />
+                </ButtonLink>
               </div>
             </Card>
 
