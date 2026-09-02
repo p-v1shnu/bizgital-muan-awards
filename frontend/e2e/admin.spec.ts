@@ -57,9 +57,6 @@ test.describe('the edition page', () => {
     const body = await page.locator('body').innerText();
     expect(body).toContain('ໜ້າປີສະແດງຫຍັງ');
     expect(body).toContain('ຟອມສົ່ງລາຍຊື່');
-    expect(body, 'the reason they are separate is stated on the page').toContain(
-      'ເປັນຫຍັງຈຶ່ງແຍກສອງກ່ອງ',
-    );
   });
 
   test('the night’s programme can be typed in and saved', async ({ page }) => {

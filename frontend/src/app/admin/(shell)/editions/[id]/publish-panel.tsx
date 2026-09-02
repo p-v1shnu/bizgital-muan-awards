@@ -146,11 +146,6 @@ export function PublishPanel({
 
       <SubmissionsPanel edition={edition} />
 
-      <Note tone="brand">
-        <b>ເປັນຫຍັງຈຶ່ງແຍກສອງກ່ອງ:</b> ປີເກົ່າທີ່ຍ້ອນໃສ່ຂໍ້ມູນຕ້ອງ “ປະກາດຜູ້ຊະນະແລ້ວ”
-        ໂດຍ<b>ບໍ່ເຄີຍເປີດຟອມ</b>ເລີຍ — ສອງເລື່ອງນີ້ຈຶ່ງບໍ່ຄວນເປັນປຸ່ມດຽວກັນ
-      </Note>
-
       <RollbackPanel edition={edition} />
 
       {nextPhase && (
