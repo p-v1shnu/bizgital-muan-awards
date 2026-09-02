@@ -368,14 +368,14 @@ test('the site content form arrives filled, and a save survives a reload', async
   await page.goto('/admin/site');
 
   // Seeded through the API, so a blank box here means the form never read it.
-  const brand = page.getByRole('textbox', { name: /ຂໍ້ຄວາມແບຣນ/ });
+  const brand = page.getByRole('textbox', { name: /ຂໍ້ຄວາມຢູ່ກ້ອງ/ });
   expect((await brand.inputValue()).trim(), 'the form starts from what the server holds').not.toBe(
     '',
   );
 
   // The caption is the one field the seed leaves alone, so writing to it cannot
   // change what another spec reads off a public page.
-  const caption = page.getByRole('textbox', { name: /ຄຳບັນຍາຍໃຕ້ຮູບ/ });
+  const caption = page.getByRole('textbox', { name: /ຄຳບັນຍາຍກ້ອງຮູບ/ });
   const original = await caption.inputValue();
   try {
     await caption.fill('ຄຳບັນຍາຍທົດສອບ');
@@ -383,12 +383,12 @@ test('the site content form arrives filled, and a save survives a reload', async
     await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole('textbox', { name: /ຄຳບັນຍາຍໃຕ້ຮູບ/ })).toHaveValue(
+    await expect(page.getByRole('textbox', { name: /ຄຳບັນຍາຍກ້ອງຮູບ/ })).toHaveValue(
       'ຄຳບັນຍາຍທົດສອບ',
     );
   } finally {
     // Put the year back as it was found, cleared box included.
-    const after = page.getByRole('textbox', { name: /ຄຳບັນຍາຍໃຕ້ຮູບ/ });
+    const after = page.getByRole('textbox', { name: /ຄຳບັນຍາຍກ້ອງຮູບ/ });
     await after.fill(original);
     await page.getByRole('button', { name: 'ບັນທຶກ' }).first().click();
     await expect(page.getByText('ບັນທຶກແລ້ວ')).toBeVisible();
