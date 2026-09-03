@@ -50,28 +50,26 @@ interface WinnerRowData {
   winner: { creator: { slug: string; nameLo: string; avatarKey: string | null } };
 }
 
-function WinnerRow({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
+function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
   const { category, winner } = row;
   return (
-    <div className="border-b border-hairline px-5 py-4 last:border-b-0">
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-ink-3">
+    <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-4">
+      <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
         {category.nameLo}
       </p>
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/creators/${winner.creator.slug}`}
-          className="flex min-w-0 items-center gap-3 font-serif text-xl text-ink hover:underline"
-        >
-          <Avatar creator={winner.creator} size="md" />
-          <span className="truncate">{winner.creator.nameLo}</span>
-        </Link>
-        <Link
-          href={`/awards/${editionSlug}/${category.slug}`}
-          className="ml-auto shrink-0 text-[13px] text-brand-deep hover:underline"
-        >
-          ເບິ່ງຜູ້ເຂົ້າຊີງ →
-        </Link>
-      </div>
+      <Link
+        href={`/creators/${winner.creator.slug}`}
+        className="flex min-w-0 items-center gap-3 font-serif text-lg text-ink hover:underline"
+      >
+        <Avatar creator={winner.creator} size="md" />
+        <span className="truncate">{winner.creator.nameLo}</span>
+      </Link>
+      <Link
+        href={`/awards/${editionSlug}/${category.slug}`}
+        className="mt-2.5 inline-block text-[12.5px] text-brand-deep hover:underline"
+      >
+        ເບິ່ງຜູ້ເຂົ້າຊີງ →
+      </Link>
     </div>
   );
 }
@@ -324,28 +322,30 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
           what stands between them and the answer (PRD §6.1.2). */}
       {winners.length > 0 && (
         <Section eyebrow="ຜົນລາງວັນ" title="ຜູ້ຊະນະທຸກສາຂາ">
-          <div className="overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel">
+          <div className="grid gap-3 sm:grid-cols-2">
             {winners.slice(0, WINNER_ROWS).map((row) => (
-              <WinnerRow key={row.category.id} row={row} editionSlug={edition.slug} />
+              <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
             ))}
-
-            {/* A year with 40 categories would otherwise be one endless page
-                (PRD §7.6). <details> does this with no client JavaScript, so
-                the rows below the fold are still in the HTML for search. */}
-            {winners.length > WINNER_ROWS && (
-              <details className="group">
-                <summary className="cursor-pointer list-none border-t border-hairline px-5 py-3.5 text-center text-[13px] font-semibold text-brand-deep hover:bg-brand-soft/50">
-                  <span className="group-open:hidden">
-                    ເບິ່ງເພີ່ມອີກ {winners.length - WINNER_ROWS} ສາຂາ ↓
-                  </span>
-                  <span className="hidden group-open:inline">ຫຍໍ້ກັບ ↑</span>
-                </summary>
-                {winners.slice(WINNER_ROWS).map((row) => (
-                  <WinnerRow key={row.category.id} row={row} editionSlug={edition.slug} />
-                ))}
-              </details>
-            )}
           </div>
+
+          {/* A year with 40 categories would otherwise be one endless page
+              (PRD §7.6). <details> does this with no client JavaScript, so
+              the rows below the fold are still in the HTML for search. */}
+          {winners.length > WINNER_ROWS && (
+            <details className="group mt-3">
+              <summary className="cursor-pointer list-none rounded-[var(--radius-box)] border border-rule bg-panel px-5 py-3 text-center text-[13px] font-semibold text-brand-deep hover:bg-brand-soft/50">
+                <span className="group-open:hidden">
+                  ເບິ່ງເພີ່ມອີກ {winners.length - WINNER_ROWS} ສາຂາ ↓
+                </span>
+                <span className="hidden group-open:inline">ຫຍໍ້ກັບ ↑</span>
+              </summary>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {winners.slice(WINNER_ROWS).map((row) => (
+                  <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
+                ))}
+              </div>
+            </details>
+          )}
         </Section>
       )}
 
