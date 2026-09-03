@@ -387,14 +387,14 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                       <p className="mt-0.5 text-[13px] text-ink-2">{category.descriptionLo}</p>
                     )}
                   </div>
-                  <span className="ml-auto flex shrink-0 items-center gap-3">
-                    {category.nominees.length > 0 && (
+                  {category.nominees.length > 0 && (
+                    <span className="ml-auto flex shrink-0 items-center gap-3">
                       <span className="text-[12px] text-ink-3">
                         ຜູ້ເຂົ້າຊີງ {category.nominees.length} ຄົນ
                       </span>
-                    )}
-                    <ChevronDown className="size-4 shrink-0 text-ink-3 transition-transform group-open:rotate-180" />
-                  </span>
+                      <ChevronDown className="size-4 shrink-0 text-ink-3 transition-transform group-open:rotate-180" />
+                    </span>
+                  )}
                 </summary>
 
                 {category.nominees.length > 0 && (
