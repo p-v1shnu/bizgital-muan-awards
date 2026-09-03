@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { SiteImage } from './site-image';
 import { Watermark } from './watermark';
 import { imageUrl } from '@/lib/images';
 import type { Creator } from '@/types/api';
@@ -170,21 +171,26 @@ export function CreatorCard({
   const body = (
     <div
       className={cn(
-        'relative flex h-full flex-col items-center gap-3 overflow-hidden rounded-[var(--radius-box)] bg-panel p-5 pt-6 text-center',
+        'flex h-full flex-col overflow-hidden rounded-[var(--radius-box)] bg-panel',
         'shadow-[0_1px_2px_rgba(20,14,10,.05),0_1px_10px_rgba(20,14,10,.04)] transition-shadow',
         'hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)]',
       )}
     >
-      {isWinner && <span className="foil absolute inset-x-0 top-0 h-[3px]" aria-hidden />}
-      <Avatar creator={creator} size="lg" />
-      <div>
+      <div className="relative aspect-[3/4] overflow-hidden bg-panel-2">
+        <SiteImage
+          imageKey={creator.avatarKey}
+          alt={creator.nameLo}
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
+        />
         {isWinner && (
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-brand-deep">
+          <span className="absolute bottom-2.5 left-2.5 rounded-full bg-brand-deep px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_1px_4px_rgba(0,0,0,.25)]">
             ຜູ້ຊະນະ
-          </p>
+          </span>
         )}
-        <p className="font-serif text-[19px] leading-tight text-ink">{creator.nameLo}</p>
-        {creator.nameEn && <p className="mt-0.5 text-[12px] text-ink-3">{creator.nameEn}</p>}
+      </div>
+      <div className="px-3.5 pb-4 pt-3.5 text-center">
+        <p className="font-serif text-[17px] leading-tight text-ink">{creator.nameLo}</p>
+        {creator.nameEn && <p className="mt-0.5 text-[11.5px] text-ink-3">{creator.nameEn}</p>}
       </div>
     </div>
   );
