@@ -339,10 +339,14 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 </span>
                 <span className="hidden group-open:inline">ຫຍໍ້ກັບ ↑</span>
               </summary>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {winners.slice(WINNER_ROWS).map((row) => (
-                  <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
-                ))}
+              <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
+                <div className="overflow-hidden">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {winners.slice(WINNER_ROWS).map((row) => (
+                      <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
+                    ))}
+                  </div>
+                </div>
               </div>
             </details>
           )}
@@ -398,26 +402,35 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 </summary>
 
                 {category.nominees.length > 0 && (
-                  <div className="border-t border-hairline px-5 py-5">
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      {[...category.nominees]
-                        // The winner leads the grid when there is one.
-                        .sort((a, b) => Number(b.isWinner) - Number(a.isWinner))
-                        .map((nominee) => (
-                          <CreatorCard
-                            key={nominee.id}
-                            creator={nominee.creator}
-                            isWinner={nominee.isWinner}
-                            href={`/creators/${nominee.creator.slug}`}
-                          />
-                        ))}
+                  // Animates open/close without client JS: the grid row
+                  // tweens between 0fr and 1fr, and the row's own intrinsic
+                  // height does the rest — <details> itself still controls
+                  // open/close state, so keyboard support and the crawlable,
+                  // no-JS fallback from PRD §7.6 are untouched.
+                  <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
+                    <div className="overflow-hidden">
+                      <div className="border-t border-hairline px-5 py-5">
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                          {[...category.nominees]
+                            // The winner leads the grid when there is one.
+                            .sort((a, b) => Number(b.isWinner) - Number(a.isWinner))
+                            .map((nominee) => (
+                              <CreatorCard
+                                key={nominee.id}
+                                creator={nominee.creator}
+                                isWinner={nominee.isWinner}
+                                href={`/creators/${nominee.creator.slug}`}
+                              />
+                            ))}
+                        </div>
+                        <Link
+                          href={`/awards/${edition.slug}/${category.slug}`}
+                          className="mt-4 inline-block text-[13px] text-brand-deep hover:underline"
+                        >
+                          ເບິ່ງທັງສາຂາ →
+                        </Link>
+                      </div>
                     </div>
-                    <Link
-                      href={`/awards/${edition.slug}/${category.slug}`}
-                      className="mt-4 inline-block text-[13px] text-brand-deep hover:underline"
-                    >
-                      ເບິ່ງທັງສາຂາ →
-                    </Link>
                   </div>
                 )}
               </details>
