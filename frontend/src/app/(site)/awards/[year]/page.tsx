@@ -440,9 +440,10 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 key={activity}
                 className="flex items-center gap-4 border-b border-hairline px-5 py-4 last:border-b-0"
               >
-                <span className="grid size-7 shrink-0 place-items-center rounded-full border border-brand-edge bg-brand-soft text-[12px] font-bold text-brand-deep">
+                <span className="w-[34px] shrink-0 text-center font-serif text-[30px] font-bold leading-none text-brand-deep">
                   {index + 1}
                 </span>
+                <span className="w-px shrink-0 self-stretch bg-rule" aria-hidden />
                 <span className="text-[19px] leading-snug text-ink">{activity}</span>
               </li>
             ))}
