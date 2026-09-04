@@ -438,9 +438,9 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             {activities.map((activity, index) => (
               <li
                 key={activity}
-                className="flex items-start gap-4 border-b border-hairline px-5 py-4 last:border-b-0"
+                className="flex items-center gap-4 border-b border-hairline px-5 py-4 last:border-b-0"
               >
-                <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border border-brand-edge bg-brand-soft text-[12px] font-bold text-brand-deep">
+                <span className="grid size-7 shrink-0 place-items-center rounded-full border border-brand-edge bg-brand-soft text-[12px] font-bold text-brand-deep">
                   {index + 1}
                 </span>
                 <span className="text-[19px] leading-snug text-ink">{activity}</span>
