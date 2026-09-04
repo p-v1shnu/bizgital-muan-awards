@@ -317,6 +317,35 @@ Scenario ที่ต้องรองรับ: **งาน 2026 จบไป�
 - มีแต่ PNG ยังไม่มีไฟล์เวกเตอร์ — เริ่มด้วย PNG ไปก่อน แล้วเปลี่ยนเป็น SVG ทีหลังเมื่อทีมกราฟิกส่งมา
 - favicon ต้องใช้ brandmark เวอร์ชันย่อ (ลายเส้นปัจจุบันละเอียดเกินไปที่ 32×32 px) — ขอทีหลัง
 
+#### 6.0.3 Motion & Animation System
+
+**การตัดสินใจ (4 ก.ย. 2026):** ใช้ [Motion](https://motion.dev) (`npm i motion`, ชื่อเดิม Framer Motion) เป็นไลบรารี animation เดียวของโปรเจกต์ — MIT license ฟรี 100% ไม่มีค่าใช้จ่ายเพิ่มเติมไม่ว่าจะใช้เชิงพาณิชย์แค่ไหน (Motion+ เป็น subscription แยกสำหรับ template/ตัวอย่างเสริมเท่านั้น ไม่จำเป็นสำหรับสิ่งที่ใช้ในโปรเจกต์นี้)
+
+**ทำไมไม่ใช้ตัวอื่น:**
+
+- **GSAP** — ฟรีทุก plugin แล้วตั้งแต่ Webflow ซื้อไปปี 2024 (เดิมบาง plugin เช่น ScrollTrigger ต้องจ่ายเชิงพาณิชย์) แต่เป็น imperative timeline tool ที่ไม่ผูกกับ React component lifecycle โดยตรง — integrate เข้ากับ Next.js App Router ได้ไม่เนียนเท่า Motion
+- **CSS ล้วน** — พอสำหรับ hover/transition ง่ายๆ (ยังใช้ต่อไปสำหรับกรณีนี้ ดูตารางด้านล่าง) แต่ทำ shared-layout transition ข้ามหน้า, exit animation, orchestrated stagger ไม่ได้ดีเท่า
+
+**กฎการใช้งาน — ห้ามแปลง Server Component ทั้งเว็บเป็น Client เพราะเรื่องนี้:**
+
+โครงเว็บ public เป็น Server Component เกือบทั้งหมด (ก่อนเพิ่ม Motion มี client component แค่ 2 ไฟล์: `mobile-nav.tsx`, `submit-form.tsx`) — สถาปัตยกรรมนี้ต้องคงไว้:
+
+1. `'use client'` ใช้เฉพาะจุดใบไม้ (leaf component) ที่ต้องมี animation จริงๆ ไม่ห่อทั้งหน้าหรือทั้ง layout
+2. hover สี/เงา/transform ง่ายๆ ยังใช้ Tailwind CSS transition ต่อไป ไม่ต้องเรียก Motion (เบากว่า ไม่ต้องเป็น client component)
+3. ใช้ Motion เฉพาะที่ CSS ทำได้ไม่ดีพอ: shared layout transition (`layoutId`), exit animation (`AnimatePresence`), scroll-triggered reveal ที่มี stagger/spring (`whileInView`), gesture (drag)
+4. ทุก animation ต้องเคารพ `prefers-reduced-motion` — Motion เคารพให้อัตโนมัติผ่าน `useReducedMotion()`/`MotionConfig`, ฝั่ง CSS ต้องเพิ่ม media query เอง (`globals.css`)
+
+**จุดที่วางแผนใช้ (ตามลำดับความคุ้มค่า/ความเสี่ยง):**
+
+| ระดับ | จุด | เทคนิค |
+|---|---|---|
+| Tier 1 | hover การ์ด/ปุ่มทั่วเว็บให้สม่ำเสมอ (ตอนนี้กระจุกอยู่แค่หน้าแรก) | CSS transition — ไม่ใช้ Motion |
+| Tier 2 | เปิด-ปิด accordion (สาขา, ผู้ชนะ "ดูเพิ่ม", FAQ) แบบ smooth แทนที่จะ snap | CSS ล้วน (grid-rows trick) — ไม่ใช้ Motion |
+| Tier 2 | ตัวเลขสถิติหน้าแรก count-up ตอน scroll เข้าจอ | Motion `whileInView` |
+| Tier 3 | รูปผู้เข้าชิง/ผู้ชนะ morph เป็นรูป hero ตอนเข้าหน้าโปรไฟล์ | Motion `layoutId` |
+| Tier 3 | Lightbox ภาพบรรยากาศงาน (`ພາບບັນຍາກາດງານ`) | Motion `AnimatePresence` |
+| Tier 3 | Header หด/ขึ้น shadow ตอน scroll | client wrapper เล็ก — ไม่จำเป็นต้องใช้ Motion |
+
 ### 6.1 เว็บ Public — 7 หน้า
 
 ```mermaid
@@ -660,6 +689,7 @@ erDiagram
 | ส่วน | เทคโนโลยี |
 |---|---|
 | Frontend | Next.js (App Router) + Tailwind CSS v4 + shadcn/ui |
+| Animation | [Motion](https://motion.dev) (`motion`, MIT license, ฟรี) — เฉพาะจุด client component ที่จำเป็น, ดู §6.0.3 |
 | Backend | NestJS + REST `/api/v1/` + Swagger |
 | Database | MySQL + Prisma |
 | Auth (admin เท่านั้น) | JWT + Refresh Token (HttpOnly cookie) |
@@ -1286,6 +1316,32 @@ CI ไม่ได้เรียก lint จึงไม่มีอะไร�
 **ไม่มีปุ่ม** · ฝั่ง browser เทสต์ “ข้อความการ์ดมาจากหลังบ้าน”
 อ่านป้ายกับคำบรรยายเพิ่มด้วย ซึ่งเป็นหลักฐานทั้งหมดที่มี เพราะทั้งสองจุด**ไม่มีข้อความสำรองในโค้ดเลย**
 · ค่าที่เทสต์อ่านถูกใส่ไว้ใน `e2e/seed.ts` ด้วย มิฉะนั้นฐานที่ seed ไว้ก่อนจะมี field นี้จะทำให้ตกโดยไม่เกี่ยวกับหน้าเว็บ
+
+### รอบที่สิบสี่ — ตกลงใช้ Motion เป็นไลบรารี animation (4 ก.ย. 2026)
+
+เจ้าของโปรเจกต์ขอคำแนะนำเรื่อง motion/interaction ทั้งเว็บ หลังจากรอบก่อนหน้าปรับ font-weight,
+spacing และเลขลำดับในหน้าปีไปหลายจุด — สำรวจโค้ดจริงพบว่า transition/animation ที่มีอยู่ตอนนี้
+กระจุกอยู่แค่หน้าแรก (`page.tsx`) เกือบทั้งหมด ส่วนหน้าปี, about, winners แทบไม่มีเลย และไม่มี
+`prefers-reduced-motion` รองรับที่ไหนเลย
+
+เสนอเป็น 3 tier ตามความคุ้มค่า (ดู §6.0.3 สำหรับตารางเต็ม) แล้วเจ้าของโปรเจกต์ถามต่อว่าถ้าจะทำ
+ให้ครบทุก tier ควรมี animation library ไหม — คำตอบคือ **ไม่จำเป็นถ้ายึด scope เดิม** เพราะ CSS
+ล้วนพอสำหรับ hover และ accordion ส่วน count-up/scroll-reveal ใช้ client component เล็กๆ ได้โดยไม่ต้อง
+พึ่งไลบรารี **แต่พอเจ้าของโปรเจกต์บอกว่าอยากได้ลูกเล่นที่ดีที่สุดจริงๆ ยอมรับ trade-off ด้าน performance
+ได้** คำตอบจึงเปลี่ยน: แนะนำ **Motion** (`motion`, ชื่อเดิม Framer Motion) เพราะเปิดทางทำ
+shared-layout transition (รูปผู้เข้าชิงในการ์ด morph เป็นรูป hero ตอนเข้าหน้าโปรไฟล์) ซึ่งเป็นจุดที่
+CSS ล้วนทำได้ยากมากและเป็นรายละเอียดที่คนสังเกตเห็นชัดว่า "มีคนตั้งใจดีไซน์" ที่สุด
+
+**ทำไม Motion ไม่ใช่ GSAP:** GSAP ฟรีทุก plugin แล้วก็จริง (Webflow ซื้อไปปี 2024) แต่เป็น
+imperative timeline tool ไม่ผูกกับ React lifecycle โดยตรง ส่วน Motion integrate กับ Next.js App
+Router ได้เนียนกว่า (`'use client'` เฉพาะจุดที่ใช้ ไม่ต้องมี provider ระดับบนสุด)
+
+**ค่าใช้จ่าย:** Motion core ฟรี 100% (MIT license) ใช้เชิงพาณิชย์ได้โดยไม่มีค่าใช้จ่าย — Motion+
+เป็น subscription แยกสำหรับ template/ตัวอย่างเสริมเท่านั้น ไม่จำเป็นสำหรับสิ่งที่ใช้ในโปรเจกต์นี้
+
+**กฎสำคัญที่บันทึกไว้กันลืม:** แม้จะมีไลบรารีแล้ว ก็ยังต้อง**ไม่**แปลง Server Component ทั้งเว็บเป็น
+Client เพราะเรื่องนี้ — `'use client'` ใช้เฉพาะจุดใบไม้ที่ต้องมี animation จริงๆ, hover ง่ายๆ ยังใช้ CSS
+transition ต่อไป, Motion ใช้เฉพาะที่ CSS ทำได้ไม่ดีพอ (รายละเอียดเต็มอยู่ที่ §6.0.3)
 
 ---
 
