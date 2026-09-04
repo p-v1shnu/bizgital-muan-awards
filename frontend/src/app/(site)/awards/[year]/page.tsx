@@ -53,7 +53,7 @@ interface WinnerRowData {
 function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
   const { category, winner } = row;
   return (
-    <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-4">
+    <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-4 transition-colors hover:border-ink-3">
       <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
         {category.nameLo}
       </p>
