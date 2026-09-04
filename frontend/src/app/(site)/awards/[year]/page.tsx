@@ -443,7 +443,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border border-brand-edge bg-brand-soft text-[12px] font-bold text-brand-deep">
                   {index + 1}
                 </span>
-                <span className="font-serif text-[19px] leading-snug text-ink">{activity}</span>
+                <span className="text-[19px] leading-snug text-ink">{activity}</span>
               </li>
             ))}
           </ol>

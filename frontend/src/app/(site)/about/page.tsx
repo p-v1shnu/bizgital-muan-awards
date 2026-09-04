@@ -129,7 +129,7 @@ export default async function AboutPage() {
                 key={`${index}-${step.titleLo}`}
                 className="rounded-[var(--radius-box)] border border-rule bg-panel p-5"
               >
-                <p className="font-serif text-xl text-ink">
+                <p className="text-xl text-ink">
                   <span className="mr-2 text-ink-3">{index + 1}.</span>
                   {step.titleLo}
                 </p>

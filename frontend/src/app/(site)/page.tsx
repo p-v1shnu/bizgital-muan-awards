@@ -412,7 +412,7 @@ export default async function HomePage() {
                       <Icon className="size-4.5" />
                     </span>
                   )}
-                  <p className="mt-3 font-serif text-lg text-ink">
+                  <p className="mt-3 text-lg text-ink">
                     <span className="mr-1.5 text-ink-3">{index + 1}.</span>
                     {step.titleLo}
                   </p>
