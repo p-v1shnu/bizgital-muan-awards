@@ -86,7 +86,7 @@ export function ActionLink({
   className?: string;
 }) {
   const classes = cn(
-    'inline-flex items-center gap-2 rounded-[var(--radius-btn)] px-5 py-3 text-[14px] font-semibold',
+    'inline-flex items-center gap-2 rounded-[var(--radius-btn)] px-5 py-3 text-[14px] font-semibold transition-colors',
     tone === 'primary'
       ? 'bg-ink text-white hover:bg-brand-deep'
       : 'border border-rule bg-panel text-ink-2 hover:bg-panel-2 hover:text-ink',
@@ -172,8 +172,9 @@ export function CreatorCard({
     <div
       className={cn(
         'flex h-full flex-col overflow-hidden rounded-[var(--radius-box)] bg-panel',
-        'shadow-[0_1px_2px_rgba(20,14,10,.05),0_1px_10px_rgba(20,14,10,.04)] transition-shadow',
-        'hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)]',
+        'shadow-[0_1px_2px_rgba(20,14,10,.05),0_1px_10px_rgba(20,14,10,.04)]',
+        'transition-[box-shadow,transform] duration-200',
+        'hover:-translate-y-0.5 hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)]',
       )}
     >
       <div className="relative aspect-[3/4] overflow-hidden bg-panel-2">
