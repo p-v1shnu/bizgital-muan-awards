@@ -82,11 +82,17 @@
    * font-family and silently drops the Lao fallback, which renders Lao text
    * in a face that does not match the rest of the page.
    */
+  /**
+   * 600, not 700: Noto Serif Lao's bold cut is much more uniformly thick than
+   * Bodoni Moda's, so the same nominal weight reads noticeably heavier once a
+   * heading falls back to it — which is most headings on this site, since
+   * nearly all of them are Lao text.
+   */
   h1,
   h2,
   h3 {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600;
   }
 
   ::selection {
