@@ -311,7 +311,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       )}
 
       {edition.descriptionLo && (
-        <Section className="py-6">
+        <Section className="py-6 md:py-8">
           <p className="max-w-2xl text-[15px] leading-[1.85] text-ink-2">{edition.descriptionLo}</p>
         </Section>
       )}
