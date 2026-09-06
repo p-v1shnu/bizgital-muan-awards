@@ -5,6 +5,7 @@ import { ArrowUpRight, Facebook, Instagram, Youtube } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobileNav } from '@/components/site/mobile-nav';
 import type { NavItem } from '@/components/site/mobile-nav';
+import { ScrollHeader } from '@/components/site/scroll-header';
 import { Watermark } from '@/components/site/watermark';
 import { tryGetPublic } from '@/lib/api/server';
 import type { Edition, SiteSettings } from '@/types/api';
@@ -64,7 +65,7 @@ export async function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-rule/70 bg-paper/85 backdrop-blur">
+    <ScrollHeader>
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
         {/* The lockups are chosen per background, never recoloured with a CSS
             filter (PRD §6.0.2) — the horizontal one already carries the name,
@@ -124,7 +125,7 @@ export async function SiteHeader() {
           <MobileNav items={navItems} className="ml-1 md:hidden" />
         </nav>
       </div>
-    </header>
+    </ScrollHeader>
   );
 }
 
