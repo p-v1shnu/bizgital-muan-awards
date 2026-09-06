@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 'lucide-react';
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
+import { CountUp } from '@/components/site/count-up';
 import { INK_FALLBACK, SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
@@ -512,9 +513,10 @@ function Stat({ value, label }: { value: number; label: string }) {
     <div className="border-l border-white/15 pl-4 md:pl-5">
       <dt className="sr-only">{label}</dt>
       <dd>
-        <span className="block font-serif text-[clamp(32px,5vw,56px)] leading-none text-white tabular-nums">
-          {value}
-        </span>
+        <CountUp
+          value={value}
+          className="block font-serif text-[clamp(32px,5vw,56px)] leading-none text-white tabular-nums"
+        />
         <span className="mt-2 block text-[13px] text-white/60">{label}</span>
       </dd>
     </div>

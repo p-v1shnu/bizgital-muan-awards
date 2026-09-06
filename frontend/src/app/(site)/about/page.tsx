@@ -148,15 +148,19 @@ export default async function AboutPage() {
             {faq.map((item, position) => (
               <details
                 key={`${position}-${item.questionLo}`}
-                className="border-b border-hairline last:border-b-0"
+                className="group border-b border-hairline last:border-b-0"
               >
                 <summary className="cursor-pointer list-none px-5 py-4 font-serif text-[19px] text-ink">
                   {item.questionLo}
                 </summary>
-                <div className="space-y-2 px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
-                  {paragraphs(item.answerLo).map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
+                <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
+                  <div className="overflow-hidden">
+                    <div className="space-y-2 px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
+                      {paragraphs(item.answerLo).map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </details>
             ))}

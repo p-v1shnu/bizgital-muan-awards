@@ -62,8 +62,19 @@ jobs:
       - run: npm test
 
       # A vulnerable dependency should fail the build, not sit in a report
-      # nobody opens.
-      - run: npm audit --audit-level=high
+      # nobody opens. The registry's own audit endpoint (not our lockfile —
+      # confirmed by re-running against the same commit) has intermittently
+      # answered with a 500/503/400 of its own while it winds down in favor
+      # of a bulk replacement; a few retries tell that apart from a real
+      # advisory without giving up the gate entirely.
+      - name: npm audit
+        run: |
+          for attempt in 1 2 3; do
+            npm audit --audit-level=high && exit 0
+            echo "npm audit failed (attempt $attempt/3) — registry flakes clear on retry; a real advisory won't."
+            [ "$attempt" -lt 3 ] && sleep 20
+          done
+          exit 1
 
   frontend:
     name: Frontend — build and typecheck
@@ -84,7 +95,17 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
-      - run: npm audit --audit-level=high
+
+      # Same registry-side flake as the backend job's audit step — see the
+      # comment there.
+      - name: npm audit
+        run: |
+          for attempt in 1 2 3; do
+            npm audit --audit-level=high && exit 0
+            echo "npm audit failed (attempt $attempt/3) — registry flakes clear on retry; a real advisory won't."
+            [ "$attempt" -lt 3 ] && sleep 20
+          done
+          exit 1
 
   e2e:
     name: End to end — the browser pass
