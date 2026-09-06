@@ -88,7 +88,12 @@
  */
 .section-reveal-content {
   clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%);
-  transition: clip-path 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Symmetric ease-in-out, not an expo curve: cubic-bezier(0.16,1,.3,1) (an
+     ease-out-expo) put both interior control points at y=1, which reaches
+     ~95% completion by ~20% of the duration — confirmed by screenshotting a
+     mid-transition frame, where the wipe had already all but finished. The
+     wipe read as a near-instant pop instead of a crossing motion. */
+  transition: clip-path 0.9s cubic-bezier(0.65, 0, 0.35, 1);
 }
 .section-reveal-content.is-visible {
   clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%);
@@ -105,13 +110,29 @@
   opacity: 0;
   filter: blur(1px);
   pointer-events: none;
-  transition:
-    left 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-    opacity 0.15s ease-out 0.75s;
 }
+/* A keyframe animation, not a two-state transition: the seam has to be
+   visible *while* it crosses (not just pop in at the end, which is what a
+   transition's single opacity value would do), then fade back out once past
+   the edge — a plain `transition` cannot express "on, then off" like that. */
 .section-reveal-seam.is-crossing {
-  left: 108%;
-  opacity: 0.9;
+  animation: section-reveal-seam-cross 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@keyframes section-reveal-seam-cross {
+  0% {
+    left: -8%;
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.9;
+  }
+  88% {
+    opacity: 0.9;
+  }
+  100% {
+    left: 108%;
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
