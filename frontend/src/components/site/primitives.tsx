@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { SectionReveal } from './section-reveal';
 import { SiteImage } from './site-image';
 import { Watermark } from './watermark';
 import { imageUrl } from '@/lib/images';
@@ -53,20 +54,30 @@ export function Section({
       {Heading === 'h1' && (
         <Watermark className="top-6 right-[calc(50%-50vw)] hidden h-[234px] w-[300px] opacity-[0.05] md:block" />
       )}
-      {(eyebrow || title) && (
-        <header className="mb-8 max-w-2xl">
-          {eyebrow && (
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">{eyebrow}</p>
-          )}
-          {title && (
-            <Heading className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
-              {title}
-            </Heading>
-          )}
-          {intro && <p className="mt-3 text-[15px] leading-relaxed text-ink-2">{intro}</p>}
-        </header>
-      )}
-      {children}
+      {(() => {
+        const body = (
+          <>
+            {(eyebrow || title) && (
+              <header className="mb-8 max-w-2xl">
+                {eyebrow && (
+                  <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">{eyebrow}</p>
+                )}
+                {title && (
+                  <Heading className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
+                    {title}
+                  </Heading>
+                )}
+                {intro && <p className="mt-3 text-[15px] leading-relaxed text-ink-2">{intro}</p>}
+              </header>
+            )}
+            {children}
+          </>
+        );
+        // The leading section of a page is on screen at first paint, so it
+        // is never wrapped: revealing it only once "scrolled to" would mean
+        // a page whose own h1 is hidden at rest (see SectionReveal's doc).
+        return Heading === 'h1' ? body : <SectionReveal>{body}</SectionReveal>;
+      })()}
     </section>
   );
 }
