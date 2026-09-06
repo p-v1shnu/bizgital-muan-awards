@@ -66,6 +66,19 @@
     repeating-linear-gradient(-45deg, var(--color-brand-edge) 0 2px, transparent 2px 9px);
 }
 
+/**
+ * Fades a photo in on first paint — a plain CSS entry animation (PRD
+ * §6.0.3), no client component involved. A browser without @starting-style
+ * support just shows the image immediately, which is the experience this
+ * replaces, so there is nothing to fall back to.
+ */
+@utility hero-fade-in {
+  transition: opacity 0.5s ease-out;
+  @starting-style {
+    opacity: 0;
+  }
+}
+
 @layer base {
   html {
     background-color: var(--color-paper);

@@ -142,7 +142,7 @@ export function Avatar({
         alt={alt}
         width={px}
         height={px}
-        className={cn(box, 'shrink-0 rounded-[20%] border border-rule object-cover')}
+        className={cn(box, 'shrink-0 rounded-[20%] border border-rule object-cover', size === 'lg' && 'hero-fade-in')}
       />
     );
   }
