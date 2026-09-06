@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { CalendarDays, ChevronDown, Clock, Eye, MapPin, Play } from 'lucide-react';
 
 import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
+import { Gallery } from '@/components/site/gallery';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-image';
@@ -542,17 +543,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 8 — the gallery, once the night is over */}
       {gallery.length > 0 && (
         <Section eyebrow="ບັນຍາກາດ" title={`ພາບບັນຍາກາດງານ ${edition.year}`}>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {gallery.map((key) => (
-              <div key={key} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2">
-                <SiteImage
-                  imageKey={key}
-                  alt={`ບັນຍາກາດ ${edition.titleLo}`}
-                  sizes="(max-width: 768px) 50vw, 380px"
-                />
-              </div>
-            ))}
-          </div>
+          <Gallery imageKeys={gallery} alt={`ບັນຍາກາດ ${edition.titleLo}`} />
         </Section>
       )}
     </>
