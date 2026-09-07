@@ -80,71 +80,57 @@
 }
 
 /**
- * Section reveal (PRD §6.0.3) — a diagonal wipe at the weave motif's own
- * 45° angle, with the foil gradient riding the seam as it crosses. Plain
- * classes rather than @utility: each needs a companion .is-visible/
- * .is-crossing state, which @utility's single-class model does not fit.
- * Driven by SectionReveal (components/site/section-reveal.tsx).
+ * Section reveal (PRD §6.0.3) — a fade-up: content settles in from a slight
+ * downward offset with a fade, rather than a wipe. The wipe (clip-path plus a
+ * seam riding the crossing edge) read as a card being flipped open on a wide
+ * desktop viewport and was dropped after design review. Driven by
+ * SectionReveal (components/site/section-reveal.tsx).
  */
 .section-reveal-content {
-  clip-path: polygon(0 0, 0 0, -30% 100%, -30% 100%);
-  /* Symmetric ease-in-out, not an expo curve: cubic-bezier(0.16,1,.3,1) (an
-     ease-out-expo) put both interior control points at y=1, which reaches
-     ~95% completion by ~20% of the duration — confirmed by screenshotting a
-     mid-transition frame, where the wipe had already all but finished. The
-     wipe read as a near-instant pop instead of a crossing motion. */
-  transition: clip-path 0.9s cubic-bezier(0.65, 0, 0.35, 1);
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .section-reveal-content.is-visible {
-  clip-path: polygon(0 0, 130% 0, 100% 100%, -30% 100%);
+  opacity: 1;
+  transform: none;
 }
 
-.section-reveal-seam {
-  position: absolute;
-  top: -10%;
-  left: -8%;
-  width: 14px;
-  height: 130%;
-  background-image: linear-gradient(90deg, #f9b8d5, #e897c9 46%, #c896d8);
-  transform: rotate(20deg);
+/**
+ * An optional layer on top of the reveal above, for a section whose content
+ * is a row of parallel cards/tiles (winner highlights, judging steps, a
+ * grid of photos) rather than a single block of text: each item fades up on
+ * its own, a beat after the one before, instead of the whole row arriving at
+ * once. Add this class to each item in the row — nth-child does the timing,
+ * so no per-item JS is needed. Every direct sibling in the row must carry it
+ * for the count to line up.
+ */
+.stagger-item {
   opacity: 0;
-  filter: blur(1px);
-  pointer-events: none;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
-/* A keyframe animation, not a two-state transition: the seam has to be
-   visible *while* it crosses (not just pop in at the end, which is what a
-   transition's single opacity value would do), then fade back out once past
-   the edge — a plain `transition` cannot express "on, then off" like that. */
-.section-reveal-seam.is-crossing {
-  animation: section-reveal-seam-cross 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+.section-reveal-content.is-visible .stagger-item {
+  opacity: 1;
+  transform: none;
 }
-@keyframes section-reveal-seam-cross {
-  0% {
-    left: -8%;
-    opacity: 0;
-  }
-  12% {
-    opacity: 0.9;
-  }
-  88% {
-    opacity: 0.9;
-  }
-  100% {
-    left: 108%;
-    opacity: 0;
-  }
+.stagger-item:nth-child(2) {
+  transition-delay: 70ms;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  /* The global transition-duration override below still fires, but leaves
-     a near-instant clip-path snap that can read as a one-frame flash on
-     content this size — so this one gets an explicit off switch instead. */
-  .section-reveal-content {
-    clip-path: none !important;
-  }
-  .section-reveal-seam {
-    display: none !important;
-  }
+.stagger-item:nth-child(3) {
+  transition-delay: 140ms;
+}
+.stagger-item:nth-child(4) {
+  transition-delay: 210ms;
+}
+.stagger-item:nth-child(5) {
+  transition-delay: 280ms;
+}
+.stagger-item:nth-child(6) {
+  transition-delay: 350ms;
+}
+.stagger-item:nth-child(n + 7) {
+  transition-delay: 420ms;
 }
 
 @layer base {

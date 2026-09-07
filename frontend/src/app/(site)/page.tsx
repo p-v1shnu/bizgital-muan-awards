@@ -350,7 +350,7 @@ export default async function HomePage() {
                 <Link
                   key={category.id}
                   href={`/creators/${category.winner.slug}`}
-                  className="group block overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink"
+                  className="group stagger-item block overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink"
                 >
                   <div className="relative aspect-[3/4] overflow-hidden bg-panel-2">
                     <SiteImage
@@ -406,7 +406,7 @@ export default async function HomePage() {
               return (
                 <li
                   key={`${index}-${step.titleLo}`}
-                  className="rounded-[var(--radius-box)] border border-rule bg-panel p-5"
+                  className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-5"
                 >
                   {Icon && (
                     <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
@@ -435,7 +435,7 @@ export default async function HomePage() {
               <Link
                 key={edition.id}
                 href={`/awards/${edition.slug}`}
-                className="group overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-colors hover:border-ink-3"
+                className="group stagger-item overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-colors hover:border-ink-3"
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-panel-2">
                   <SiteImage
@@ -461,7 +461,7 @@ export default async function HomePage() {
             {gallery.slice(0, 6).map((key) => (
               <div
                 key={key}
-                className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-panel-2"
+                className="group stagger-item relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-panel-2"
               >
                 <SiteImage
                   imageKey={key}

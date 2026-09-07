@@ -54,7 +54,7 @@ interface WinnerRowData {
 function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
   const { category, winner } = row;
   return (
-    <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-4 transition-colors hover:border-ink-3">
+    <div className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-4 transition-colors hover:border-ink-3">
       <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
         {category.nameLo}
       </p>
@@ -452,7 +452,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             {activities.map((activity, index) => (
               <li
                 key={activity}
-                className="flex items-center gap-4 border-b border-hairline px-5 py-4 last:border-b-0"
+                className="stagger-item flex items-center gap-4 border-b border-hairline px-5 py-4 last:border-b-0"
               >
                 <span className="w-[34px] shrink-0 text-center font-serif text-[30px] font-bold leading-none text-brand-deep">
                   {index + 1}
@@ -472,7 +472,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             {edition.judges.map((judge) => (
               <div
                 key={judge.id}
-                className="rounded-[var(--radius-box)] border border-rule bg-panel p-5 text-center"
+                className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-5 text-center"
               >
                 <div className="flex justify-center">
                   <Avatar creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }} alt={judge.nameLo} />
