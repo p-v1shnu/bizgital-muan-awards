@@ -221,6 +221,16 @@ test.describe('the edition page', () => {
 
     await page.goto(`${url}?tab=categories`);
     const deleteButton = page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' });
+    // `Locator.isVisible()` checks the current DOM immediately rather than
+    // waiting the way an `expect` assertion does — right after `goto`, the
+    // category list is often still loading, so it reports "not there" even
+    // when the category is in fact already assigned. Give it a bounded wait
+    // instead, long enough to outlast that load.
+    const isAlreadyAdded = () =>
+      deleteButton
+        .waitFor({ state: 'visible', timeout: 5_000 })
+        .then(() => true)
+        .catch(() => false);
 
     try {
       // Idempotent: an earlier failed attempt at this same test (Playwright
@@ -230,7 +240,7 @@ test.describe('the edition page', () => {
       // so re-running the add flow ambiguously matches two elements. Adding
       // only when it is not already there makes a retry start from the same
       // state as a first attempt.
-      if (!(await deleteButton.isVisible())) {
+      if (!(await isAlreadyAdded())) {
         await page.getByRole('button', { name: 'ເພີ່ມສາຂາ' }).first().click();
         await page.getByPlaceholder('ຄົ້ນຫາສາຂາຈາກຄັງ…').fill('ສາຂາທົດສອບວ່າງເປົ່າ');
         await page.getByRole('button', { name: /ສາຂາທົດສອບວ່າງເປົ່າ/ }).click();
@@ -251,7 +261,7 @@ test.describe('the edition page', () => {
       // Resilient the same way: nothing to clean up if the category was
       // never actually added (a failure before that point).
       await page.goto(`${url}?tab=categories`);
-      if (await deleteButton.isVisible()) {
+      if (await isAlreadyAdded()) {
         await deleteButton.click();
         await page.getByRole('button', { name: 'ລຶບ', exact: true }).click();
         // The confirm dialog repeats the name, so waiting on the text alone
@@ -261,7 +271,10 @@ test.describe('the edition page', () => {
     }
 
     await page.goto(url);
-    await expect(page.getByRole('button', { name: /ໄປຂັ້ນ/ })).toBeEnabled();
+    // The same real save-then-refetch round trip as the add above, this time
+    // for the delete — generous headroom rather than assuming an instant
+    // update to the publish checklist.
+    await expect(page.getByRole('button', { name: /ໄປຂັ້ນ/ })).toBeEnabled({ timeout: 30_000 });
   });
 
   /**
