@@ -284,16 +284,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* A team-set video, independent of any year — a recap, a highlight
-          reel, whatever they want to show (PRD §6.0.3). Absent entirely with
-          nothing set, rather than an empty section. */}
-      {site?.homeHighlightVideoUrl && (
-        <HighlightVideo
-          videoUrl={site.homeHighlightVideoUrl}
-          thumbnailKey={site.homeHighlightThumbnailKey}
-        />
-      )}
-
       {/* 3 — what this is */}
       <Section>
         <div className="grid gap-8 md:grid-cols-[1.1fr_1fr] md:items-center">
@@ -346,6 +336,16 @@ export default async function HomePage() {
           </div>
         </div>
       </Section>
+
+      {/* A team-set video, independent of any year — a recap, a highlight
+          reel, whatever they want to show (PRD §6.0.3). Absent entirely with
+          nothing set, rather than an empty section. */}
+      {site?.homeHighlightVideoUrl && (
+        <HighlightVideo
+          videoUrl={site.homeHighlightVideoUrl}
+          thumbnailKey={site.homeHighlightThumbnailKey}
+        />
+      )}
 
       {/* 4 — the latest winners, which swap themselves when a new year announces */}
       {featuredWinners.length > 0 && latestWinners && (

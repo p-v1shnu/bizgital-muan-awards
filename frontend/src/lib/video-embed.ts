@@ -44,10 +44,20 @@ function youtubeId(url: string): string | null {
  * YouTube's own thumbnail, no API key or auth required — the one provider
  * this works for. Facebook has no equivalent no-auth endpoint, which is why
  * homeHighlightThumbnailKey exists at all.
+ *
+ * `maxresdefault` (1280×720) is what a full-width homepage box needs to look
+ * sharp rather than upscaled and soft — `hqdefault` (480×360) is what every
+ * video has, `maxresdefault` only what was uploaded in HD. YouTube answers a
+ * missing one with a 200 and a tiny grey placeholder rather than a 404, so a
+ * caller cannot tell them apart from the URL alone; HighlightVideo checks the
+ * loaded image's own size and falls back to `hqdefault` itself.
  */
-export function youtubeThumbnailUrl(url: string): string | null {
+export function youtubeThumbnailUrl(
+  url: string,
+  quality: 'maxresdefault' | 'hqdefault' = 'maxresdefault',
+): string | null {
   const id = youtubeId(url);
-  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null;
+  return id ? `https://img.youtube.com/vi/${id}/${quality}.jpg` : null;
 }
 
 /**
