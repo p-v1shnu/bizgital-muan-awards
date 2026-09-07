@@ -220,27 +220,46 @@ test.describe('the edition page', () => {
     });
 
     await page.goto(`${url}?tab=categories`);
-    await page.getByRole('button', { name: 'ເພີ່ມສາຂາ' }).first().click();
-    await page.getByPlaceholder('ຄົ້ນຫາສາຂາຈາກຄັງ…').fill('ສາຂາທົດສອບວ່າງເປົ່າ');
-    await page.getByRole('button', { name: /ສາຂາທົດສອບວ່າງເປົ່າ/ }).click();
-    await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
-    // The dialog never unmounts on close (see categories-tab.tsx), only hides
-    // — its own copy of the picked template's name stays in the DOM, so a
-    // bare text locator matches that too. The list row is the only paragraph
-    // with this text, same fix as the delete-confirm dialog below.
-    await expect(page.getByRole('paragraph', { name: 'ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeVisible();
+    const deleteButton = page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' });
 
     try {
+      // Idempotent: an earlier failed attempt at this same test (Playwright
+      // retries automatically) may already have added the category and not
+      // reached the cleanup below to remove it again — the picker would then
+      // show it as already-assigned (disabled) rather than offer it to add,
+      // so re-running the add flow ambiguously matches two elements. Adding
+      // only when it is not already there makes a retry start from the same
+      // state as a first attempt.
+      if (!(await deleteButton.isVisible())) {
+        await page.getByRole('button', { name: 'ເພີ່ມສາຂາ' }).first().click();
+        await page.getByPlaceholder('ຄົ້ນຫາສາຂາຈາກຄັງ…').fill('ສາຂາທົດສອບວ່າງເປົ່າ');
+        await page.getByRole('button', { name: /ສາຂາທົດສອບວ່າງເປົ່າ/ }).click();
+        await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
+        // The dialog never unmounts on close (see categories-tab.tsx), only
+        // hides — its own copy of the picked template's name stays in the
+        // DOM, so a bare text locator matches that too. The list row is the
+        // only paragraph with this text, same fix as the delete-confirm
+        // dialog below. A generous timeout: this is a real save-then-refetch
+        // round trip, not an instant UI update.
+        await expect(page.getByRole('paragraph', { name: 'ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeVisible({
+          timeout: 30_000,
+        });
+      }
+
       await page.goto(url);
       await expect(page.getByRole('button', { name: /ໄປຂັ້ນ/ })).toBeDisabled();
       await expect(page.getByText(/ຕ້ອງແກ້ \d+ ຢ່າງທີ່ໝາຍສີແດງກ່ອນ/)).toBeVisible();
     } finally {
+      // Resilient the same way: nothing to clean up if the category was
+      // never actually added (a failure before that point).
       await page.goto(`${url}?tab=categories`);
-      await page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' }).click();
-      await page.getByRole('button', { name: 'ລຶບ', exact: true }).click();
-      // The confirm dialog repeats the name, so waiting on the text alone
-      // matches two things. The row's own delete button is the row.
-      await expect(page.getByRole('button', { name: 'ລຶບ ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeHidden();
+      if (await deleteButton.isVisible()) {
+        await deleteButton.click();
+        await page.getByRole('button', { name: 'ລຶບ', exact: true }).click();
+        // The confirm dialog repeats the name, so waiting on the text alone
+        // matches two things. The row's own delete button is the row.
+        await expect(deleteButton).toBeHidden();
+      }
     }
 
     await page.goto(url);
