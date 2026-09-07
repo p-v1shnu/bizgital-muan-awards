@@ -26,10 +26,47 @@ export function HighlightVideo({
   const reduceMotion = useReducedMotion();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const thumbnailRef = useRef<HTMLImageElement>(null);
 
   const provider = detectVideoProvider(videoUrl);
   const embedUrl = provider ? videoEmbedUrl(videoUrl, provider) : null;
-  const thumbnail = imageUrl(thumbnailKey) ?? (provider === 'youtube' ? youtubeThumbnailUrl(videoUrl) : null);
+  const uploadedThumbnail = imageUrl(thumbnailKey);
+  const autoThumbnail = provider === 'youtube' ? youtubeThumbnailUrl(videoUrl) : null;
+  // Starts at the sharpest option (an upload, or YouTube's 1280×720 tier) and
+  // drops to the 480×360 tier only if that turns out not to exist — see
+  // checkThumbnailSize below.
+  const [thumbnail, setThumbnail] = useState(uploadedThumbnail ?? autoThumbnail);
+
+  // A video with no 1280×720 thumbnail still answers this request with a 200
+  // — just a ~120×90 grey placeholder — so a 404 handler would never catch
+  // it. The loaded image's own size is the only signal available, and only
+  // for the auto-derived YouTube tier: an upload the team chose is shown
+  // as-is.
+  function checkThumbnailSize(img: HTMLImageElement) {
+    if (
+      uploadedThumbnail ||
+      provider !== 'youtube' ||
+      thumbnail !== autoThumbnail ||
+      img.naturalWidth > 120
+    ) {
+      return;
+    }
+    const fallback = youtubeThumbnailUrl(videoUrl, 'hqdefault');
+    if (fallback) setThumbnail(fallback);
+  }
+
+  // The plain onLoad prop below is not enough on its own: on a fast enough
+  // response (a cached image, most likely) the browser can finish loading it
+  // before React finishes hydrating and attaches that listener, and the
+  // event firing to nobody was verified directly — a fixture answering
+  // instantly reproduced this exact miss, and answering with realistic
+  // latency did not. `complete` is a live property, so checking it once
+  // after mount catches a load that already happened.
+  useEffect(() => {
+    const img = thumbnailRef.current;
+    if (img?.complete) checkThumbnailSize(img);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [thumbnail]);
 
   const close = () => {
     setOpen(false);
@@ -66,7 +103,13 @@ export function HighlightVideo({
           // Next.js image hosts, so this stays a plain img (same call as the
           // admin's own upload preview).
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={thumbnail} alt="" className="size-full object-cover" />
+          <img
+            ref={thumbnailRef}
+            src={thumbnail}
+            alt=""
+            className="size-full object-cover"
+            onLoad={(event) => checkThumbnailSize(event.currentTarget)}
+          />
         ) : null}
         <div
           aria-hidden
