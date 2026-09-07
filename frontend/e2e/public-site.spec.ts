@@ -311,6 +311,14 @@ test('the brand is the real logo, and a bare link still shares a picture', async
 test('no page fails an automated accessibility check', async ({ page }) => {
   // Contrast, labels, roles, landmarks — the machine-checkable half of WCAG
   // 2.1 AA. It caught footer headings at 4.29:1 and a faded panel at 2:1.
+  //
+  // Sections fade up into view (PRD §6.0.3), and a scan that lands mid-fade
+  // samples genuinely low-alpha text against its background — a real
+  // computed value, but a transient one, not the page's resting contrast.
+  // Emulating reduced motion collapses every transition to ~0 (globals.css'
+  // one site-wide reduced-motion rule), so the scan always sees the settled
+  // state, the same way a person who has that OS setting on does.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const AxeBuilder = (await import('@axe-core/playwright')).default;
   for (const path of ['/', '/awards/2025', '/winners', '/creators/khamla', '/submit', '/about']) {
     // Not `networkidle`: after a fresh build the image optimiser is encoding
