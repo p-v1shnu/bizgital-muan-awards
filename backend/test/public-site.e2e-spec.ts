@@ -543,6 +543,30 @@ describe('public site', () => {
   });
 
   /**
+   * Corrects where the hero photo crops on a wide desktop screen — see the
+   * migration and heroImageFocalY's schema comment for why this is one
+   * vertical percentage rather than a full crop rectangle.
+   */
+  describe('the hero photo\'s vertical focal point', () => {
+    it('reaches the public payload once the team sets it', async () => {
+      await api(h).put(path('/admin/site')).set(h.auth).send({ heroImageFocalY: 20 }).expect(200);
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.heroImageFocalY).toBe(20);
+    });
+
+    it('refuses a value outside 0–100', async () => {
+      await api(h).put(path('/admin/site')).set(h.auth).send({ heroImageFocalY: 101 }).expect(400);
+      await api(h).put(path('/admin/site')).set(h.auth).send({ heroImageFocalY: -1 }).expect(400);
+    });
+
+    it('takes an emptied field as emptied, not as unchanged', async () => {
+      await api(h).put(path('/admin/site')).set(h.auth).send({ heroImageFocalY: null }).expect(200);
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.heroImageFocalY).toBeNull();
+    });
+  });
+
+  /**
    * The team writes the questions as well as the answers, so the list has to
    * survive the trip in the order it was arranged, and a half-written entry must
    * not reach the page as a heading that opens onto nothing.

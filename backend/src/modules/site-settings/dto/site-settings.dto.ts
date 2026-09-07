@@ -5,12 +5,15 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsInt,
   IsNotEmpty,
   IsObject,
   IsOptional,
   IsString,
   IsUrl,
+  Max,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -173,6 +176,17 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(300)
   heroImageKey?: string | null;
+
+  @ApiPropertyOptional({
+    minimum: 0,
+    maximum: 100,
+    description: 'Vertical crop centre of heroImageKey, 0 (top) to 100 (bottom) — corrects what a wide 16:9 screen crops out; null keeps the vertical centre',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100)
+  heroImageFocalY?: number | null;
 
   @ApiPropertyOptional()
   @IsOptional()

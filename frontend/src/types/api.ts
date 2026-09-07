@@ -191,6 +191,8 @@ export interface PageSeo {
 export interface SiteSettings {
   id: string;
   heroImageKey: string | null;
+  /** Vertical crop centre of heroImageKey, 0 (top) to 100 (bottom). Null keeps the vertical centre. */
+  heroImageFocalY: number | null;
   heroCaptionLo: string | null;
   /** The pill above the hero heading. Blank hides it. */
   heroKickerLo: string | null;

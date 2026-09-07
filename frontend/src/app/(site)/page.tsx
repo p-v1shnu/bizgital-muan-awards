@@ -140,6 +140,7 @@ export default async function HomePage() {
                 sizes="100vw"
                 priority
                 fallbackClassName={INK_FALLBACK}
+                focalY={site?.heroImageFocalY}
               />
             ) : (
               // Dark, like the photograph it stands in for. It used to be a cream

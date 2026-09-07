@@ -414,6 +414,13 @@ model SiteSetting {
   id String @id @default("singleton")
 
   heroImageKey     String?
+  /// Where the vertical crop of heroImageKey stays centred, 0 (top) to 100
+  /// (bottom) — an object-position Y, not an object-position pair: the hero
+  /// box is wide on a desktop 16:9 screen and tall on a phone, so it crops
+  /// the photo's height differently at each width, not its width, and this
+  /// is the one axis that ever needs correcting. Null keeps the old default,
+  /// the vertical centre (50).
+  heroImageFocalY  Int?
   heroCaptionLo    String?
   heroCaptionEn    String?
   /// The small pill above the homepage hero heading — "ຕັ້ງແຕ່ປີ 2023 ·

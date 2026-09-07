@@ -29,6 +29,12 @@ export function SiteImage({
   sizes = '100vw',
   priority,
   fallbackClassName,
+  /** Vertical crop centre, 0 (top) to 100 (bottom) — for a box whose aspect
+   *  ratio varies a lot across screen widths (the homepage hero: wide on
+   *  desktop, tall on a phone), where a plain centre crop can cut off the
+   *  photo's important part at one width and not the other. Undefined keeps
+   *  the default centre. */
+  focalY,
 }: {
   imageKey: string | null | undefined;
   alt?: string;
@@ -37,6 +43,7 @@ export function SiteImage({
   /** Set on the one image above the fold; it is what LCP measures. */
   priority?: boolean;
   fallbackClassName?: string;
+  focalY?: number | null;
 }) {
   const src = imageUrl(imageKey);
 
@@ -61,6 +68,7 @@ export function SiteImage({
       sizes={sizes}
       priority={priority}
       className={cn('object-cover', className)}
+      style={focalY == null ? undefined : { objectPosition: `50% ${focalY}%` }}
     />
   );
 }
