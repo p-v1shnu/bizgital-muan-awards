@@ -5,11 +5,15 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Reveals a section with a diagonal wipe at the same 45° angle as the
- * site's own weave motif (globals.css .weave), with the foil gradient
- * riding the seam as it crosses — PRD §6.0.3's answer for "does scrolling
- * feel considered", reusing the site's own decorative language instead of
- * a generic fade-up.
+ * Reveals a section with a fade-up as it scrolls into view — PRD §6.0.3's
+ * answer for "does scrolling feel considered". An earlier version wiped the
+ * section open along the weave motif's 45° angle; on a wide desktop viewport
+ * that read as a card being flipped open rather than a section arriving, so
+ * it was replaced with a plain fade + slight upward settle.
+ *
+ * A row of parallel cards/tiles inside the children can additionally mark
+ * each item with the `stagger-item` class (globals.css) to have them fade up
+ * one after another instead of all at once.
  *
  * Section skips wrapping its leading (titleAs="h1") content in this: that
  * section is on screen at first paint on every page that has one, and
@@ -36,9 +40,8 @@ export function SectionReveal({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div ref={ref} className="relative overflow-hidden">
-      <span aria-hidden className={cn('section-reveal-seam', visible && 'is-crossing')} />
-      <div className={cn('section-reveal-content', visible && 'is-visible')}>{children}</div>
+    <div ref={ref} className={cn('section-reveal-content', visible && 'is-visible')}>
+      {children}
     </div>
   );
 }
