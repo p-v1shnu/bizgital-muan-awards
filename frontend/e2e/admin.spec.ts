@@ -224,7 +224,11 @@ test.describe('the edition page', () => {
     await page.getByPlaceholder('ຄົ້ນຫາສາຂາຈາກຄັງ…').fill('ສາຂາທົດສອບວ່າງເປົ່າ');
     await page.getByRole('button', { name: /ສາຂາທົດສອບວ່າງເປົ່າ/ }).click();
     await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
-    await expect(page.getByText('ສາຂາທົດສອບວ່າງເປົ່າ')).toBeVisible();
+    // The dialog never unmounts on close (see categories-tab.tsx), only hides
+    // — its own copy of the picked template's name stays in the DOM, so a
+    // bare text locator matches that too. The list row is the only paragraph
+    // with this text, same fix as the delete-confirm dialog below.
+    await expect(page.getByRole('paragraph', { name: 'ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeVisible();
 
     try {
       await page.goto(url);
