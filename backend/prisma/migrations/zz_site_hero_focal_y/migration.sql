@@ -1,0 +1,11 @@
+-- Lets the team correct where the homepage hero photo crops on a wide 16:9
+-- desktop screen: `object-fit: cover` crops out whatever the box is too
+-- short to fit, and on a wide box that is height, so the top of the photo
+-- (a couple's faces, say) can be cut while a phone's taller box shows it
+-- fine. One vertical percentage — 0 top, 100 bottom — corrects that crop at
+-- every screen width; the horizontal centre never needed the same fix.
+--
+-- Named `zz_` for the reason the migrations before it are: this directory is
+-- applied in lexicographic order and its numbers are unpadded, so 9_ runs
+-- after 19_. A `zz_` prefix is the only way to be certain a file runs last.
+ALTER TABLE `site_settings` ADD COLUMN `heroImageFocalY` INT NULL;

@@ -8,7 +8,7 @@ import { ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
 import { Field, Input, Switch, Textarea } from '@/components/ui/field';
 import { EntryListEditor } from '@/components/admin/entry-list-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
-import { ImageUpload } from '@/components/admin/image-upload';
+import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
@@ -97,6 +97,7 @@ function SettingsForm({
     homeHighlightVideoUrl: initial?.homeHighlightVideoUrl ?? '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(initial?.heroImageKey ?? null);
+  const [heroFocalY, setHeroFocalY] = useState(initial?.heroImageFocalY ?? 50);
   const [highlightThumbnailKey, setHighlightThumbnailKey] = useState<string | null>(
     initial?.homeHighlightThumbnailKey ?? null,
   );
@@ -175,6 +176,7 @@ function SettingsForm({
                 pageSeo: seo,
                 footerLocationLo: emptyToNull(form.footerLocationLo),
                 heroImageKey: heroImageKey ?? null,
+                heroImageFocalY: heroFocalY,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
                 homeHighlightVideoUrl: emptyToNull(form.homeHighlightVideoUrl),
@@ -320,6 +322,42 @@ function SettingsForm({
                   value={heroImageKey}
                   onChange={setHeroImageKey}
                 />
+                {heroImageKey && (
+                  <div className="mt-4">
+                    <p className="mb-1.5 text-xs font-semibold text-ink-2">
+                      ຈຸດສຳຄັນຂອງຮູບ (ແນວຕັ້ງ)
+                    </p>
+                    {/* A 16:9 box — the shape the hero crops to on a desktop screen
+                        — so the team sees the same crop they will get, rather than
+                        having to picture it from a number. */}
+                    <div className="aspect-video w-full max-w-sm overflow-hidden rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2">
+                      {/* Plain img, not next/image: object storage is not a
+                          Next.js image host in every environment (see ImageUpload
+                          above), and this is a live-editing preview, not the
+                          shipped hero picture. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imagePublicUrl(heroImageKey) ?? undefined}
+                        alt=""
+                        className="size-full object-cover"
+                        style={{ objectPosition: `50% ${heroFocalY}%` }}
+                      />
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={heroFocalY}
+                      onChange={(event) => setHeroFocalY(Number(event.target.value))}
+                      className="mt-2 w-full max-w-sm"
+                      aria-label="ຈຸດສຳຄັນຂອງຮູບ hero ໃນແນວຕັ້ງ"
+                    />
+                    <p className="mt-1 max-w-sm text-[11px] text-ink-3">
+                      ຊິດຊ້າຍ = ຮັກສາເບື້ອງເທິງໄວ້ (ຕັດເບື້ອງລຸ່ມ) · ຊິດຂວາ = ຮັກສາເບື້ອງລຸ່ມໄວ້ (ຕັດເບື້ອງເທິງ) —
+                      ແກ້ໄຂເວລາຈໍກວ້າງ (ຄອມພິວເຕີ) ຕັດຮູບຜິດບ່ອນ
+                    </p>
+                  </div>
+                )}
                 <div className="mt-4">
                   <Field label="ຄຳບັນຍາຍກ້ອງຮູບ" hint="— ບໍ່ບັງຄັບ">
                     <Input
