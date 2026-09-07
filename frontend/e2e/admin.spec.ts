@@ -237,13 +237,11 @@ test.describe('the edition page', () => {
         await page.getByRole('button', { name: 'ບັນທຶກ' }).click();
         // The dialog never unmounts on close (see categories-tab.tsx), only
         // hides — its own copy of the picked template's name stays in the
-        // DOM, so a bare text locator matches that too. The list row is the
-        // only paragraph with this text, same fix as the delete-confirm
-        // dialog below. A generous timeout: this is a real save-then-refetch
-        // round trip, not an instant UI update.
-        await expect(page.getByRole('paragraph', { name: 'ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeVisible({
-          timeout: 30_000,
-        });
+        // DOM, so a bare text locator matches that too. Filtering a
+        // paragraph by its text (rather than `getByRole(..., { name })`,
+        // which computes accessible *name* — not a plain paragraph's text
+        // content, so it never matches at all) targets only the list row.
+        await expect(page.getByRole('paragraph').filter({ hasText: 'ສາຂາທົດສອບວ່າງເປົ່າ' })).toBeVisible();
       }
 
       await page.goto(url);
