@@ -81,5 +81,22 @@ export function videoEmbedUrl(
   // Facebook's plugin iframe needs no SDK script, only a public post/video —
   // a private or friends-only video renders blank rather than erroring, which
   // is why the admin note says to check the video is public.
-  return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&autoplay=true&mute=${muted ? '1' : '0'}`;
+  //
+  // `width` is not optional despite what the plugin's own docs imply: every
+  // embed code Facebook's own "Embed" button generates includes it, and
+  // without it the player never initialises — the iframe loads but stays
+  // blank, which is what this looked like before this was added. The plugin
+  // has no percentage/responsive width, so this asks for its maximum
+  // (1280) and lets our own CSS (`size-full` on the iframe element) scale
+  // the actual box to fit the container regardless. `show_text=false`
+  // matches Facebook's generated code too — the post's caption text, which
+  // would otherwise sit inside the plugin's own box beneath the video.
+  const params = new URLSearchParams({
+    href: url,
+    autoplay: 'true',
+    mute: muted ? '1' : '0',
+    width: '1280',
+    show_text: 'false',
+  });
+  return `https://www.facebook.com/plugins/video.php?${params.toString()}`;
 }
