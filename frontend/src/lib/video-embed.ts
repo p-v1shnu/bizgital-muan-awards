@@ -91,11 +91,18 @@ export function videoEmbedUrl(
   // the actual box to fit the container regardless. `show_text=false`
   // matches Facebook's generated code too — the post's caption text, which
   // would otherwise sit inside the plugin's own box beneath the video.
+  //
+  // `height` turned out not to be optional either: width alone rendered on
+  // a neutral third-party host but stayed blank on the real site across
+  // three browsers and a phone, and the one difference from Facebook's own
+  // generated code (which always pairs width with a height) was this
+  // missing param. 720 matches the 16:9 a 1280-wide box implies.
   const params = new URLSearchParams({
     href: url,
     autoplay: 'true',
     mute: muted ? '1' : '0',
     width: '1280',
+    height: '720',
     show_text: 'false',
   });
   return `https://www.facebook.com/plugins/video.php?${params.toString()}`;
