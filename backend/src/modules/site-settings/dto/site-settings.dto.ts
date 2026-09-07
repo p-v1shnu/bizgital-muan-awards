@@ -3,6 +3,7 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsObject,
@@ -252,6 +253,13 @@ export class UpdateSiteSettingsDto {
   @IsOptional()
   @IsUrl({ require_protocol: true })
   homeHighlightVideoUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Whether the video above autoplays, muted, once scrolled into view, instead of waiting for a click. The poster below is read only while this is off',
+  })
+  @IsOptional()
+  @IsBoolean()
+  homeHighlightAutoplay?: boolean;
 
   @ApiPropertyOptional({
     description: 'Object storage key for the video\'s poster frame, never a full URL — optional; a YouTube link falls back to YouTube\'s own thumbnail without it',

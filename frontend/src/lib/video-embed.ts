@@ -61,17 +61,25 @@ export function youtubeThumbnailUrl(
 }
 
 /**
- * The lightbox opens as a direct result of clicking the thumbnail — a real
- * user gesture — so both providers are asked to autoplay with sound rather
- * than muted, unlike a page-load autoplay a browser would simply refuse.
+ * `muted: false` is only for a video started by a real click — a genuine
+ * user gesture, which is what lets a browser allow sound. `muted: true` is
+ * for the autoplay-once-visible mode, where there is no click behind it and
+ * every browser refuses anything louder.
  */
-export function videoEmbedUrl(url: string, provider: VideoProvider): string | null {
+export function videoEmbedUrl(
+  url: string,
+  provider: VideoProvider,
+  { muted }: { muted: boolean },
+): string | null {
   if (provider === 'youtube') {
     const id = youtubeId(url);
-    return id ? `https://www.youtube.com/embed/${id}?autoplay=1` : null;
+    if (!id) return null;
+    const params = new URLSearchParams({ autoplay: '1' });
+    if (muted) params.set('mute', '1');
+    return `https://www.youtube.com/embed/${id}?${params.toString()}`;
   }
   // Facebook's plugin iframe needs no SDK script, only a public post/video —
   // a private or friends-only video renders blank rather than erroring, which
   // is why the admin note says to check the video is public.
-  return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&autoplay=true&mute=0`;
+  return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&autoplay=true&mute=${muted ? '1' : '0'}`;
 }

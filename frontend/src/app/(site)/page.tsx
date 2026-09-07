@@ -343,6 +343,7 @@ export default async function HomePage() {
       {site?.homeHighlightVideoUrl && (
         <HighlightVideo
           videoUrl={site.homeHighlightVideoUrl}
+          autoplay={site.homeHighlightAutoplay}
           thumbnailKey={site.homeHighlightThumbnailKey}
         />
       )}

@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardBody, CardHeader } from '@/components/ui/card';
 import { ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
-import { Field, Input, Textarea } from '@/components/ui/field';
+import { Field, Input, Switch, Textarea } from '@/components/ui/field';
 import { EntryListEditor } from '@/components/admin/entry-list-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload } from '@/components/admin/image-upload';
@@ -100,6 +100,7 @@ function SettingsForm({
   const [highlightThumbnailKey, setHighlightThumbnailKey] = useState<string | null>(
     initial?.homeHighlightThumbnailKey ?? null,
   );
+  const [highlightAutoplay, setHighlightAutoplay] = useState(initial?.homeHighlightAutoplay ?? false);
   const [gallery, setGallery] = useState<string[]>(initial?.galleryImageKeys ?? []);
   const [socials, setSocials] = useState<Record<string, string>>(initial?.socialLinks ?? {});
   const [faq, setFaq] = useState<FaqItem[]>(initial?.faq ?? []);
@@ -177,6 +178,7 @@ function SettingsForm({
                 galleryImageKeys: gallery,
                 socialLinks: socials,
                 homeHighlightVideoUrl: emptyToNull(form.homeHighlightVideoUrl),
+                homeHighlightAutoplay: highlightAutoplay,
                 homeHighlightThumbnailKey: highlightThumbnailKey ?? null,
               },
               { onSuccess: () => setSaved(true) },
@@ -357,15 +359,36 @@ function SettingsForm({
                     />
                   </Field>
                 </div>
-                <div className="mt-4">
-                  <ImageUpload
-                    label="ພາບປົກວິດີໂອ"
-                    hint="ບໍ່ບັງຄັບ — ວິດີໂອ YouTube ຈະໃຊ້ພາບປົກຂອງ YouTube ເອງຖ້າບໍ່ໄດ້ອັບໂຫລດໄວ້ບ່ອນນີ້ ແຕ່ Facebook ຕ້ອງອັບໂຫລດ ບໍ່ດັ່ງນັ້ນຈະຂຶ້ນເປັນປຸ່ມ play ເປົ່າໆ"
-                    folder="site"
-                    value={highlightThumbnailKey}
-                    onChange={setHighlightThumbnailKey}
+                <div className="mt-4 flex items-center gap-3">
+                  <Switch
+                    checked={highlightAutoplay}
+                    onChange={setHighlightAutoplay}
+                    label="ຫຼິ້ນອັດຕະໂນມັດ"
                   />
+                  <span>
+                    <span className="block text-[13px] font-semibold text-ink">ຫຼິ້ນອັດຕະໂນມັດ</span>
+                    <span className="block text-[11.5px] text-ink-3">
+                      ຫຼິ້ນເອງ (ປິດສຽງ) ທັນທີທີ່ເລື່ອນມາຮອດ ແທນທີ່ຈະລໍຖ້າໃຫ້ກົດ — ປິດຢູ່ ຄົນເບິ່ງຕ້ອງກົດ play ເອງ
+                      ແລ້ວຈະໄດ້ຍິນສຽງເລີຍ
+                    </span>
+                  </span>
                 </div>
+                {!highlightAutoplay && (
+                  <div className="mt-4">
+                    <ImageUpload
+                      label="ພາບປົກວິດີໂອ"
+                      hint="ບໍ່ບັງຄັບ — ວິດີໂອ YouTube ຈະໃຊ້ພາບປົກຂອງ YouTube ເອງຖ້າບໍ່ໄດ້ອັບໂຫລດໄວ້ບ່ອນນີ້ ແຕ່ Facebook ຕ້ອງອັບໂຫລດ ບໍ່ດັ່ງນັ້ນຈະຂຶ້ນເປັນປຸ່ມ play ເປົ່າໆ"
+                      folder="site"
+                      value={highlightThumbnailKey}
+                      onChange={setHighlightThumbnailKey}
+                    />
+                  </div>
+                )}
+                {highlightAutoplay && (
+                  <div className="mt-4">
+                    <Note>ປິດການອັບໂຫລດພາບປົກໄວ້ຊົ່ວຄາວ — ຫຼິ້ນອັດຕະໂນມັດແລ້ວບໍ່ມີພາບປົກໃຫ້ໂຊວ໌ກ່ອນ</Note>
+                  </div>
+                )}
               </CardBody>
             </Card>
           </FormSection>

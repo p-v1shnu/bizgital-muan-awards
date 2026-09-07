@@ -1,35 +1,50 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Play, X } from 'lucide-react';
+import { useReducedMotion } from 'motion/react';
+import { Play } from 'lucide-react';
 
 import { detectVideoProvider, videoEmbedUrl, youtubeThumbnailUrl } from '@/lib/video-embed';
 import { imageUrl } from '@/lib/images';
 
 /**
- * The homepage's own video, independent of any year (PRD §6.0.3) — a lightbox
- * rather than a link out, so watching it never leaves the site. No visible
- * heading: a big thumbnail with a play button needs no label to be understood
- * as a video, and the content behind it varies too much for one fixed
- * caption to always fit — but an sr-only heading keeps the section a real
- * landmark for anyone navigating by headings.
+ * The homepage's own video, independent of any year (PRD §6.0.3) — plays in
+ * place, in the same box, never a popup. No visible heading: a big
+ * thumbnail with a play button needs no label to be understood as a video,
+ * and the content behind it varies too much for one fixed caption to always
+ * fit — but an sr-only heading keeps the section a real landmark for anyone
+ * navigating by headings.
+ *
+ * Two modes, set in /admin/site, that cannot both apply at once:
+ * - Autoplay on: no click, no poster to show one — it starts on its own
+ *   (muted; no browser allows anything louder with no click behind it) once
+ *   scrolled into view.
+ * - Autoplay off: a poster and a play button, and the video only starts —
+ *   unmuted, since a click is a real user gesture — once clicked.
+ *
+ * Reduced motion overrides the autoplay setting regardless of what the team
+ * chose: a video starting to move on its own is exactly the kind of motion
+ * that setting exists to suppress, so it falls back to the click-to-play
+ * behaviour instead.
  */
 export function HighlightVideo({
   videoUrl,
+  autoplay,
   thumbnailKey,
 }: {
   videoUrl: string;
+  autoplay: boolean;
   thumbnailKey: string | null;
 }) {
-  const [open, setOpen] = useState(false);
   const reduceMotion = useReducedMotion();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const effectiveAutoplay = autoplay && !reduceMotion;
+
+  const [started, setStarted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const thumbnailRef = useRef<HTMLImageElement>(null);
 
   const provider = detectVideoProvider(videoUrl);
-  const embedUrl = provider ? videoEmbedUrl(videoUrl, provider) : null;
+  const embedUrl = provider ? videoEmbedUrl(videoUrl, provider, { muted: effectiveAutoplay }) : null;
   const uploadedThumbnail = imageUrl(thumbnailKey);
   const autoThumbnail = provider === 'youtube' ? youtubeThumbnailUrl(videoUrl) : null;
   // Starts at the sharpest option (an upload, or YouTube's 1280×720 tier) and
@@ -57,113 +72,87 @@ export function HighlightVideo({
 
   // The plain onLoad prop below is not enough on its own: on a fast enough
   // response (a cached image, most likely) the browser can finish loading it
-  // before React finishes hydrating and attaches that listener, and the
-  // event firing to nobody was verified directly — a fixture answering
-  // instantly reproduced this exact miss, and answering with realistic
-  // latency did not. `complete` is a live property, so checking it once
-  // after mount catches a load that already happened.
+  // before React finishes hydrating and attaches that listener — confirmed
+  // directly, a fixture answering instantly reproduced this exact miss, and
+  // answering with realistic latency did not. `complete` is a live property,
+  // so checking it once after mount catches a load that already happened.
   useEffect(() => {
+    if (effectiveAutoplay) return;
     const img = thumbnailRef.current;
     if (img?.complete) checkThumbnailSize(img);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [thumbnail]);
+  }, [thumbnail, effectiveAutoplay]);
 
-  const close = () => {
-    setOpen(false);
-    triggerRef.current?.focus();
-  };
-
+  // Autoplay mode only: starts the video once the box is actually on
+  // screen, rather than the instant the page loads — a visitor who never
+  // scrolls this far never pays for it.
   useEffect(() => {
-    if (!open) return;
-    closeButtonRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [open]);
+    if (!effectiveAutoplay || started) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setStarted(true);
+        observer.disconnect();
+      },
+      { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [effectiveAutoplay, started]);
 
-  // Nothing to embed — an unrecognised link, most likely — so nothing to
-  // open on click either. Refusing to render is safer than a lightbox that
-  // opens onto a blank iframe.
+  // Nothing to embed — an unrecognised link, most likely. Refusing to render
+  // is safer than a box that never plays anything.
   if (!provider || !embedUrl) return null;
 
   return (
     <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
       <h2 className="sr-only">ວິດີໂອ</h2>
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="ເປີດວິດີໂອ"
-        className="group relative block aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel-2"
+      <div
+        ref={containerRef}
+        className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel-2"
       >
-        {thumbnail ? (
-          // External storage and YouTube's own CDN alike are not configured
-          // Next.js image hosts, so this stays a plain img (same call as the
-          // admin's own upload preview).
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            ref={thumbnailRef}
-            src={thumbnail}
-            alt=""
-            className="size-full object-cover"
-            onLoad={(event) => checkThumbnailSize(event.currentTarget)}
+        {started ? (
+          <iframe
+            src={embedUrl}
+            title="ວິດີໂອ"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+            className="size-full"
           />
-        ) : null}
-        <div
-          aria-hidden
-          className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/10 to-transparent transition-colors group-hover:from-ink/60"
-        />
-        <span className="absolute inset-0 grid place-items-center">
-          <span className="grid size-16 place-items-center rounded-full bg-white/90 text-ink shadow-[0_4px_18px_rgba(20,14,10,.25)] transition-transform group-hover:scale-105">
-            <Play className="ml-1 size-6 fill-current" />
-          </span>
-        </span>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            role="dialog"
-            aria-modal="true"
-            aria-label="ວິດີໂອ"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/90 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reduceMotion ? 0 : 0.2 }}
-            onClick={close}
+        ) : effectiveAutoplay ? null : (
+          <button
+            type="button"
+            onClick={() => setStarted(true)}
+            aria-label="ເປີດວິດີໂອ"
+            className="group absolute inset-0 block"
           >
-            <button
-              ref={closeButtonRef}
-              type="button"
-              aria-label="ປິດ"
-              onClick={close}
-              className="absolute right-4 top-4 grid size-10 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
-            >
-              <X className="size-5" />
-            </button>
-
-            <motion.div
-              className="relative aspect-video w-full max-w-3xl"
-              initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
-              transition={{ duration: reduceMotion ? 0 : 0.2 }}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <iframe
-                src={embedUrl}
-                title="ວິດີໂອ"
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-                className="size-full rounded-[var(--radius-box)]"
+            {thumbnail ? (
+              // External storage and YouTube's own CDN alike are not
+              // configured Next.js image hosts, so this stays a plain img
+              // (same call as the admin's own upload preview).
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                ref={thumbnailRef}
+                src={thumbnail}
+                alt=""
+                className="size-full object-cover"
+                onLoad={(event) => checkThumbnailSize(event.currentTarget)}
               />
-            </motion.div>
-          </motion.div>
+            ) : null}
+            <div
+              aria-hidden
+              className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/10 to-transparent transition-colors group-hover:from-ink/60"
+            />
+            <span className="absolute inset-0 grid place-items-center">
+              <span className="grid size-16 place-items-center rounded-full bg-white/90 text-ink shadow-[0_4px_18px_rgba(20,14,10,.25)] transition-transform group-hover:scale-105">
+                <Play className="ml-1 size-6 fill-current" />
+              </span>
+            </span>
+          </button>
         )}
-      </AnimatePresence>
+      </div>
     </section>
   );
 }
