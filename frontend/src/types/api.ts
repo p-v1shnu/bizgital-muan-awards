@@ -201,6 +201,10 @@ export interface SiteSettings {
   ctaTitleLo: string;
   ctaBodyLo: string;
   galleryImageKeys: string[] | null;
+  /** A homepage video, set independent of any year. YouTube or Facebook. */
+  homeHighlightVideoUrl: string | null;
+  /** Poster frame for the video above. A YouTube link falls back to its own thumbnail without one. */
+  homeHighlightThumbnailKey: string | null;
   socialLinks: Record<string, string> | null;
   aboutHistoryLo: string | null;
   contactEmail: string | null;

@@ -485,6 +485,50 @@ describe('public site', () => {
   });
 
   /**
+   * The homepage's own video, set independent of any year (unlike
+   * Edition.highlightUrl) — the team can point it at whatever they like and
+   * swap it whenever they like.
+   */
+  describe('the homepage highlight video', () => {
+    it('reaches the public payload once the team sets it', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          homeHighlightVideoUrl: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+          homeHighlightThumbnailKey: 'site/highlight-poster.jpg',
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.homeHighlightVideoUrl).toBe(
+        'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      );
+      expect(response.body.data.homeHighlightThumbnailKey).toBe('site/highlight-poster.jpg');
+    });
+
+    it('refuses a value that is not a URL', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ homeHighlightVideoUrl: 'ວິດີໂອຂອງພວກເຮົາ' })
+        .expect(400);
+    });
+
+    it('takes an emptied field as emptied, not as unchanged', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ homeHighlightVideoUrl: null, homeHighlightThumbnailKey: null })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.homeHighlightVideoUrl).toBeNull();
+      expect(response.body.data.homeHighlightThumbnailKey).toBeNull();
+    });
+  });
+
+  /**
    * The team writes the questions as well as the answers, so the list has to
    * survive the trip in the order it was arranged, and a half-written entry must
    * not reach the page as a heading that opens onto nothing.
