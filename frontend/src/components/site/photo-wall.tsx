@@ -14,12 +14,12 @@ const POOL_SIZE = 8;
  *  windows — same speed and direction everywhere would read as one
  *  mechanism instead of a wall of separate photos. */
 const WINDOW_MOTION: readonly [number, boolean][] = [
-  [28, false],
-  [16, true],
-  [20, false],
-  [15, true],
-  [18, false],
-  [22, true],
+  [56, false],
+  [32, true],
+  [40, false],
+  [30, true],
+  [36, false],
+  [44, true],
 ];
 
 /**
