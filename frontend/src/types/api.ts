@@ -203,6 +203,8 @@ export interface SiteSettings {
   galleryImageKeys: string[] | null;
   /** A homepage video, set independent of any year. YouTube or Facebook. */
   homeHighlightVideoUrl: string | null;
+  /** Plays muted once scrolled into view instead of waiting for a click. The poster below is read only while this is off. */
+  homeHighlightAutoplay: boolean;
   /** Poster frame for the video above. A YouTube link falls back to its own thumbnail without one. */
   homeHighlightThumbnailKey: string | null;
   socialLinks: Record<string, string> | null;

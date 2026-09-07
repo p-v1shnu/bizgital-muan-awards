@@ -507,6 +507,20 @@ describe('public site', () => {
       expect(response.body.data.homeHighlightThumbnailKey).toBe('site/highlight-poster.jpg');
     });
 
+    it('turns autoplay on and back off', async () => {
+      await api(h).put(path('/admin/site')).set(h.auth).send({ homeHighlightAutoplay: true }).expect(200);
+      const on = await api(h).get(path('/site')).expect(200);
+      expect(on.body.data.homeHighlightAutoplay).toBe(true);
+
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ homeHighlightAutoplay: false })
+        .expect(200);
+      const off = await api(h).get(path('/site')).expect(200);
+      expect(off.body.data.homeHighlightAutoplay).toBe(false);
+    });
+
     it('refuses a value that is not a URL', async () => {
       await api(h)
         .put(path('/admin/site'))

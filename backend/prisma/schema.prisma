@@ -450,12 +450,20 @@ model SiteSetting {
   /// this). YouTube and Facebook links are recognised; nullable, and the
   /// section is absent with nothing to show rather than empty.
   homeHighlightVideoUrl     String?
+  /// Whether the video above plays on its own once scrolled into view
+  /// (muted — a browser refuses any louder autoplay with no click behind
+  /// it) rather than waiting for a click. The two modes are mutually
+  /// exclusive with the poster below: autoplay has nothing to show a poster
+  /// of *before* the video that would already be playing, so the field is
+  /// only read while this is off.
+  homeHighlightAutoplay     Boolean @default(false)
   /// A poster frame for the video above, uploaded by the team rather than
   /// fetched — Facebook has no public no-auth thumbnail endpoint the way
-  /// YouTube does, so this is the one path that works for both. Optional
-  /// even so: a YouTube link with nothing uploaded here falls back to
-  /// YouTube's own thumbnail at render time, and a Facebook link with
-  /// nothing here falls back to a plain, unlabelled play button.
+  /// YouTube does, so this is the one path that works for both. Read only
+  /// when homeHighlightAutoplay is off; optional even then — a YouTube link
+  /// with nothing uploaded here falls back to YouTube's own thumbnail at
+  /// render time, and a Facebook link with nothing here falls back to a
+  /// plain, unlabelled play button.
   homeHighlightThumbnailKey String?
   /// The organisation's own accounts, shown as icon links in the footer —
   /// separate from a Creator's or Judge's own socialLinks. { facebook, tiktok,
