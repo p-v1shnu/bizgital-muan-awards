@@ -133,6 +133,52 @@
   transition-delay: 420ms;
 }
 
+/**
+ * The homepage "about" gallery once there are more photos than fit in six
+ * boxes (PRD §6.0.3) — a strip of them scrolling upward on a continuous
+ * loop, rather than only ever showing the first six. Driven by PhotoWall
+ * (components/site/photo-wall.tsx), a server component: the loop, the
+ * hover pause and the reduced-motion freeze are all plain CSS.
+ */
+.photo-wall-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  animation-name: photo-wall-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.photo-wall-strip.is-reverse {
+  animation-direction: reverse;
+}
+/* Lets a visitor hold a frame long enough to actually look at it. */
+.photo-wall-strip:hover {
+  animation-play-state: paused;
+}
+@keyframes photo-wall-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    /* Exactly one pool's height, since the strip is the pool doubled —
+       the second copy is now where the first started, so the loop has
+       no seam. */
+    transform: translateY(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* The global transition/animation-duration override below still fires,
+     but an infinite-iteration animation squeezed to 0.01ms cycles through
+     the whole loop many times a second instead of holding still — the
+     opposite of what reduced motion asks for — so this gets an explicit
+     off switch instead. */
+  .photo-wall-strip {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 @layer base {
   html {
     background-color: var(--color-paper);

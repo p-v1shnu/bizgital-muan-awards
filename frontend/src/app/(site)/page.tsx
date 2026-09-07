@@ -5,6 +5,7 @@ import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { CountUp } from '@/components/site/count-up';
 import { HighlightVideo } from '@/components/site/highlight-video';
+import { PhotoWall } from '@/components/site/photo-wall';
 import { INK_FALLBACK, SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
@@ -311,29 +312,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {(gallery.length > 0 ? gallery.slice(0, 6) : Array.from({ length: 6 })).map(
-              (item, index) => (
-                <div
-                  key={index}
-                  className={`group relative aspect-square overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-panel-2 ${
-                    index === 0 ? 'col-span-2 row-span-2' : ''
-                  }`}
-                >
-                  {typeof item === 'string' ? (
-                    <SiteImage
-                      imageKey={item}
-                      alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌"
-                      sizes="(max-width: 768px) 33vw, 200px"
-                      className="transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="size-full border border-dashed border-rule" />
-                  )}
-                </div>
-              ),
-            )}
-          </div>
+          <PhotoWall imageKeys={gallery} />
         </div>
       </Section>
 
