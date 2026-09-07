@@ -4,6 +4,7 @@ import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { CountUp } from '@/components/site/count-up';
+import { HighlightVideo } from '@/components/site/highlight-video';
 import { INK_FALLBACK, SiteImage } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
@@ -282,6 +283,16 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* A team-set video, independent of any year — a recap, a highlight
+          reel, whatever they want to show (PRD §6.0.3). Absent entirely with
+          nothing set, rather than an empty section. */}
+      {site?.homeHighlightVideoUrl && (
+        <HighlightVideo
+          videoUrl={site.homeHighlightVideoUrl}
+          thumbnailKey={site.homeHighlightThumbnailKey}
+        />
+      )}
 
       {/* 3 — what this is */}
       <Section>

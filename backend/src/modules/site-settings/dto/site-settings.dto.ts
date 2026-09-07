@@ -8,6 +8,7 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  IsUrl,
   MaxLength,
   ValidateNested,
 } from 'class-validator';
@@ -244,6 +245,21 @@ export class UpdateSiteSettingsDto {
   @ArrayMaxSize(24)
   @IsString({ each: true })
   galleryImageKeys?: string[];
+
+  @ApiPropertyOptional({
+    description: 'A homepage video the team can set independent of any year — a YouTube or Facebook link; the section hides when unset',
+  })
+  @IsOptional()
+  @IsUrl({ require_protocol: true })
+  homeHighlightVideoUrl?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Object storage key for the video\'s poster frame, never a full URL — optional; a YouTube link falls back to YouTube\'s own thumbnail without it',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  homeHighlightThumbnailKey?: string | null;
 
   @ApiPropertyOptional({
     example: { facebook: 'https://…', tiktok: 'https://…' },

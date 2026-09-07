@@ -444,6 +444,19 @@ model SiteSetting {
   ctaTitleLo       String  @default("ຢາກສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກບໍ່?")
   ctaBodyLo        String  @default("ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກເຂົ້າມາໄດ້ເລີຍ")
   galleryImageKeys Json?
+  /// A video the team wants on the homepage — a highlight reel, a multi-year
+  /// recap, whatever they want to show, and not necessarily tied to any one
+  /// year's own highlight film (Edition.highlightUrl is that, unrelated to
+  /// this). YouTube and Facebook links are recognised; nullable, and the
+  /// section is absent with nothing to show rather than empty.
+  homeHighlightVideoUrl     String?
+  /// A poster frame for the video above, uploaded by the team rather than
+  /// fetched — Facebook has no public no-auth thumbnail endpoint the way
+  /// YouTube does, so this is the one path that works for both. Optional
+  /// even so: a YouTube link with nothing uploaded here falls back to
+  /// YouTube's own thumbnail at render time, and a Facebook link with
+  /// nothing here falls back to a plain, unlabelled play button.
+  homeHighlightThumbnailKey String?
   /// The organisation's own accounts, shown as icon links in the footer —
   /// separate from a Creator's or Judge's own socialLinks. { facebook, tiktok,
   /// youtube, instagram }; a platform with no value here shows no icon.

@@ -94,8 +94,12 @@ function SettingsForm({
     contactPhone: initial?.contactPhone ?? '',
     submitAfterLo: initial?.submitAfterLo ?? '',
     footerLocationLo: initial?.footerLocationLo ?? '',
+    homeHighlightVideoUrl: initial?.homeHighlightVideoUrl ?? '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(initial?.heroImageKey ?? null);
+  const [highlightThumbnailKey, setHighlightThumbnailKey] = useState<string | null>(
+    initial?.homeHighlightThumbnailKey ?? null,
+  );
   const [gallery, setGallery] = useState<string[]>(initial?.galleryImageKeys ?? []);
   const [socials, setSocials] = useState<Record<string, string>>(initial?.socialLinks ?? {});
   const [faq, setFaq] = useState<FaqItem[]>(initial?.faq ?? []);
@@ -172,6 +176,8 @@ function SettingsForm({
                 heroImageKey: heroImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
+                homeHighlightVideoUrl: emptyToNull(form.homeHighlightVideoUrl),
+                homeHighlightThumbnailKey: highlightThumbnailKey ?? null,
               },
               { onSuccess: () => setSaved(true) },
             );
@@ -329,6 +335,37 @@ function SettingsForm({
               <CardHeader title="ຄັງພາບໜ້າຫຼັກ" aside={`${gallery.length} ຮູບ`} />
               <CardBody>
                 <GalleryEditor keys={gallery} onChange={setGallery} folder="site" />
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader title="ວິດີໂອໜ້າຫຼັກ" />
+              <CardBody>
+                <Note>
+                  ບໍ່ຜູກກັບປີໃດ — ໃສ່ວິດີໂອຫຍັງກໍໄດ້ (ໄຮໄລທ໌, ລວມຫຼາຍປີ, ອື່ນໆ) ແລ້ວປ່ຽນໄດ້ທຸກເມື່ອ ·
+                  ຖ້າເວັ້ນວ່າງ ໜ້າຫຼັກຈະບໍ່ມີສ່ວນນີ້ເລີຍ · ຮັບລິງກ໌ຈາກ <b>YouTube</b> ຫຼື{' '}
+                  <b>Facebook</b> ເທົ່ານັ້ນ (ວິດີໂອ Facebook ຕ້ອງຕັ້ງເປັນສາທາລະນະ ບໍ່ດັ່ງນັ້ນຈະຂຶ້ນຫວ່າງເປົ່າ)
+                </Note>
+                <div className="mt-4">
+                  <Field label="ລິງກ໌ວິດີໂອ" hint="— ບໍ່ບັງຄັບ">
+                    <Input
+                      type="url"
+                      placeholder="https://www.youtube.com/watch?v=… ຫຼື https://www.facebook.com/…/videos/…"
+                      value={form.homeHighlightVideoUrl}
+                      onChange={(event) =>
+                        setForm({ ...form, homeHighlightVideoUrl: event.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="mt-4">
+                  <ImageUpload
+                    label="ພາບປົກວິດີໂອ"
+                    hint="ບໍ່ບັງຄັບ — ວິດີໂອ YouTube ຈະໃຊ້ພາບປົກຂອງ YouTube ເອງຖ້າບໍ່ໄດ້ອັບໂຫລດໄວ້ບ່ອນນີ້ ແຕ່ Facebook ຕ້ອງອັບໂຫລດ ບໍ່ດັ່ງນັ້ນຈະຂຶ້ນເປັນປຸ່ມ play ເປົ່າໆ"
+                    folder="site"
+                    value={highlightThumbnailKey}
+                    onChange={setHighlightThumbnailKey}
+                  />
+                </div>
               </CardBody>
             </Card>
           </FormSection>
