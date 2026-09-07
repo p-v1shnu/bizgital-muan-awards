@@ -5,7 +5,7 @@ import { Facebook, Instagram, Youtube } from 'lucide-react';
 import { Avatar, EmptyNote, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { safeHttpUrl } from '@/lib/utils';
-import { getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
+import { apiPath, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, creatorJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicProfile } from '@/types/public';
@@ -16,7 +16,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const profile = await tryGetPublic<PublicProfile>(`/creators/${slug}`);
+  const profile = await tryGetPublic<PublicProfile>(apiPath`/creators/${slug}`);
   // The 404 page's title, not a wording of its own — see the year page.
   if (!profile) return { title: NOT_FOUND_TITLE };
 
@@ -45,7 +45,7 @@ const SOCIAL_ICON = {
  */
 export default async function CreatorPage({ params }: PageProps) {
   const { slug } = await params;
-  const profile = await getPublicOrNotFound<PublicProfile>(`/creators/${slug}`);
+  const profile = await getPublicOrNotFound<PublicProfile>(apiPath`/creators/${slug}`);
 
   const wins = profile.appearances.filter((appearance) => appearance.isWinner).length;
   // Anything that is not a web address is dropped rather than linked.

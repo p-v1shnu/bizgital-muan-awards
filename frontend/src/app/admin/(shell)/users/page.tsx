@@ -215,6 +215,7 @@ function CreateUserDialog({ open, onClose }: { open: boolean; onClose: () => voi
 function ChangePasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [mismatch, setMismatch] = useState(false);
+  const { logout } = useAuth();
 
   const change = useApiMutation<Record<string, unknown>>('/admin/users/me/password', 'POST', []);
 
@@ -250,6 +251,15 @@ function ChangePasswordDialog({ open, onClose }: { open: boolean; onClose: () =>
               onSuccess: () => {
                 setForm({ currentPassword: '', newPassword: '', confirm: '' });
                 onClose();
+                // A password change ends every session for this account, this
+                // browser's included — deliberately, since a password is
+                // usually changed because it may be in someone else's hands
+                // (`UsersService.changePassword`). Nothing acted on that here,
+                // so the back office sat there looking signed in while every
+                // read and every save answered 401, until whoever it was
+                // thought to reload the page. Going to the sign-in form with a
+                // word about why is the whole of the fix.
+                void logout('password-changed');
               },
             },
           );
