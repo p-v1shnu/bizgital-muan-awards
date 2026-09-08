@@ -6,38 +6,69 @@
  */
 export type VideoProvider = 'youtube' | 'facebook';
 
-export function detectVideoProvider(url: string): VideoProvider | null {
-  let host: string;
+/**
+ * The host, without the subdomain that only says which client wrote the link.
+ *
+ * Shared by both readers below because they each had their own copy and the
+ * copies disagreed: this one dropped `m.`, the id reader did not, so a link
+ * from a phone was recognised as a YouTube link that no id could be got out
+ * of — and a recognised provider with no id renders nothing. One function, so
+ * "is this YouTube" and "which video" cannot answer differently again.
+ */
+function normalisedHost(url: string): string | null {
   try {
-    host = new URL(url).hostname.replace(/^www\.|^m\./, '');
+    return new URL(url).hostname.replace(/^(www|m|music)\./, '');
   } catch {
     return null;
   }
+}
+
+export function detectVideoProvider(url: string): VideoProvider | null {
+  const host = normalisedHost(url);
   if (host === 'youtube.com' || host === 'youtu.be') return 'youtube';
   if (host === 'facebook.com' || host === 'fb.watch') return 'facebook';
   return null;
 }
 
 /**
+ * What a YouTube id may be made of. Eleven characters of URL-safe base64 is
+ * every id YouTube has ever issued.
+ *
+ * Checked rather than assumed, because the id is interpolated into the embed
+ * address: `?v=../../foo` was carried through as an id and `.../embed/../../
+ * foo` resolves, before the iframe is even created, to a different YouTube
+ * page altogether. Refusing to recognise the link is the honest answer to one.
+ */
+const YOUTUBE_ID = /^[\w-]{11}$/;
+
+/**
  * Pulls the 11-character video id out of every URL shape YouTube hands out —
- * watch, share (youtu.be), embed and Shorts links all point at the same
+ * watch, share (youtu.be), embed, Shorts and live links all point at the same
  * video, just spelled differently.
+ *
+ * `/live/…` is here for the same reason `m.` is handled in `normalisedHost`:
+ * both were links the team could paste, save, and then find that the homepage
+ * section had silently not appeared — `HighlightVideo` renders nothing when
+ * the provider is recognised but no id can be got out of the address.
  */
 function youtubeId(url: string): string | null {
+  const host = normalisedHost(url);
+  if (host !== 'youtube.com' && host !== 'youtu.be') return null;
+
+  let parsed: URL;
   try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, '');
-    if (host === 'youtu.be') return parsed.pathname.slice(1) || null;
-    if (host === 'youtube.com') {
-      const fromQuery = parsed.searchParams.get('v');
-      if (fromQuery) return fromQuery;
-      const match = parsed.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/);
-      if (match) return match[1];
-    }
-    return null;
+    parsed = new URL(url);
   } catch {
     return null;
   }
+
+  const id =
+    host === 'youtu.be'
+      ? parsed.pathname.split('/')[1]
+      : (parsed.searchParams.get('v') ??
+        parsed.pathname.match(/^\/(?:embed|shorts|live|v)\/([^/?#]+)/)?.[1]);
+
+  return id && YOUTUBE_ID.test(id) ? id : null;
 }
 
 /**

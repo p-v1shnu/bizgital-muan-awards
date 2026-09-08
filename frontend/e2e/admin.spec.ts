@@ -16,6 +16,16 @@ import { ADMIN } from './seed';
  */
 test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.11' } });
 
+/**
+ * A real 1×1 PNG — signature, IHDR, IDAT, IEND, correct CRCs. The upload reads
+ * a file's first bytes to decide what it is, so a placeholder string is not
+ * something the API will take any more.
+ */
+const ONE_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC',
+  'base64',
+);
+
 test('a wrong password surfaces what the server said', async ({ page }) => {
   await page.goto('/admin/login');
   await page.fill('input[type=email]', ADMIN.email);
@@ -470,11 +480,7 @@ test('an uploaded file is readable by its key alone, not by browsing the bucket'
     headers: auth,
     multipart: {
       folder: 'creators',
-      file: {
-        name: 'probe.png',
-        mimeType: 'image/png',
-        buffer: Buffer.from('not a real image, just bytes to move'),
-      },
+      file: { name: 'probe.png', mimeType: 'image/png', buffer: ONE_PIXEL_PNG },
     },
   });
   expect(upload.status(), 'the API took the upload').toBe(201);
@@ -491,4 +497,49 @@ test('an uploaded file is readable by its key alone, not by browsing the bucket'
   const listAttempt = await request.get(`${bucketRoot}/?list-type=2`, { failOnStatusCode: false });
   expect(listAttempt.status(), 'but the bucket itself must not be browsable').not.toBe(200);
 });
+});
+
+/**
+ * The upload used to believe the `Content-Type` written on the multipart part,
+ * which the sender chooses. Anything at all could be sent labelled as a PNG
+ * and was then stored under a `.png` key and served as `image/png` from the
+ * host every page loads its pictures from. The bytes decide the type now
+ * (`sniffImageType` in storage.service.ts), so a truthful label on untruthful
+ * content buys nothing.
+ *
+ * Outside the `signed in` block on purpose, twice over. It needs no browser
+ * session — it only ever holds a bearer token — and that block's `beforeEach`
+ * signs in through the form for every test under it. Written inside it, this
+ * one drew two more sign-ins from the file's shared address: the sixteen
+ * `beforeEach` logins, the wrong-password test and three API logins already
+ * come to exactly twenty inside a minute, which is the whole per-address
+ * budget (PRD §8). Test eighteen was the first request past the ceiling, so
+ * its `beforeEach` was throttled, the form never navigated, and it failed in
+ * the hook without reaching a single assertion.
+ */
+test('an upload that is not really an image is refused, whatever it calls itself', async ({ request }) => {
+  const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
+  const login = await request.post(`${api}/auth/login`, {
+    // Its own address, for the same reason the winner-crowning setup above
+    // takes one: the budget on this file's shared address is already spent.
+    headers: { 'X-Forwarded-For': '203.0.113.15' },
+    data: { email: 'admin@muanawards.com', password: 'a-very-long-password' },
+  });
+  const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+
+  for (const [what, buffer] of [
+    ['a page of HTML', Buffer.from('<html><script>alert(1)</script></html>')],
+    ['an SVG, which browsers do run scripts in', Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>')],
+  ] as const) {
+    const refused = await request.post(`${api}/admin/uploads`, {
+      headers: auth,
+      failOnStatusCode: false,
+      multipart: {
+        folder: 'creators',
+        // The label a sender would pick to get past a check that trusts it.
+        file: { name: 'looks-fine.png', mimeType: 'image/png', buffer },
+      },
+    });
+    expect(refused.status(), `${what} must not be stored`).toBe(400);
+  }
 });

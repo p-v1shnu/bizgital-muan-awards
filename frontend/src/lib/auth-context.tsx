@@ -11,8 +11,15 @@ interface AuthState {
   /** True until the first refresh attempt settles, so pages don't flash. */
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
+  /**
+   * `notice` names why, for the sign-in page to explain itself. Signing out by
+   * hand needs no explanation; being sent back by a password change does.
+   */
+  logout: (notice?: LogoutNotice) => Promise<void>;
 }
+
+/** The one reason a sign-out happens to somebody rather than by them. */
+export type LogoutNotice = 'password-changed';
 
 const AuthContext = createContext<AuthState | null>(null);
 
@@ -57,15 +64,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(session.user);
   }, []);
 
-  const logout = useCallback(async () => {
-    try {
-      await apiFetch<void>('/auth/logout', { method: 'POST' });
-    } finally {
-      setAccessToken(null);
-      setUser(null);
-      router.replace('/admin/login');
-    }
-  }, [router]);
+  const logout = useCallback(
+    async (notice?: LogoutNotice) => {
+      // Telling the server is best-effort, and the call failing is ordinary
+      // rather than exceptional: the token may already be dead — expired, or
+      // cancelled by a password change, which is what `notice` is for — and
+      // then this answers 401 and the refresh behind it cannot help. Both
+      // callers invoke this as `void logout()`, so a rejection here would go
+      // nowhere except the console. What actually signs the person out is
+      // below, and it cannot fail.
+      try {
+        await apiFetch<void>('/auth/logout', { method: 'POST' });
+      } catch {
+        // Nothing to do about it and nothing to tell them.
+      } finally {
+        setAccessToken(null);
+        setUser(null);
+        router.replace(notice ? `/admin/login?notice=${notice}` : '/admin/login');
+      }
+    },
+    [router],
+  );
 
   const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

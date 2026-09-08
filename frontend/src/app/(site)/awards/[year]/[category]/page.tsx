@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 
 import { CreatorCard, EmptyNote, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
-import { getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
+import { apiPath, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, categoryJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';
@@ -22,7 +22,7 @@ interface PageProps {
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year, category } = await params;
-  const page = await tryGetPublic<PublicCategoryPage>(`/editions/${year}/categories/${category}`);
+  const page = await tryGetPublic<PublicCategoryPage>(apiPath`/editions/${year}/categories/${category}`);
   // The 404 page's title, not a wording of its own — see the year page.
   if (!page) return { title: NOT_FOUND_TITLE };
 
@@ -55,7 +55,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   const { preview } = await searchParams;
 
   const page = await getPublicOrDraft<PublicCategoryPage>(
-    `/editions/${year}/categories/${category}`,
+    apiPath`/editions/${year}/categories/${category}`,
     { preview },
   );
   if (!page) notFound();

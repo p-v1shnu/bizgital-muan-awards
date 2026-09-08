@@ -44,6 +44,9 @@ function reveals(phase: EditionPhase) {
   };
 }
 
+/** The longest a creator's name may be (`CreateSubmissionDto.creatorNameRaw`). */
+const MAX_SUGGESTION_TERM = 160;
+
 export interface ViewerContext {
   /** A signed-in admin sees drafts; anyone else needs a preview token. */
   isAdmin: boolean;
@@ -309,6 +312,11 @@ export class PublicSiteService {
   async creatorSuggestions(term: string) {
     const query = term.trim();
     if (query.length < 2) return [];
+    // The box this serves is capped at 160 characters, but the endpoint is
+    // public and reads a raw query parameter — nothing in the request pipeline
+    // bounds it, so anything at all arrived here and went straight into a
+    // `contains` scan. Longer than a name can be is not a name.
+    if (query.length > MAX_SUGGESTION_TERM) return [];
 
     return this.prisma.creator.findMany({
       where: {

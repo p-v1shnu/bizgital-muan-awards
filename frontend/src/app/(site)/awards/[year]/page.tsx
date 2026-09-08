@@ -8,7 +8,7 @@ import { Gallery } from '@/components/site/gallery';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-image';
-import { getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
+import { apiPath, getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition } from '@/types/api';
@@ -22,7 +22,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { year } = await params;
-  const edition = await tryGetPublic<PublicEdition>(`/editions/${year}`);
+  const edition = await tryGetPublic<PublicEdition>(apiPath`/editions/${year}`);
   // The same title the 404 page carries, not a wording of its own. The page
   // below calls notFound() on this same miss, so the reader gets the boundary's
   // title first and this one after hydration — two different sentences meant a
@@ -85,7 +85,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
   const { preview } = await searchParams;
 
   const [edition, allEditions] = await Promise.all([
-    getPublicOrDraft<PublicEdition>(`/editions/${year}`, { preview }),
+    getPublicOrDraft<PublicEdition>(apiPath`/editions/${year}`, { preview }),
     getPublic<Edition[]>('/editions'),
   ]);
   if (!edition) notFound();

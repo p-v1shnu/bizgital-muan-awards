@@ -52,6 +52,21 @@ muanawards.com, www.muanawards.com {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
+
+		# Nothing here is meant to be shown inside somebody else's page, and
+		# /admin is the reason it matters: a sign-in form that can be framed
+		# can be framed invisibly over bait, and the click that the person
+		# thinks they are giving to the page on top lands on this one instead.
+		# Helmet sets this on the API's own answers, which are JSON nobody
+		# frames — the pages a person actually looks at are served by Next
+		# through the block above and carried no such header at all.
+		#
+		# frame-ancestors is what current browsers read; X-Frame-Options says
+		# the same thing to older ones, which ignore CSP. Only *being* framed
+		# is refused: the year pages embed YouTube and Facebook players
+		# themselves, and that is frame-src, which this does not touch.
+		Content-Security-Policy "frame-ancestors 'self'"
+		X-Frame-Options "SAMEORIGIN"
 		-Server
 	}
 

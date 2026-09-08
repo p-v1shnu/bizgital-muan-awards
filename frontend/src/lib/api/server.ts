@@ -47,7 +47,60 @@ class ApiUnavailableError extends Error {}
  */
 const BUILDING = process.env.NEXT_PHASE === 'phase-production-build';
 
+/**
+ * Refuses a path that would climb out of the segment it was written into.
+ *
+ * Every caller interpolates a route segment — a year, a slug — into a literal
+ * path, and a URL resolves `..` before anything looks at it. So the page at
+ * `/awards/..%2Fadmin%2Fusers` received the plain string `../admin/users`,
+ * built `/api/v1/editions/../admin/users`, and this process read
+ * `/api/v1/admin/users`: a request made from inside the network, against a
+ * host no visitor can reach. `?` and `#` in a segment redirected the query
+ * string the same way. Nothing came back — those routes want a bearer token a
+ * server render does not have — but which internal path this process fetches
+ * is not a decision to leave to a URL segment.
+ *
+ * `..` is the only thing that climbs, so that is what this looks for, in the
+ * path as written rather than in the URL after it has been resolved: by then
+ * `/api/v1/editions/../admin/users` has become `/api/v1/admin/users`, which
+ * sits under the prefix perfectly happily and tells you nothing.
+ *
+ * `apiPath` below is the fix at the call sites; this is the backstop, and it
+ * also catches what encoding alone does not — `encodeURIComponent` leaves a
+ * dot alone, so a segment of exactly `..` survives it intact.
+ *
+ * Answered as "no such record" rather than thrown, because that is what it is:
+ * `/awards/%2E%2E` is a URL somebody typed, and the visitor should get the
+ * not-found page. Throwing would make it a 500 instead — a lie about whose
+ * fault it is, and countable: ten of them inside five minutes is the spike
+ * that `/health/errors` reports and that wakes somebody up (monitoring.md §6),
+ * which would put that alarm within reach of anyone with a browser. The
+ * refusal is logged so a caller that does this by mistake is still findable.
+ */
+function climbsOutOfPath(path: string) {
+  if (!path.split('/').some((segment) => segment === '..' || segment === '.')) return false;
+  console.warn(`Refused an API path that climbs out of its segment: ${path}`);
+  return true;
+}
+
+/**
+ * Builds a request path with every interpolated value encoded, so a route
+ * segment cannot mean anything but a segment.
+ *
+ * A tagged template rather than a rule to remember: the encoding is the thing
+ * that was missing at all six call sites, and `apiPath\`/creators/${slug}\``
+ * cannot be written without it the way a plain template string could.
+ */
+export function apiPath(strings: TemplateStringsArray, ...values: (string | number)[]) {
+  return strings.reduce(
+    (out, part, index) =>
+      out + part + (index < values.length ? encodeURIComponent(values[index]) : ''),
+    '',
+  );
+}
+
 export async function getPublic<T>(path: string, options: Options = {}): Promise<T | null> {
+  if (climbsOutOfPath(path)) return null;
   const url = new URL(`${BASE_URL}${path}`);
   if (options.preview) url.searchParams.set('preview', options.preview);
 
