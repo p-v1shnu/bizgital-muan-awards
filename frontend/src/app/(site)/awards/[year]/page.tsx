@@ -317,7 +317,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
 
       {edition.descriptionLo && (
         <Section className="py-6 md:py-8">
-          <p className="max-w-2xl text-[15px] leading-[1.85] text-ink-2">{edition.descriptionLo}</p>
+          <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">{edition.descriptionLo}</p>
         </Section>
       )}
 
@@ -393,7 +393,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   <div className="min-w-0">
                     <h3 className="font-serif text-xl text-ink">{category.nameLo}</h3>
                     {category.descriptionLo && (
-                      <p className="mt-0.5 text-[13px] text-ink-2">{category.descriptionLo}</p>
+                      <p className="mt-0.5 font-sans-looped text-[13px] text-ink-2">{category.descriptionLo}</p>
                     )}
                   </div>
                   {category.nominees.length > 0 && (

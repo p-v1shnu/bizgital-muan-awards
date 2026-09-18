@@ -189,7 +189,7 @@ export default async function HomePage() {
               <h1 className="max-w-2xl font-serif text-[clamp(32px,4.6vw,60px)] leading-[1.08] text-white">
                 {site?.heroTitleLo || 'ມ່ວນອາວອດສ໌'}
               </h1>
-              <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-white/85 md:text-base">
+              <p className="mt-3 max-w-lg font-sans-looped text-[15px] leading-relaxed text-white/85 md:text-base">
                 {site?.brandStatementLo || (
                   <Placeholder>ຂໍ້ຄວາມຢູ່ກ້ອງຊື່ງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
                 )}
@@ -274,7 +274,7 @@ export default async function HomePage() {
                   ຕະຫຼອດທຸກປີ
                 </p>
                 <p className="mt-2 font-serif text-2xl text-ink">ທຳນຽບຜູ້ຊະນະ</p>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">
+                <p className="mt-2 font-sans-looped text-[13.5px] leading-relaxed text-ink-2">
                   {cards.hallOfWinners?.bodyLo || 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ'}
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default async function HomePage() {
               {site?.aboutTitleLo || 'ມ່ວນອາວອດສ໌ ຄືຫຍັງ'}
             </h2>
             <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
-            <p className="text-[15px] leading-[1.85] text-ink-2">
+            <p className="font-sans-looped text-[15px] leading-[1.85] text-ink-2">
               {site?.aboutSummaryLo || (
                 <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
               )}
@@ -410,7 +410,7 @@ export default async function HomePage() {
                     <span className="mr-1.5 text-ink-3">{index + 1}.</span>
                     {step.titleLo}
                   </p>
-                  <p className="mt-1 text-[13px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+                  <p className="mt-1 font-sans-looped text-[13px] leading-relaxed text-ink-2">{step.bodyLo}</p>
                 </li>
               );
             })}
@@ -489,7 +489,7 @@ export default async function HomePage() {
           <h2 className="font-serif text-[clamp(26px,3.6vw,38px)] text-ink">
             {site?.ctaTitleLo || 'ຢາກສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກບໍ່?'}
           </h2>
-          <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-ink-2">
+          <p className="mx-auto mt-3 max-w-md font-sans-looped text-[15px] leading-relaxed text-ink-2">
             {site?.ctaBodyLo || 'ສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກເຂົ້າມາໄດ້ເລີຍ'}
           </p>
           <div className="mt-6 flex justify-center">
@@ -534,7 +534,7 @@ function CurrentEditionCard({
     return (
       <div className="rounded-[var(--radius-box)] border border-rule bg-panel p-6">
         <p className="font-serif text-2xl text-ink">{cards.noYear?.titleLo || 'ງານປີຕໍ່ໄປ'}</p>
-        <p className="mt-2 text-[13.5px] text-ink-2">
+        <p className="mt-2 font-sans-looped text-[13.5px] text-ink-2">
           {cards.noYear?.bodyLo || 'ຈະປະກາດໃນໄວໆນີ້'}
         </p>
       </div>
@@ -589,7 +589,7 @@ function CurrentEditionCard({
           {shown.eyebrow} · {edition.year}
         </p>
         <p className="mt-2 font-serif text-2xl text-ink">{shown.title}</p>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-2">{shown.body}</p>
+        <p className="mt-2 font-sans-looped text-[13.5px] leading-relaxed text-ink-2">{shown.body}</p>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-2">

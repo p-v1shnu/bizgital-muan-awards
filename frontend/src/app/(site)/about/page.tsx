@@ -101,19 +101,19 @@ export default async function AboutPage() {
   return (
     <>
       <Section eyebrow="ກ່ຽວກັບງານ" title="ມ່ວນອາວອດສ໌" titleAs="h1">
-        <p className="max-w-2xl text-[15.5px] leading-[1.9] text-ink-2">
+        <p className="max-w-2xl font-sans-looped text-[15.5px] leading-[1.9] text-ink-2">
           {site?.aboutSummaryLo || (
             <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           )}
         </p>
         {history.length > 0 ? (
-          <div className="mt-4 max-w-2xl space-y-3 text-[15px] leading-[1.9] text-ink-3">
+          <div className="mt-4 max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-3">
             {history.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
           </div>
         ) : (
-          <p className="mt-4 max-w-2xl text-[15px] leading-[1.9] text-ink-3">
+          <p className="mt-4 max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
             <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           </p>
         )}
@@ -133,7 +133,7 @@ export default async function AboutPage() {
                   <span className="mr-2 text-ink-3">{index + 1}.</span>
                   {step.titleLo}
                 </p>
-                <p className="mt-1.5 text-[14px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+                <p className="mt-1.5 font-sans-looped text-[14px] leading-relaxed text-ink-2">{step.bodyLo}</p>
               </li>
             ))}
           </ol>
@@ -155,7 +155,7 @@ export default async function AboutPage() {
                 </summary>
                 <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
                   <div className="overflow-hidden">
-                    <div className="space-y-2 px-5 pb-4 text-[14px] leading-relaxed text-ink-2">
+                    <div className="space-y-2 px-5 pb-4 font-sans-looped text-[14px] leading-relaxed text-ink-2">
                       {paragraphs(item.answerLo).map((paragraph, index) => (
                         <p key={index}>{paragraph}</p>
                       ))}
@@ -166,7 +166,7 @@ export default async function AboutPage() {
             ))}
           </div>
         ) : (
-          <p className="text-[14.5px] leading-relaxed text-ink-2">
+          <p className="font-sans-looped text-[14.5px] leading-relaxed text-ink-2">
             <Placeholder>ຍັງບໍ່ມີຄຳຖາມ — ເພີ່ມໄດ້ໃນ /admin/site</Placeholder>
           </p>
         )}
@@ -175,7 +175,7 @@ export default async function AboutPage() {
       {/* The form asks for a name and an email, so the page has to say what
           happens to them. Written as plainly as the rest of the site. */}
       <Section id="privacy" eyebrow="ຄວາມເປັນສ່ວນຕົວ" title="ຂໍ້ມູນຂອງທ່ານ" className="bg-panel-2/50">
-        <div className="max-w-3xl space-y-6 text-[14.5px] leading-[1.85] text-ink-2">
+        <div className="max-w-3xl space-y-6 font-sans-looped text-[14.5px] leading-[1.85] text-ink-2">
           <div>
             <h3 className="font-serif text-[19px] text-ink">ຕອນສົ່ງລາຍຊື່ ພວກເຮົາເກັບຫຍັງແດ່</h3>
             <ul className="mt-2 list-disc space-y-1 pl-5">
@@ -264,11 +264,11 @@ export default async function AboutPage() {
               )}
             </div>
           ) : (
-            <p className="text-[14.5px] leading-relaxed text-ink-2">
+            <p className="font-sans-looped text-[14.5px] leading-relaxed text-ink-2">
               <Placeholder>ອີເມວ / ເບີໂທ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
             </p>
           )}
-          <p className="mt-6 text-[14.5px] leading-relaxed text-ink-2">
+          <p className="mt-6 font-sans-looped text-[14.5px] leading-relaxed text-ink-2">
             ຢາກສະເໜີຊື່ຄຣີເອເຕີ? ບໍ່ຕ້ອງຕິດຕໍ່ທີມງານ ສົ່ງຜ່ານຟອມໄດ້ເລີຍ
           </p>
           <div className="mt-4">
