@@ -27,16 +27,46 @@ export function SectionReveal({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    const reveal = () => {
+      setVisible(true);
+      observer.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
-        setVisible(true);
-        observer.disconnect();
+        reveal();
       },
       { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+
+    // IntersectionObserver only calls back when the ratio *crosses* a
+    // threshold. A fast fling, an End-key jump, or a browser restoring a
+    // scrolled position can move the viewport clean past a section — from
+    // "not yet reached" straight to "already above it" — in a single frame
+    // that never renders an in-between state where the ratio crossed 20%.
+    // The observer then never fires again, and the section sits at opacity
+    // 0 forever with its links still live underneath. This falls back to
+    // reading the section's actual position once it has fully left the top
+    // of the viewport, which needs no crossing and so has no such gap.
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        if (el.getBoundingClientRect().bottom <= 0) reveal();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', onScroll);
+    };
   }, []);
 
   return (
