@@ -186,7 +186,12 @@ export default async function HomePage() {
               {/* Scaled by the width rather than jumping from 36px to 60px at a
                   single breakpoint, so the title stops turning into three lines
                   on the windows between the two. The mockup's own curve. */}
-              <h1 className="max-w-2xl font-serif text-[clamp(32px,4.6vw,60px)] leading-[1.08] text-white">
+              {/* leading-tight (1.25), matching every other heading on the
+                  site: the tighter 1.08 this used to carry left too little
+                  room above the line for Lao's stacked tone marks, which sit
+                  higher than a Latin cap-height glyph — on a two-line title
+                  they crowded straight into the kicker pill above. */}
+              <h1 className="max-w-2xl font-serif text-[clamp(32px,4.6vw,60px)] leading-tight text-white">
                 {site?.heroTitleLo || 'ມ່ວນອາວອດສ໌'}
               </h1>
               <p className="mt-3 max-w-lg font-sans-looped text-[15px] leading-relaxed text-white/85 md:text-base">

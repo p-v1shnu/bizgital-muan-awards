@@ -180,6 +180,24 @@
     transform: translateY(-50%);
   }
 }
+/* The highlight video's ambient glow (PRD-adjacent feedback: a YouTube-style
+ * "ambient mode" behind the player). Its two blobs drift and breathe slowly
+ * — colour comes from the thumbnail's average, or the brand purple when
+ * there is no thumbnail to sample (autoplay, or a non-YouTube link with no
+ * uploaded poster), set inline by highlight-video.tsx either way. */
+@keyframes ambient-drift {
+  0%,
+  100% {
+    transform: scale(1.14) translate(0, 0);
+  }
+  50% {
+    transform: scale(1.24) translate(3%, -2%);
+  }
+}
+.ambient-glow {
+  animation: ambient-drift 10s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* The global transition/animation-duration override below still fires,
      but an infinite-iteration animation squeezed to 0.01ms cycles through
@@ -189,6 +207,15 @@
   .photo-wall-strip {
     animation: none !important;
     transform: none !important;
+  }
+  /* The glow's resting scale is where the animation starts, not the
+     element's own base state, so turning the animation off with
+     transform: none the way photo-wall-strip does would also collapse the
+     glow back down to invisible behind the player instead of just holding
+     it still. */
+  .ambient-glow {
+    animation: none !important;
+    transform: scale(1.14) !important;
   }
 }
 
