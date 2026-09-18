@@ -46,12 +46,16 @@
   --radius-ui-sm: 8px;
 
   /**
-   * Serif carries names and headings from 18px up; sans carries anything
-   * pressable, fillable, scannable, or under 17px. Every stack ends in a Lao
-   * family so Lao glyphs never fall back to a mismatched face.
+   * font-serif carries names and headings from 18px up; font-sans carries
+   * anything pressable, fillable, scannable, or under 17px — a Latin
+   * distinction only. Lao never renders serif: font-serif's Lao glyphs use
+   * the loop-free Noto Sans Lao (matching the heading role), font-sans's use
+   * Noto Sans Lao Looped, whose loops the team asked for specifically to
+   * help body copy stay legible. Every stack still ends in a Lao family so a
+   * Lao glyph never falls back to a mismatched face.
    */
-  --font-serif: var(--font-bodoni), 'Bodoni Moda', var(--font-noto-serif-lao), 'Noto Serif Lao', serif;
-  --font-sans: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
+  --font-serif: var(--font-bodoni), 'Bodoni Moda', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
+  --font-sans: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao-looped), 'Noto Sans Lao Looped', sans-serif;
 }
 
 /* The foil gradient is a decoration, never a text colour. */
@@ -196,10 +200,9 @@
    * in a face that does not match the rest of the page.
    */
   /**
-   * 600, not 700: Noto Serif Lao's bold cut is much more uniformly thick than
-   * Bodoni Moda's, so the same nominal weight reads noticeably heavier once a
-   * heading falls back to it — which is most headings on this site, since
-   * nearly all of them are Lao text.
+   * 600, not 700: a Noto Lao cut reads heavier than Bodoni Moda's at the
+   * same nominal weight, and nearly every heading on this site is Lao text
+   * falling back to one.
    */
   h1,
   h2,
