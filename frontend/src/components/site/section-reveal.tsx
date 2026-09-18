@@ -39,7 +39,13 @@ export function SectionReveal({ children }: { children: React.ReactNode }) {
         if (!entry.isIntersecting) return;
         reveal();
       },
-      { threshold: 0.2, rootMargin: '0px 0px -10% 0px' },
+      // threshold 0 (any pixel at all) rather than an area fraction: a
+      // fraction of the section's own height is what made this feel slow on
+      // a phone — stacked to one column there, a tall row of tiles needs far
+      // more scrolling before 20% of it is on screen, even though the top of
+      // the section already arrived. rootMargin's -5% keeps the trigger from
+      // firing on a sliver at the very bottom edge, which read as premature.
+      { threshold: 0, rootMargin: '0px 0px -5% 0px' },
     );
     observer.observe(el);
 
