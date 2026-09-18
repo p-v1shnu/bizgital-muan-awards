@@ -1,5 +1,6 @@
+import { SponsorLogoSize } from '@prisma/client';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateSponsorTierTemplateDto {
   @ApiProperty({ example: 'ຜູ້ສະໜັບສະໜູນຫຼັກ' })
@@ -13,6 +14,11 @@ export class CreateSponsorTierTemplateDto {
   @IsString()
   @MaxLength(80)
   nameEn?: string | null;
+
+  @ApiPropertyOptional({ enum: SponsorLogoSize, default: SponsorLogoSize.M })
+  @IsOptional()
+  @IsEnum(SponsorLogoSize)
+  logoSize?: SponsorLogoSize;
 }
 
 export class UpdateSponsorTierTemplateDto extends PartialType(CreateSponsorTierTemplateDto) {}

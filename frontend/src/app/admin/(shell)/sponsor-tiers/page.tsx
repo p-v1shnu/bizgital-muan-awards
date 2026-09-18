@@ -13,8 +13,15 @@ import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
-import type { SponsorTierTemplate } from '@/types/api';
+import type { SponsorLogoSize, SponsorTierTemplate } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
+
+const LOGO_SIZE_LABEL: Record<SponsorLogoSize, string> = {
+  S: 'S — ນ້ອຍ',
+  M: 'M — ກາງ',
+  L: 'L — ໃຫຍ່',
+  XL: 'XL — ໃຫຍ່ພິເສດ',
+};
 
 /**
  * The library sponsor tiers are picked from — browsing it here is what
@@ -96,6 +103,7 @@ export default function SponsorTierTemplatesPage() {
                   {template.nameLo}
                 </p>
                 <div className="ml-auto flex items-center gap-2">
+                  <Badge tone="brand">{LOGO_SIZE_LABEL[template.logoSize]}</Badge>
                   <Badge tone={(template._count?.tiers ?? 0) === 0 ? 'stop' : 'neutral'}>
                     ໃຊ້ໃນ {template._count?.tiers ?? 0} ປີ
                   </Badge>
@@ -154,9 +162,10 @@ function SponsorTierTemplateDialog({
   template: SponsorTierTemplate | null;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{ nameLo: string; nameEn: string; logoSize: SponsorLogoSize }>({
     nameLo: template?.nameLo ?? '',
     nameEn: template?.nameEn ?? '',
+    logoSize: template?.logoSize ?? 'M',
   });
   // Reset synchronously during render, not in an effect — the dialog element
   // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
@@ -166,7 +175,11 @@ function SponsorTierTemplateDialog({
   if (open !== wasOpen) {
     setWasOpen(open);
     if (open) {
-      setForm({ nameLo: template?.nameLo ?? '', nameEn: template?.nameEn ?? '' });
+      setForm({
+        nameLo: template?.nameLo ?? '',
+        nameEn: template?.nameEn ?? '',
+        logoSize: template?.logoSize ?? 'M',
+      });
     }
   }
 
@@ -205,7 +218,7 @@ function SponsorTierTemplateDialog({
         onSubmit={(event) => {
           event.preventDefault();
           action.mutate(
-            { nameLo: form.nameLo, nameEn: emptyToNull(form.nameEn) },
+            { nameLo: form.nameLo, nameEn: emptyToNull(form.nameEn), logoSize: form.logoSize },
             { onSuccess: onClose },
           );
         }}
@@ -224,6 +237,19 @@ function SponsorTierTemplateDialog({
             value={form.nameEn}
             onChange={(event) => setForm({ ...form, nameEn: event.target.value })}
           />
+        </Field>
+        <Field label="ຂະໜາດໂລໂກ້" help="ໝວດທີ່ໃຫຍ່ກວ່າ ໂລໂກ້ກໍ່ໃຫຍ່ກວ່າ ໃນທຸກປີທີ່ໃຊ້ໝວດນີ້">
+          <select
+            value={form.logoSize}
+            onChange={(event) => setForm({ ...form, logoSize: event.target.value as SponsorLogoSize })}
+            className="w-full rounded-[var(--radius-ui-sm)] border border-rule bg-white px-3 py-2 text-[13px] text-ink"
+          >
+            {(Object.keys(LOGO_SIZE_LABEL) as SponsorLogoSize[]).map((size) => (
+              <option key={size} value={size}>
+                {LOGO_SIZE_LABEL[size]}
+              </option>
+            ))}
+          </select>
         </Field>
 
         {action.error && <ErrorNote error={action.error} />}

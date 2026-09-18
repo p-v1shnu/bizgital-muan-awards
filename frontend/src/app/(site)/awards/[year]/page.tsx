@@ -11,7 +11,7 @@ import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-
 import { apiPath, getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
-import type { Edition } from '@/types/api';
+import type { Edition, SponsorLogoSize } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
 import { formatDate, formatDateTime } from '@/lib/dates';
 
@@ -45,6 +45,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 /** How many winner rows show before the rest fold away (PRD §7.6). */
 const WINNER_ROWS = 12;
+
+/**
+ * A tier's chosen size sets both the card around a logo and the logo's own
+ * frame inside it — the two scale together rather than a bigger logo
+ * floating in an unchanged card, or a bigger card around an unchanged logo.
+ * M matches the one size every sponsor rendered at before per-tier sizing
+ * existed, so nothing already live moves the day this ships.
+ *
+ * `logo` fixes both height and width (a 4:3 frame, not just a height with
+ * width left to follow), which is the actual fix for logos rendering "too
+ * wide": the old version only fixed height and let width track whatever
+ * ratio that sponsor's own logo happened to be, so a naturally
+ * wide/landscape logo had nothing capping how far it stretched. `object-
+ * contain` still keeps the real image's own proportions inside this frame —
+ * a taller or narrower logo than 4:3 is letterboxed, never cropped.
+ */
+const LOGO_SIZE: Record<SponsorLogoSize, { card: string; logo: string }> = {
+  S: { card: 'h-16 min-w-32', logo: 'h-8 w-[43px]' },
+  M: { card: 'h-20 min-w-40', logo: 'h-10 w-[53px]' },
+  L: { card: 'h-28 min-w-56', logo: 'h-14 w-[75px]' },
+  XL: { card: 'h-36 min-w-72', logo: 'h-18 w-24' },
+};
 
 interface WinnerRowData {
   category: { id: string; slug: string; nameLo: string };
@@ -505,42 +527,48 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               (groups[sponsor.tierId] ??= []).push(sponsor);
               return groups;
             }, {}),
-          ).map(([tierId, sponsors]) => (
-            <div key={tierId} className="mb-8 last:mb-0">
-              <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
-                {sponsors[0].tierNameLo}
-              </p>
-              <div className="flex flex-wrap items-center gap-3">
-                {sponsors.map((sponsor) => {
-                  const inner = sponsor.logoKey ? (
-                    <SiteImageFixed
-                      imageKey={sponsor.logoKey}
-                      alt={sponsor.name}
-                      width={160}
-                      height={40}
-                      className="h-10 w-auto object-contain"
-                    />
-                  ) : (
-                    <span className="text-[13px] text-ink-2">{sponsor.name}</span>
-                  );
-                  return (
-                    <div
-                      key={sponsor.id}
-                      className="grid h-20 min-w-40 place-items-center rounded-[var(--radius-sm)] border border-rule bg-panel px-5"
-                    >
-                      {safeHttpUrl(sponsor.websiteUrl) ? (
-                        <a href={safeHttpUrl(sponsor.websiteUrl) as string} target="_blank" rel="noreferrer">
-                          {inner}
-                        </a>
-                      ) : (
-                        inner
-                      )}
-                    </div>
-                  );
-                })}
+          ).map(([tierId, sponsors]) => {
+            const size = LOGO_SIZE[sponsors[0].tierLogoSize];
+            return (
+              <div key={tierId} className="mb-8 last:mb-0">
+                <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
+                  {sponsors[0].tierNameLo}
+                </p>
+                <div className="flex flex-wrap items-center gap-3">
+                  {sponsors.map((sponsor) => {
+                    const inner = sponsor.logoKey ? (
+                      <SiteImageFixed
+                        imageKey={sponsor.logoKey}
+                        alt={sponsor.name}
+                        width={160}
+                        height={120}
+                        className={cn(size.logo, 'object-contain')}
+                      />
+                    ) : (
+                      <span className="text-[13px] text-ink-2">{sponsor.name}</span>
+                    );
+                    return (
+                      <div
+                        key={sponsor.id}
+                        className={cn(
+                          size.card,
+                          'grid place-items-center rounded-[var(--radius-sm)] border border-rule bg-panel px-5',
+                        )}
+                      >
+                        {safeHttpUrl(sponsor.websiteUrl) ? (
+                          <a href={safeHttpUrl(sponsor.websiteUrl) as string} target="_blank" rel="noreferrer">
+                            {inner}
+                          </a>
+                        ) : (
+                          inner
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </Section>
       )}
 

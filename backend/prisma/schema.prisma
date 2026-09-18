@@ -53,6 +53,17 @@ enum AdminRole {
   ADMIN
 }
 
+/// How large this tier's logos render on a year page, relative to every
+/// other tier's — M is the size every existing tier rendered at before this
+/// existed, so it stays the default rather than picking a new visual
+/// baseline out from under sponsors already on a live page.
+enum SponsorLogoSize {
+  S
+  M
+  L
+  XL
+}
+
 // ─────────────────────────────────────────────────────────────
 // Edition — one awards year
 // ─────────────────────────────────────────────────────────────
@@ -283,6 +294,8 @@ model SponsorTierTemplate {
   id     String  @id @default(cuid())
   nameLo String
   nameEn String?
+
+  logoSize SponsorLogoSize @default(M)
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
