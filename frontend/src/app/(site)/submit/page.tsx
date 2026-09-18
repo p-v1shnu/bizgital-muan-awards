@@ -53,7 +53,7 @@ export default async function SubmitPage() {
       return (
         <Section eyebrow="ສົ່ງລາຍຊື່" title="ຍັງບໍ່ເປີດຮັບ" titleAs="h1">
           <div className="max-w-xl rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-10">
-            <p className="text-[15px] leading-relaxed text-ink-2">
+            <p className="font-sans-looped text-[15px] leading-relaxed text-ink-2">
               ງານປີ {edition.year} ຍັງບໍ່ໄດ້ເປີດຮັບການສະເໜີຊື່
               {previousClosed &&
                 (previousAnnounced ? (
@@ -93,7 +93,7 @@ export default async function SubmitPage() {
         titleAs="h1"
       >
         <div className="max-w-xl rounded-[var(--radius-box)] border border-rule bg-panel px-6 py-10">
-          <p className="text-[15px] leading-relaxed text-ink-2">
+          <p className="font-sans-looped text-[15px] leading-relaxed text-ink-2">
             {closed ? (
               announced ? (
                 <>ການສະເໜີຊື່ຂອງງານປີ {closed.edition.year} ປິດແລ້ວ ແລະ ປະກາດຜູ້ຊະນະຄົບທຸກສາຂາແລ້ວ</>
@@ -142,7 +142,7 @@ export default async function SubmitPage() {
           <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
             ຫຼັງຈາກສົ່ງແລ້ວ
           </p>
-          <ol className="mt-3 space-y-2.5">
+          <ol className="mt-3 space-y-2.5 font-sans-looped">
             {steps.map((step, index) => (
               <li key={index}>{step}</li>
             ))}

@@ -125,7 +125,7 @@ export function HighlightVideo({
             ວິດີໂອໄຮໄລທ໌
           </h2>
           {descriptionLo && (
-            <p className="mt-3 text-[15px] leading-relaxed text-white/70">{descriptionLo}</p>
+            <p className="mt-3 font-sans-looped text-[15px] leading-relaxed text-white/70">{descriptionLo}</p>
           )}
         </header>
         <div

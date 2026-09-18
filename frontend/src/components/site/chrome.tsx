@@ -201,7 +201,7 @@ export async function SiteFooter() {
                 height={40}
                 className="h-10 w-auto"
               />
-              <p className="mt-3 max-w-xs text-[13px] leading-relaxed text-[#a89c8e]">
+              <p className="mt-3 max-w-xs font-sans-looped text-[13px] leading-relaxed text-[#a89c8e]">
                 {site?.brandStatementLo || 'ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ ແລະ ຜູ້ສ້າງສັນເນື້ອຫາ'}
               </p>
               {socials.length > 0 && (

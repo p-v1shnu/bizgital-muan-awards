@@ -108,7 +108,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       <div className="foil mb-5 h-[3px] w-16 rounded-sm" aria-hidden />
       <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">{page.nameLo}</h1>
       {page.descriptionLo && (
-        <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-ink-2">{page.descriptionLo}</p>
+        <p className="mt-3 max-w-2xl font-sans-looped text-[15px] leading-relaxed text-ink-2">{page.descriptionLo}</p>
       )}
 
       {nominees.length === 0 ? (

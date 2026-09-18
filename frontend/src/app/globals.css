@@ -48,14 +48,23 @@
   /**
    * font-serif carries names and headings from 18px up; font-sans carries
    * anything pressable, fillable, scannable, or under 17px — a Latin
-   * distinction only. Lao never renders serif: font-serif's Lao glyphs use
-   * the loop-free Noto Sans Lao (matching the heading role), font-sans's use
-   * Noto Sans Lao Looped, whose loops the team asked for specifically to
-   * help body copy stay legible. Every stack still ends in a Lao family so a
-   * Lao glyph never falls back to a mismatched face.
+   * distinction only. Lao never renders serif: both font-serif and font-sans
+   * fall back to the loop-free Noto Sans Lao, which is what nearly
+   * everything on the site is — headings, but also every eyebrow, button,
+   * link, nav item and footer line, none of which carry font-serif.
+   *
+   * font-sans-looped is the one exception, applied by hand to genuine
+   * reading prose (descriptions, bios, FAQ answers, the highlight video's
+   * caption) rather than inherited by default — Noto Sans Lao Looped's
+   * loops are what the team asked for there specifically, for legibility
+   * across a whole paragraph, not for a three-word button label.
+   *
+   * Every stack still ends in a Lao family so a Lao glyph never falls back
+   * to a mismatched face.
    */
   --font-serif: var(--font-bodoni), 'Bodoni Moda', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
-  --font-sans: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao-looped), 'Noto Sans Lao Looped', sans-serif;
+  --font-sans: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
+  --font-sans-looped: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao-looped), 'Noto Sans Lao Looped', sans-serif;
 }
 
 /* The foil gradient is a decoration, never a text colour. */

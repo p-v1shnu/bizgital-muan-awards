@@ -67,7 +67,7 @@ export function Section({
                     {title}
                   </Heading>
                 )}
-                {intro && <p className="mt-3 text-[15px] leading-relaxed text-ink-2">{intro}</p>}
+                {intro && <p className="mt-3 font-sans-looped text-[15px] leading-relaxed text-ink-2">{intro}</p>}
               </header>
             )}
             {children}
