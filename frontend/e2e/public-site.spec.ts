@@ -148,6 +148,30 @@ test.describe('a year page follows its phase', () => {
   });
 
   /**
+   * SectionReveal (components/site/section-reveal.tsx) fades each section in
+   * via an IntersectionObserver, which only calls back when the visible ratio
+   * *crosses* its threshold. A single jump straight to the bottom — an
+   * End-key press, a fast fling, a browser restoring scroll position — can
+   * move the viewport clean past a section with no frame in between where it
+   * was ever 20% on screen, so the observer never fires and the section (and
+   * every winner tile in it) sits at opacity 0 forever with its links still
+   * live underneath. toBeVisible() would not have caught this: Playwright
+   * treats an opacity-0 element with a real bounding box as visible, which is
+   * why this checks the reveal's own is-visible class instead.
+   */
+  test('winner tiles still reveal after a scroll that jumps clean past them', async ({ page }) => {
+    await page.goto('/awards/2025');
+    const main = page.getByRole('main');
+    const results = main
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'ຜູ້ຊະນະທຸກສາຂາ' }) });
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    await expect(results.locator('.section-reveal-content')).toHaveClass(/is-visible/);
+  });
+
+  /**
    * The two switches of PRD §4 are independent, and the public side used to
    * read one off the other: the invitation to send a name appeared because the
    * year was PUBLISHED, not because the form was open. So it showed on a year
