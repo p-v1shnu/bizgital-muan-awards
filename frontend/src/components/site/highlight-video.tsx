@@ -6,6 +6,19 @@ import { Play } from 'lucide-react';
 
 import { detectVideoProvider, videoEmbedUrl, youtubeThumbnailUrl } from '@/lib/video-embed';
 import { imageUrl } from '@/lib/images';
+import { averageColor } from '@/lib/average-color';
+
+// The brand purple (--color-brand / --color-brand-deep in globals.css),
+// duplicated as plain RGB rather than imported: there is nothing here to
+// import from, since the token only exists as a CSS custom property, and
+// this is the one colour the glow falls back to when there is no thumbnail
+// to sample — a non-YouTube link with no poster uploaded in /admin/site.
+const BRAND_GLOW: [number, number, number] = [141, 62, 168];
+
+function lighten([r, g, b]: [number, number, number], amount: number): string {
+  const mix = (channel: number) => Math.round(channel + (255 - channel) * amount);
+  return `${mix(r)}, ${mix(g)}, ${mix(b)}`;
+}
 
 /**
  * The homepage's own video, independent of any year (PRD §6.0.3) — plays in
@@ -55,6 +68,27 @@ export function HighlightVideo({
   // drops to the 480×360 tier only if that turns out not to exist — see
   // checkThumbnailSize below.
   const [thumbnail, setThumbnail] = useState(uploadedThumbnail ?? autoThumbnail);
+
+  // The ambient glow behind the player (a YouTube "ambient mode" ask):
+  // there is no way to sample the actual playing frames — it's a
+  // cross-origin iframe, not a <video> element this page owns — so the
+  // closest approximation is the thumbnail's own average colour, sampled
+  // once. Anything a canvas can't read (no thumbnail, a load failure, a
+  // CORS-blocked image) keeps the brand-purple fallback instead.
+  const [glowColor, setGlowColor] = useState<[number, number, number]>(BRAND_GLOW);
+  useEffect(() => {
+    // Nothing to sample — the default state above is already the fallback.
+    // thumbnail only ever moves from unset to a URL (or to a sharper one),
+    // never back, so there is no case here to reset it in.
+    if (!thumbnail) return;
+    let cancelled = false;
+    averageColor(thumbnail).then((color) => {
+      if (!cancelled) setGlowColor(color ?? BRAND_GLOW);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [thumbnail]);
 
   // A video with no 1280×720 thumbnail still answers this request with a 200
   // — just a ~120×90 grey placeholder — so a 404 handler would never catch
@@ -111,7 +145,11 @@ export function HighlightVideo({
   if (!provider || !embedUrl) return null;
 
   return (
-    <section className="bg-ink py-14 md:py-20">
+    // overflow-x-hidden: the glow below bleeds past the player's own edges
+    // on purpose, but on a narrow viewport that same bleed reaches past the
+    // section's own width too — the section is exactly where that belongs,
+    // rather than pushing the page's scrollable width out with it.
+    <section className="overflow-x-hidden bg-ink py-14 md:py-20">
       <div className="mx-auto max-w-6xl px-5">
         <header className="mb-8 max-w-2xl">
           {/* "ມ່ວນອາວອດສ໌" never wrapped — see chrome.tsx's own header mark for
@@ -128,49 +166,73 @@ export function HighlightVideo({
             <p className="mt-3 font-sans-looped text-[15px] leading-relaxed text-white/70">{descriptionLo}</p>
           )}
         </header>
-        <div
-          ref={containerRef}
-          className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-white/15 bg-black/40"
-        >
-          {started ? (
-            <iframe
-              src={embedUrl}
-              title="ວິດີໂອ"
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-              className="size-full"
-            />
-          ) : effectiveAutoplay ? null : (
-            <button
-              type="button"
-              onClick={() => setStarted(true)}
-              aria-label="ເປີດວິດີໂອ"
-              className="group absolute inset-0 block"
-            >
-              {thumbnail ? (
-                // External storage and YouTube's own CDN alike are not
-                // configured Next.js image hosts, so this stays a plain img
-                // (same call as the admin's own upload preview).
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  ref={thumbnailRef}
-                  src={thumbnail}
-                  alt=""
-                  className="size-full object-cover"
-                  onLoad={(event) => checkThumbnailSize(event.currentTarget)}
-                />
-              ) : null}
-              <div
-                aria-hidden
-                className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/10 to-transparent transition-colors group-hover:from-ink/60"
+        {/* isolate: without a stacking context of its own, the glow's
+            negative z-index below doesn't just sit behind this box — with
+            nothing here to contain it, it falls back to the nearest
+            ancestor that does establish one, however far up that is, and
+            paints behind that instead. In this page that buried it under
+            the section's own background, several levels up, and made an
+            otherwise-correct glow invisible. */}
+        <div className="relative isolate">
+          {/* The ambient glow: a copy of the player's own box, filled edge to
+              edge with two colour blobs (the thumbnail's average, or the
+              brand purple with none to sample), scaled up and blurred
+              behind the real player. Scaling the whole filled shape is what
+              gets a visible halo past the box's edge — a gradient merely
+              inset further out and blurred just fades its tail away to
+              nothing before it clears the player, which is what the first
+              version of this did. */}
+          <div
+            aria-hidden
+            className="ambient-glow absolute inset-0 -z-10 rounded-[var(--radius-box)] opacity-80 blur-2xl"
+            style={{
+              background: `radial-gradient(circle at 30% 30%, rgb(${lighten(glowColor, 0.35)}) 0%, transparent 65%), radial-gradient(circle at 70% 70%, rgb(${glowColor.join(', ')}) 0%, transparent 65%)`,
+            }}
+          />
+          <div
+            ref={containerRef}
+            className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-white/15 bg-black/40"
+          >
+            {started ? (
+              <iframe
+                src={embedUrl}
+                title="ວິດີໂອ"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="size-full"
               />
-              <span className="absolute inset-0 grid place-items-center">
-                <span className="grid size-16 place-items-center rounded-full bg-white/90 text-ink shadow-[0_4px_18px_rgba(20,14,10,.25)] transition-transform group-hover:scale-105">
-                  <Play className="ml-1 size-6 fill-current" />
+            ) : effectiveAutoplay ? null : (
+              <button
+                type="button"
+                onClick={() => setStarted(true)}
+                aria-label="ເປີດວິດີໂອ"
+                className="group absolute inset-0 block"
+              >
+                {thumbnail ? (
+                  // External storage and YouTube's own CDN alike are not
+                  // configured Next.js image hosts, so this stays a plain img
+                  // (same call as the admin's own upload preview).
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    ref={thumbnailRef}
+                    src={thumbnail}
+                    alt=""
+                    className="size-full object-cover"
+                    onLoad={(event) => checkThumbnailSize(event.currentTarget)}
+                  />
+                ) : null}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/10 to-transparent transition-colors group-hover:from-ink/60"
+                />
+                <span className="absolute inset-0 grid place-items-center">
+                  <span className="grid size-16 place-items-center rounded-full bg-white/90 text-ink shadow-[0_4px_18px_rgba(20,14,10,.25)] transition-transform group-hover:scale-105">
+                    <Play className="ml-1 size-6 fill-current" />
+                  </span>
                 </span>
-              </span>
-            </button>
-          )}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </section>
