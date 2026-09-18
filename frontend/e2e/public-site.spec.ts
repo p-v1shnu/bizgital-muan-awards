@@ -250,6 +250,19 @@ test('the hall of winners lists only years that have announced', async ({ page }
   expect(body, '2026 has not announced results').not.toContain('ມ່ວນອາວອດສ໌ 2026');
 });
 
+/**
+ * A winner's avatar used to sit next to the link that named them rather than
+ * inside it — the name went to their profile, the picture beside it went
+ * nowhere. Clicks on the avatar itself, not the text, so a regression here
+ * (the two drifting apart again) fails this rather than the row above.
+ */
+test('a winner\'s avatar on the hall of winners opens their profile', async ({ page }) => {
+  await page.goto('/winners');
+  const link = page.locator('a[href="/creators/khamla"]').first();
+  await link.locator('img, span').first().click();
+  await expect(page).toHaveURL('/creators/khamla');
+});
+
 test('a creator profile shows only announced appearances', async ({ page }) => {
   await page.goto('/creators/khamla');
 

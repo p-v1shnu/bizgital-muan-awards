@@ -65,19 +65,25 @@ export default async function WinnersPage() {
                   ) : (
                     <ul className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
                       {shown.map((category) => (
-                        <li key={category.id} className="flex items-center gap-3">
-                          <Avatar creator={category.winner} alt={category.winner.nameLo} />
-                          <div className="min-w-0">
-                            <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-ink-3">
-                              {category.nameLo}
-                            </p>
-                            <Link
-                              href={`/creators/${category.winner.slug}`}
-                              className="block truncate font-serif text-[19px] leading-tight text-ink hover:underline"
-                            >
-                              {category.winner.nameLo}
-                            </Link>
-                          </div>
+                        <li key={category.id}>
+                          <Link
+                            href={`/creators/${category.winner.slug}`}
+                            className="group flex items-center gap-3"
+                          >
+                            <Avatar
+                              creator={category.winner}
+                              alt={category.winner.nameLo}
+                              className="transition-[transform,border-color] duration-200 group-hover:scale-105 group-hover:border-ink-3"
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-ink-3">
+                                {category.nameLo}
+                              </p>
+                              <p className="truncate font-serif text-[19px] leading-tight text-ink group-hover:underline">
+                                {category.winner.nameLo}
+                              </p>
+                            </div>
+                          </Link>
                         </li>
                       ))}
                     </ul>
