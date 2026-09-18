@@ -95,7 +95,7 @@ test.describe('homepage', () => {
    */
   test('the highlight video shows its fixed title and the team\'s own description', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'ວິດີໂອໄຮໄລທ໌ຈາກມ່ວນອາວອດສ໌' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'ວິດີໂອໄຮໄລທ໌' })).toBeVisible();
     await expect(page.getByText(HOME_HIGHLIGHT_DESCRIPTION)).toBeVisible();
   });
 });

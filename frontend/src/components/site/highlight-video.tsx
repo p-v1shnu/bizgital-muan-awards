@@ -114,11 +114,15 @@ export function HighlightVideo({
     <section className="bg-ink py-14 md:py-20">
       <div className="mx-auto max-w-6xl px-5">
         <header className="mb-8 max-w-2xl">
+          {/* "ມ່ວນອາວອດສ໌" never wrapped — see chrome.tsx's own header mark for
+              the same fix: the browser's Lao line-breaker doesn't know this
+              brand name and splits it mid-syllable ("ມ່ວນອາວ / ອດສ໌")
+              otherwise. */}
           <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-brand-edge">
-            ຈາກມ່ວນອາວອດສ໌
+            ຈາກ<span className="whitespace-nowrap">ມ່ວນອາວອດສ໌</span>
           </p>
           <h2 className="mt-2 font-serif text-3xl leading-tight text-white md:text-4xl">
-            ວິດີໂອໄຮໄລທ໌ຈາກມ່ວນອາວອດສ໌
+            ວິດີໂອໄຮໄລທ໌
           </h2>
           {descriptionLo && (
             <p className="mt-3 text-[15px] leading-relaxed text-white/70">{descriptionLo}</p>
