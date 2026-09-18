@@ -145,7 +145,11 @@ export function HighlightVideo({
   if (!provider || !embedUrl) return null;
 
   return (
-    <section className="bg-ink py-14 md:py-20">
+    // overflow-x-hidden: the glow below bleeds past the player's own edges
+    // on purpose, but on a narrow viewport that same bleed reaches past the
+    // section's own width too — the section is exactly where that belongs,
+    // rather than pushing the page's scrollable width out with it.
+    <section className="overflow-x-hidden bg-ink py-14 md:py-20">
       <div className="mx-auto max-w-6xl px-5">
         <header className="mb-8 max-w-2xl">
           {/* "ມ່ວນອາວອດສ໌" never wrapped — see chrome.tsx's own header mark for
