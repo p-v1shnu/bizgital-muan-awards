@@ -325,6 +325,7 @@ export default async function HomePage() {
           videoUrl={site.homeHighlightVideoUrl}
           autoplay={site.homeHighlightAutoplay}
           thumbnailKey={site.homeHighlightThumbnailKey}
+          descriptionLo={site.homeHighlightDescriptionLo}
         />
       )}
 
@@ -337,7 +338,7 @@ export default async function HomePage() {
             title="ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ"
             className="bg-panel-2/50"
           >
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {featuredWinners.map((category) => (
                 <Link
                   key={category.id}
@@ -347,7 +348,7 @@ export default async function HomePage() {
                   <div className="relative aspect-[3/4] overflow-hidden bg-panel-2">
                     <SiteImage
                       imageKey={category.winner.avatarKey}
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
+                      sizes="(max-width: 1024px) 50vw, 280px"
                       className="transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>

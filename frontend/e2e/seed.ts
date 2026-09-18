@@ -4,6 +4,11 @@ export const API = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
 export const ADMIN = { email: 'admin@muanawards.com', password: 'a-very-long-password' };
 /** The finished year's highlight film. Read by the spec, so the two cannot drift. */
 export const HIGHLIGHT_URL = 'https://www.youtube.com/watch?v=muan2025';
+/** The homepage's own video, independent of any year. Read by the spec.
+ * The id must be exactly 11 characters — YOUTUBE_ID in video-embed.ts — or
+ * HighlightVideo treats it as unrecognised and renders nothing. */
+export const HOME_HIGHLIGHT_URL = 'https://www.youtube.com/watch?v=muanhilite1';
+export const HOME_HIGHLIGHT_DESCRIPTION = 'ຄລິບສະຫຼຸບບັນຍາກາດງານມ່ວນອາວອດສ໌ 2025';
 
 /**
  * Puts two believable years in front of the browser: 2025 finished with
@@ -73,6 +78,10 @@ export default async function seed() {
         },
       },
       footerLocationLo: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ',
+      // The homepage's own video, independent of any year — read by the spec
+      // that checks its fixed title and this description both show up.
+      homeHighlightVideoUrl: HOME_HIGHLIGHT_URL,
+      homeHighlightDescriptionLo: HOME_HIGHLIGHT_DESCRIPTION,
       // Every card state a fresh install comes up with (backend/prisma/seed.ts),
       // so the browser and any screenshot taken from it show what the team will
       // actually see rather than a half-filled stand-in.

@@ -137,10 +137,13 @@ export function Avatar({
   creator,
   size = 'md',
   alt = '',
+  className,
 }: {
   creator: Pick<Creator, 'nameLo' | 'avatarKey'>;
   size?: 'md' | 'lg';
   alt?: string;
+  /** For a caller that wraps this in its own link — e.g. `group-hover:...`. */
+  className?: string;
 }) {
   const src = imageUrl(creator.avatarKey);
   const box = size === 'lg' ? 'size-28' : 'size-16';
@@ -153,7 +156,12 @@ export function Avatar({
         alt={alt}
         width={px}
         height={px}
-        className={cn(box, 'shrink-0 rounded-[20%] border border-rule object-cover', size === 'lg' && 'hero-fade-in')}
+        className={cn(
+          box,
+          'shrink-0 rounded-[20%] border border-rule object-cover',
+          size === 'lg' && 'hero-fade-in',
+          className,
+        )}
       />
     );
   }
@@ -163,6 +171,7 @@ export function Avatar({
         box,
         'grid shrink-0 place-items-center rounded-[20%] border border-rule bg-panel-2 font-serif text-ink-3',
         size === 'lg' ? 'text-3xl' : 'text-xl',
+        className,
       )}
     >
       {creator.nameLo.trim().charAt(0)}

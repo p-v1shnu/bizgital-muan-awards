@@ -209,6 +209,8 @@ export interface SiteSettings {
   homeHighlightAutoplay: boolean;
   /** Poster frame for the video above. A YouTube link falls back to its own thumbnail without one. */
   homeHighlightThumbnailKey: string | null;
+  /** What the video is, under the section's fixed title. Changes with the video. */
+  homeHighlightDescriptionLo: string | null;
   socialLinks: Record<string, string> | null;
   aboutHistoryLo: string | null;
   contactEmail: string | null;

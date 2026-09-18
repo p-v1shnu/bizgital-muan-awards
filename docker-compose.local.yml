@@ -32,8 +32,11 @@ services:
 
   # S3-compatible storage, standing in for DigitalOcean Spaces.
   # Console at http://localhost:9001
+  #
+  # quay.io, not docker.io: MinIO stopped publishing minio/minio and minio/mc
+  # to Docker Hub, which now answers "repository does not exist" for both.
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     # Docker keeps container logs forever by default, which on a small server
     # is a disk that fills quietly months after launch (12-factor XI: the app
@@ -53,7 +56,7 @@ services:
 
   # Creates the bucket once and exits.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     depends_on: [minio]
     # The real bucket policy (docs/storage-policy.json), not `mc anonymous set
     # download` — that canned setting grants both GetObject and ListBucket to

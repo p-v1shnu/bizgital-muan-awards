@@ -18,7 +18,10 @@
     "test:watch": "jest --config test/jest-e2e.json --watch"
   },
   "overrides": {
-    "deepmerge-ts": "^8.0.1"
+    "deepmerge-ts": "^8.0.1",
+    "@nestjs/platform-express": {
+      "multer": "^2.4.0"
+    }
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1110.0",

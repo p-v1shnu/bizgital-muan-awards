@@ -1,6 +1,6 @@
 import { expect, request, test } from '@playwright/test';
 
-import { ADMIN, API, HIGHLIGHT_URL } from './seed';
+import { ADMIN, API, HIGHLIGHT_URL, HOME_HIGHLIGHT_DESCRIPTION } from './seed';
 
 /**
  * Each spec file signs in from its own address.
@@ -88,6 +88,16 @@ test.describe('homepage', () => {
     await page.goto('/');
     await expect(page.locator('header a[href="/submit"]')).toBeVisible();
   });
+
+  /**
+   * The video section's own heading is fixed in the component, unlike the
+   * description below it, which is the team's and changes with the video.
+   */
+  test('the highlight video shows its fixed title and the team\'s own description', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'ວິດີໂອໄຮໄລທ໌ຈາກມ່ວນອາວອດສ໌' })).toBeVisible();
+    await expect(page.getByText(HOME_HIGHLIGHT_DESCRIPTION)).toBeVisible();
+  });
 });
 
 test.describe('a year page follows its phase', () => {
@@ -145,6 +155,30 @@ test.describe('a year page follows its phase', () => {
     await expect(results.getByText('ສາຂາເພີ່ມເຕີມ 10')).toBeHidden();
     await fold.click();
     await expect(results.getByText('ສາຂາເພີ່ມເຕີມ 10')).toBeVisible();
+  });
+
+  /**
+   * SectionReveal (components/site/section-reveal.tsx) fades each section in
+   * via an IntersectionObserver, which only calls back when the visible ratio
+   * *crosses* its threshold. A single jump straight to the bottom — an
+   * End-key press, a fast fling, a browser restoring scroll position — can
+   * move the viewport clean past a section with no frame in between where it
+   * was ever 20% on screen, so the observer never fires and the section (and
+   * every winner tile in it) sits at opacity 0 forever with its links still
+   * live underneath. toBeVisible() would not have caught this: Playwright
+   * treats an opacity-0 element with a real bounding box as visible, which is
+   * why this checks the reveal's own is-visible class instead.
+   */
+  test('winner tiles still reveal after a scroll that jumps clean past them', async ({ page }) => {
+    await page.goto('/awards/2025');
+    const main = page.getByRole('main');
+    const results = main
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: 'ຜູ້ຊະນະທຸກສາຂາ' }) });
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    await expect(results.locator('.section-reveal-content')).toHaveClass(/is-visible/);
   });
 
   /**
@@ -224,6 +258,19 @@ test('the hall of winners lists only years that have announced', async ({ page }
 
   expect(body).toContain('2025');
   expect(body, '2026 has not announced results').not.toContain('ມ່ວນອາວອດສ໌ 2026');
+});
+
+/**
+ * A winner's avatar used to sit next to the link that named them rather than
+ * inside it — the name went to their profile, the picture beside it went
+ * nowhere. Clicks on the avatar itself, not the text, so a regression here
+ * (the two drifting apart again) fails this rather than the row above.
+ */
+test('a winner\'s avatar on the hall of winners opens their profile', async ({ page }) => {
+  await page.goto('/winners');
+  const link = page.locator('a[href="/creators/khamla"]').first();
+  await link.locator('img, span').first().click();
+  await expect(page).toHaveURL('/creators/khamla');
 });
 
 test('a creator profile shows only announced appearances', async ({ page }) => {
@@ -691,8 +738,10 @@ test('the pages tell a machine who these people are', async ({ page }) => {
 /**
  * A picture of a person is worth finding, and a picture nobody described is
  * invisible to an image search. Empty alt is right where the picture sits
- * inside a link that already names them — describing it there makes a screen
- * reader say the name twice — so the rule is about the ones standing alone.
+ * inside a link that already names them, or a button already labelled by its
+ * own aria-label (the highlight video's play button, over its own thumbnail)
+ * — describing it there too would make a screen reader say the name twice —
+ * so the rule is about the ones standing alone.
  *
  * The sweep is only as good as the pictures on the page: CI runs with no
  * object storage, so avatars and key visuals are absent there and this passes
@@ -706,7 +755,10 @@ test('every picture that stands alone says what it is', async ({ page }) => {
         .filter((image) => !image.getAttribute('alt'))
         .filter((image) => {
           const link = image.closest('a');
-          return !link || !(link.textContent ?? '').trim();
+          if (link && (link.textContent ?? '').trim()) return false;
+          const button = image.closest('button');
+          if (button && (button.getAttribute('aria-label') ?? '').trim()) return false;
+          return true;
         })
         .map((image) => image.getAttribute('src')?.slice(0, 80)),
     );

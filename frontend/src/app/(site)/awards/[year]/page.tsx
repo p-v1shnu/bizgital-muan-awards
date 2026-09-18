@@ -60,9 +60,13 @@ function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: str
       </p>
       <Link
         href={`/creators/${winner.creator.slug}`}
-        className="flex min-w-0 items-center gap-3 font-serif text-lg text-ink hover:underline"
+        className="group flex min-w-0 items-center gap-3 font-serif text-lg text-ink hover:underline"
       >
-        <Avatar creator={winner.creator} size="md" />
+        <Avatar
+          creator={winner.creator}
+          size="md"
+          className="transition-[transform,border-color] duration-200 group-hover:scale-105 group-hover:border-ink-3"
+        />
         <span className="truncate">{winner.creator.nameLo}</span>
       </Link>
       <Link
