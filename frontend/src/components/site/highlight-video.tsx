@@ -7,6 +7,7 @@ import { Play } from 'lucide-react';
 import { detectVideoProvider, videoEmbedUrl, youtubeThumbnailUrl } from '@/lib/video-embed';
 import { imageUrl } from '@/lib/images';
 import { averageColor } from '@/lib/average-color';
+import { cn } from '@/lib/utils';
 
 // The brand purple (--color-brand / --color-brand-deep in globals.css),
 // duplicated as plain RGB rather than imported: there is nothing here to
@@ -89,6 +90,10 @@ export function HighlightVideo({
       cancelled = true;
     };
   }, [thumbnail]);
+  // Reference equality is enough: the state is either still this exact
+  // constant (never sampled, or sampling failed) or a fresh array
+  // averageColor built — the two are never accidentally interchangeable.
+  const usingFallbackGlow = glowColor === BRAND_GLOW;
 
   // A video with no 1280×720 thumbnail still answers this request with a 200
   // — just a ~120×90 grey placeholder — so a 404 handler would never catch
@@ -166,29 +171,48 @@ export function HighlightVideo({
             <p className="mt-3 font-sans-looped text-[15px] leading-relaxed text-white/70">{descriptionLo}</p>
           )}
         </header>
-        {/* isolate: without a stacking context of its own, the glow's
-            negative z-index below doesn't just sit behind this box — with
-            nothing here to contain it, it falls back to the nearest
-            ancestor that does establish one, however far up that is, and
-            paints behind that instead. In this page that buried it under
-            the section's own background, several levels up, and made an
-            otherwise-correct glow invisible. */}
-        <div className="relative isolate">
+        <div className="relative">
           {/* The ambient glow: a copy of the player's own box, filled edge to
               edge with two colour blobs (the thumbnail's average, or the
               brand purple with none to sample), scaled up and blurred
               behind the real player. Scaling the whole filled shape is what
               gets a visible halo past the box's edge — a gradient merely
               inset further out and blurred just fades its tail away to
-              nothing before it clears the player, which is what the first
-              version of this did. */}
+              nothing before it clears the player.
+
+              No z-index here, on purpose: the video box below sits later in
+              this same markup, so plain paint order already puts it on top
+              — the first version of this reached for z-index/isolate to do
+              the same job and, without a stacking context anywhere nearby
+              to contain a negative one, ended up buried under the whole
+              section's own background instead.
+
+              Split into two layers rather than one: the outer fades opacity
+              in on mount so the glow doesn't just snap to visible the
+              instant the video starts, and the inner is the one actually
+              carrying the drifting/breathing animation — a single element
+              can't run a CSS transition and a CSS animation on the same
+              property (opacity) at once, so the fade-in and the pulse each
+              get their own. */}
           <div
             aria-hidden
-            className="ambient-glow absolute inset-0 -z-10 rounded-[var(--radius-box)] opacity-80 blur-2xl"
-            style={{
-              background: `radial-gradient(circle at 30% 30%, rgb(${lighten(glowColor, 0.35)}) 0%, transparent 65%), radial-gradient(circle at 70% 70%, rgb(${glowColor.join(', ')}) 0%, transparent 65%)`,
-            }}
-          />
+            className={cn(
+              'pointer-events-none absolute inset-0 transition-opacity duration-1000 ease-out',
+              started ? 'opacity-100' : 'opacity-0',
+            )}
+          >
+            <div
+              className={cn(
+                'ambient-glow absolute inset-0 rounded-[var(--radius-box)] blur-2xl',
+                // Only the flat brand-purple fallback drifts hue — a colour
+                // actually sampled from the thumbnail is left as it is.
+                usingFallbackGlow && 'hue-drift',
+              )}
+              style={{
+                background: `radial-gradient(circle at 30% 30%, rgb(${lighten(glowColor, 0.35)}) 0%, transparent 65%), radial-gradient(circle at 70% 70%, rgb(${glowColor.join(', ')}) 0%, transparent 65%)`,
+              }}
+            />
+          </div>
           <div
             ref={containerRef}
             className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-white/15 bg-black/40"
