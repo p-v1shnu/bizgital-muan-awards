@@ -95,6 +95,7 @@ function SettingsForm({
     submitAfterLo: initial?.submitAfterLo ?? '',
     footerLocationLo: initial?.footerLocationLo ?? '',
     homeHighlightVideoUrl: initial?.homeHighlightVideoUrl ?? '',
+    homeHighlightDescriptionLo: initial?.homeHighlightDescriptionLo ?? '',
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(initial?.heroImageKey ?? null);
   const [heroFocalY, setHeroFocalY] = useState(initial?.heroImageFocalY ?? 50);
@@ -182,6 +183,7 @@ function SettingsForm({
                 homeHighlightVideoUrl: emptyToNull(form.homeHighlightVideoUrl),
                 homeHighlightAutoplay: highlightAutoplay,
                 homeHighlightThumbnailKey: highlightThumbnailKey ?? null,
+                homeHighlightDescriptionLo: emptyToNull(form.homeHighlightDescriptionLo),
               },
               { onSuccess: () => setSaved(true) },
             );
@@ -393,6 +395,21 @@ function SettingsForm({
                       value={form.homeHighlightVideoUrl}
                       onChange={(event) =>
                         setForm({ ...form, homeHighlightVideoUrl: event.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="mt-4">
+                  <Field
+                    label="ຄຳອະທິບາຍວິດີໂອ"
+                    hint="— ບໍ່ບັງຄັບ"
+                    help="ຂຶ້ນກ້ອງຫົວຂໍ້ “ວິດີໂອໄຮໄລທ໌ຈາກມ່ວນອາວອດສ໌” ເທິງໜ້າຫຼັກ — ຫົວຂໍ້ຄົງທີ່ ແຕ່ອັນນີ້ປ່ຽນໄດ້ທຸກຄັ້ງທີ່ປ່ຽນວິດີໂອ"
+                  >
+                    <Textarea
+                      maxLength={300}
+                      value={form.homeHighlightDescriptionLo}
+                      onChange={(event) =>
+                        setForm({ ...form, homeHighlightDescriptionLo: event.target.value })
                       }
                     />
                   </Field>

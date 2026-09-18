@@ -9,11 +9,12 @@ import { imageUrl } from '@/lib/images';
 
 /**
  * The homepage's own video, independent of any year (PRD §6.0.3) — plays in
- * place, in the same box, never a popup. No visible heading: a big
- * thumbnail with a play button needs no label to be understood as a video,
- * and the content behind it varies too much for one fixed caption to always
- * fit — but an sr-only heading keeps the section a real landmark for anyone
- * navigating by headings.
+ * place, in the same box, never a popup. The heading is fixed, since it
+ * names the section rather than the clip inside it; what the clip actually
+ * is goes in descriptionLo instead, which the team rewrites whenever they
+ * swap the video. Its own dark band (bg-ink, the same tone the stats
+ * section further down uses), rather than the page's own paper background,
+ * sets it apart the way a projector room does.
  *
  * Two modes, set in /admin/site, that cannot both apply at once:
  * - Autoplay on: no click, no poster to show one — it starts on its own
@@ -31,10 +32,13 @@ export function HighlightVideo({
   videoUrl,
   autoplay,
   thumbnailKey,
+  descriptionLo,
 }: {
   videoUrl: string;
   autoplay: boolean;
   thumbnailKey: string | null;
+  /** What this particular video is — the team's, edited whenever the video changes. */
+  descriptionLo: string | null;
 }) {
   const reduceMotion = useReducedMotion();
   const effectiveAutoplay = autoplay && !reduceMotion;
@@ -107,51 +111,63 @@ export function HighlightVideo({
   if (!provider || !embedUrl) return null;
 
   return (
-    <section className="mx-auto max-w-6xl px-5 py-14 md:py-20">
-      <h2 className="sr-only">ວິດີໂອ</h2>
-      <div
-        ref={containerRef}
-        className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel-2"
-      >
-        {started ? (
-          <iframe
-            src={embedUrl}
-            title="ວິດີໂອ"
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-            className="size-full"
-          />
-        ) : effectiveAutoplay ? null : (
-          <button
-            type="button"
-            onClick={() => setStarted(true)}
-            aria-label="ເປີດວິດີໂອ"
-            className="group absolute inset-0 block"
-          >
-            {thumbnail ? (
-              // External storage and YouTube's own CDN alike are not
-              // configured Next.js image hosts, so this stays a plain img
-              // (same call as the admin's own upload preview).
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                ref={thumbnailRef}
-                src={thumbnail}
-                alt=""
-                className="size-full object-cover"
-                onLoad={(event) => checkThumbnailSize(event.currentTarget)}
-              />
-            ) : null}
-            <div
-              aria-hidden
-              className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/10 to-transparent transition-colors group-hover:from-ink/60"
+    <section className="bg-ink py-14 md:py-20">
+      <div className="mx-auto max-w-6xl px-5">
+        <header className="mb-8 max-w-2xl">
+          <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-brand-edge">
+            ຈາກມ່ວນອາວອດສ໌
+          </p>
+          <h2 className="mt-2 font-serif text-3xl leading-tight text-white md:text-4xl">
+            ວິດີໂອໄຮໄລທ໌ຈາກມ່ວນອາວອດສ໌
+          </h2>
+          {descriptionLo && (
+            <p className="mt-3 text-[15px] leading-relaxed text-white/70">{descriptionLo}</p>
+          )}
+        </header>
+        <div
+          ref={containerRef}
+          className="relative aspect-video w-full overflow-hidden rounded-[var(--radius-box)] border border-white/15 bg-black/40"
+        >
+          {started ? (
+            <iframe
+              src={embedUrl}
+              title="ວິດີໂອ"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              className="size-full"
             />
-            <span className="absolute inset-0 grid place-items-center">
-              <span className="grid size-16 place-items-center rounded-full bg-white/90 text-ink shadow-[0_4px_18px_rgba(20,14,10,.25)] transition-transform group-hover:scale-105">
-                <Play className="ml-1 size-6 fill-current" />
+          ) : effectiveAutoplay ? null : (
+            <button
+              type="button"
+              onClick={() => setStarted(true)}
+              aria-label="ເປີດວິດີໂອ"
+              className="group absolute inset-0 block"
+            >
+              {thumbnail ? (
+                // External storage and YouTube's own CDN alike are not
+                // configured Next.js image hosts, so this stays a plain img
+                // (same call as the admin's own upload preview).
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  ref={thumbnailRef}
+                  src={thumbnail}
+                  alt=""
+                  className="size-full object-cover"
+                  onLoad={(event) => checkThumbnailSize(event.currentTarget)}
+                />
+              ) : null}
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-gradient-to-t from-ink/50 via-ink/10 to-transparent transition-colors group-hover:from-ink/60"
+              />
+              <span className="absolute inset-0 grid place-items-center">
+                <span className="grid size-16 place-items-center rounded-full bg-white/90 text-ink shadow-[0_4px_18px_rgba(20,14,10,.25)] transition-transform group-hover:scale-105">
+                  <Play className="ml-1 size-6 fill-current" />
+                </span>
               </span>
-            </span>
-          </button>
-        )}
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );

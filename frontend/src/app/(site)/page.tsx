@@ -325,6 +325,7 @@ export default async function HomePage() {
           videoUrl={site.homeHighlightVideoUrl}
           autoplay={site.homeHighlightAutoplay}
           thumbnailKey={site.homeHighlightThumbnailKey}
+          descriptionLo={site.homeHighlightDescriptionLo}
         />
       )}
 

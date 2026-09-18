@@ -284,6 +284,14 @@ export class UpdateSiteSettingsDto {
   homeHighlightThumbnailKey?: string | null;
 
   @ApiPropertyOptional({
+    description: 'What the video above is, shown under the section\'s own fixed title — changes with the video, unlike the title',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  homeHighlightDescriptionLo?: string | null;
+
+  @ApiPropertyOptional({
     example: { facebook: 'https://…', tiktok: 'https://…' },
     description: 'The organisation\'s own accounts, shown in the footer. Only facebook, tiktok, youtube and instagram are kept',
   })

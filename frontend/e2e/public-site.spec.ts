@@ -1,6 +1,6 @@
 import { expect, request, test } from '@playwright/test';
 
-import { ADMIN, API, HIGHLIGHT_URL } from './seed';
+import { ADMIN, API, HIGHLIGHT_URL, HOME_HIGHLIGHT_DESCRIPTION } from './seed';
 
 /**
  * Each spec file signs in from its own address.
@@ -87,6 +87,16 @@ test.describe('homepage', () => {
   test('offers the submit call to action while entries are open', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('header a[href="/submit"]')).toBeVisible();
+  });
+
+  /**
+   * The video section's own heading is fixed in the component, unlike the
+   * description below it, which is the team's and changes with the video.
+   */
+  test('the highlight video shows its fixed title and the team\'s own description', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'ວິດີໂອໄຮໄລທ໌ຈາກມ່ວນອາວອດສ໌' })).toBeVisible();
+    await expect(page.getByText(HOME_HIGHLIGHT_DESCRIPTION)).toBeVisible();
   });
 });
 
