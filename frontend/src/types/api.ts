@@ -93,11 +93,15 @@ export interface EditionJudge {
   judge: Judge;
 }
 
+/** How large a tier's logos render on a year page, relative to the others. */
+export type SponsorLogoSize = 'S' | 'M' | 'L' | 'XL';
+
 /** A reusable sponsor-tier name, shared like Judge — see SponsorTier. */
 export interface SponsorTierTemplate {
   id: string;
   nameLo: string;
   nameEn: string | null;
+  logoSize: SponsorLogoSize;
   _count?: { tiers: number };
 }
 
