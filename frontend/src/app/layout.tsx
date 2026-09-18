@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Bodoni_Moda, DM_Sans, Noto_Sans_Lao, Noto_Serif_Lao } from 'next/font/google';
+import { Bodoni_Moda, DM_Sans, Noto_Sans_Lao, Noto_Sans_Lao_Looped } from 'next/font/google';
 
 import './globals.css';
 
@@ -7,17 +7,16 @@ import './globals.css';
  * Four families, two roles (PRD §6.0.2): a serif pair for names and headings,
  * a sans pair for anything a visitor presses, fills in or scans. The Lao faces
  * are loaded alongside the Latin ones so a mixed line keeps one texture.
+ *
+ * Lao never falls back to a serif face — the team asked for the loop-free
+ * "Sans Lao" on headings and the friendlier "Sans Lao Looped" on body copy
+ * instead, so Noto Serif Lao is gone entirely; Bodoni Moda still carries a
+ * heading's Latin characters (dates, English names), it is just never asked
+ * to draw a Lao one.
  */
 const bodoni = Bodoni_Moda({
   subsets: ['latin'],
   variable: '--font-bodoni',
-  display: 'swap',
-  weight: ['400', '500', '600', '700'],
-});
-
-const notoSerifLao = Noto_Serif_Lao({
-  subsets: ['lao'],
-  variable: '--font-noto-serif-lao',
   display: 'swap',
   weight: ['400', '500', '600', '700'],
 });
@@ -31,6 +30,13 @@ const dmSans = DM_Sans({
 const notoSansLao = Noto_Sans_Lao({
   subsets: ['lao'],
   variable: '--font-noto-sans-lao',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+});
+
+const notoSansLaoLooped = Noto_Sans_Lao_Looped({
+  subsets: ['lao'],
+  variable: '--font-noto-sans-lao-looped',
   display: 'swap',
   weight: ['400', '500', '600', '700'],
 });
@@ -56,9 +62,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const fontVariables = [
     bodoni.variable,
-    notoSerifLao.variable,
     dmSans.variable,
     notoSansLao.variable,
+    notoSansLaoLooped.variable,
   ].join(' ');
 
   return (
