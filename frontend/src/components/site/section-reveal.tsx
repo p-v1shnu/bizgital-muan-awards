@@ -58,16 +58,25 @@ export function SectionReveal({ children }: { children: React.ReactNode }) {
     // 0 forever with its links still live underneath. This falls back to
     // reading the section's actual position once it has fully left the top
     // of the viewport, which needs no crossing and so has no such gap.
+    const checkPosition = () => {
+      if (el.getBoundingClientRect().bottom <= 0) reveal();
+    };
     let ticking = false;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(() => {
         ticking = false;
-        if (el.getBoundingClientRect().bottom <= 0) reveal();
+        checkPosition();
       });
     };
     window.addEventListener('scroll', onScroll, { passive: true });
+    // Also once up front: a scroll that happens before this effect has run —
+    // a hash link, a restored history position, a script-driven jump — can
+    // land the page already past the section with no 'scroll' event left to
+    // fire afterwards. Safe to check unconditionally, since a section that
+    // has not been reached yet always has bottom > 0 and stays untouched.
+    checkPosition();
 
     return () => {
       observer.disconnect();

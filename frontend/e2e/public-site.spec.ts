@@ -738,8 +738,10 @@ test('the pages tell a machine who these people are', async ({ page }) => {
 /**
  * A picture of a person is worth finding, and a picture nobody described is
  * invisible to an image search. Empty alt is right where the picture sits
- * inside a link that already names them — describing it there makes a screen
- * reader say the name twice — so the rule is about the ones standing alone.
+ * inside a link that already names them, or a button already labelled by its
+ * own aria-label (the highlight video's play button, over its own thumbnail)
+ * — describing it there too would make a screen reader say the name twice —
+ * so the rule is about the ones standing alone.
  *
  * The sweep is only as good as the pictures on the page: CI runs with no
  * object storage, so avatars and key visuals are absent there and this passes
@@ -753,7 +755,10 @@ test('every picture that stands alone says what it is', async ({ page }) => {
         .filter((image) => !image.getAttribute('alt'))
         .filter((image) => {
           const link = image.closest('a');
-          return !link || !(link.textContent ?? '').trim();
+          if (link && (link.textContent ?? '').trim()) return false;
+          const button = image.closest('button');
+          if (button && (button.getAttribute('aria-label') ?? '').trim()) return false;
+          return true;
         })
         .map((image) => image.getAttribute('src')?.slice(0, 80)),
     );
