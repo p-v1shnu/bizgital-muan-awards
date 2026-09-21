@@ -75,6 +75,7 @@ export interface Creator {
 
 export interface Judge {
   id: string;
+  slug: string;
   nameLo: string;
   nameEn: string | null;
   positionLo: string;

@@ -26,7 +26,9 @@ export class JudgesService {
     const perPage = query.perPage ?? 25;
     const where: Prisma.JudgeWhereInput = {
       deletedAt: null,
-      ...(query.q ? { OR: [{ nameLo: { contains: query.q } }, { nameEn: { contains: query.q } }] } : {}),
+      ...(query.q
+        ? { OR: [{ nameLo: { contains: query.q } }, { nameEn: { contains: query.q } }, { slug: { contains: query.q } }] }
+        : {}),
     };
 
     const [data, total] = await this.prisma.$transaction([
@@ -43,6 +45,8 @@ export class JudgesService {
   }
 
   async create(dto: CreateJudgeDto, actorId: string, ipAddress?: string) {
+    await this.assertSlugFree(dto.slug);
+
     const judge = await this.prisma.judge.create({ data: dto });
     await this.audit.log({
       userId: actorId,
@@ -58,6 +62,7 @@ export class JudgesService {
   async update(id: string, dto: UpdateJudgeDto, actorId: string, ipAddress?: string) {
     const before = await this.prisma.judge.findFirst({ where: { id, deletedAt: null } });
     if (!before) throw new NotFoundException('Judge not found');
+    if (dto.slug && dto.slug !== before.slug) await this.assertSlugFree(dto.slug);
 
     const after = await this.prisma.judge.update({ where: { id }, data: dto });
     await this.audit.log({
@@ -212,5 +217,10 @@ export class JudgesService {
       before: { judgeId: assignment.judgeId, nameLo: assignment.judge.nameLo },
       ipAddress,
     });
+  }
+
+  private async assertSlugFree(slug: string) {
+    const clash = await this.prisma.judge.findUnique({ where: { slug } });
+    if (clash) throw new ConflictException('That slug is already taken');
   }
 }

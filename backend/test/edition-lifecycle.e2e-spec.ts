@@ -408,11 +408,11 @@ describe('edition lifecycle', () => {
 
     it('reorders judges within one edition, and refuses another edition’s row', async () => {
       const people = await Promise.all(
-        ['ກຳມະການ ກ', 'ກຳມະການ ຂ'].map((nameLo) =>
+        ['ກຳມະການ ກ', 'ກຳມະການ ຂ'].map((nameLo, index) =>
           api(h)
             .post(path('/admin/judges'))
             .set(h.auth)
-            .send({ nameLo, positionLo: 'ຜູ້ຊ່ຽວຊານ' })
+            .send({ nameLo, slug: `judge-reorder-${index}`, positionLo: 'ຜູ້ຊ່ຽວຊານ' })
             .expect(201),
         ),
       );

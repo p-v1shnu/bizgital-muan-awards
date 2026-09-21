@@ -16,7 +16,7 @@ import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Judge } from '@/types/api';
-import { emptyToNull } from '@/lib/utils';
+import { emptyToNull, randomSlug, slugify } from '@/lib/utils';
 
 export default function JudgesPage() {
   const [term, setTerm] = useState('');
@@ -58,7 +58,7 @@ export default function JudgesPage() {
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
               <Input
                 className="pl-9"
-                placeholder="ຄົ້ນຫາຕາມຊື່…"
+                placeholder="ຄົ້ນຫາຕາມຊື່ ຫຼື slug…"
                 value={term}
                 onChange={(event) => {
                   setTerm(event.target.value);
@@ -91,7 +91,9 @@ export default function JudgesPage() {
                   <p className="truncate font-serif text-[15.5px] leading-tight text-ink">
                     {judge.nameLo}
                   </p>
-                  <p className="truncate text-[11.5px] text-ink-3">{judge.positionLo}</p>
+                  <p className="truncate text-[11.5px] text-ink-3">
+                    @{judge.slug} · {judge.positionLo}
+                  </p>
                 </div>
                 <div className="ml-auto flex items-center gap-2">
                   <Badge>{judge._count?.editions ?? 0} ປີ</Badge>
@@ -150,13 +152,23 @@ function JudgeDialog({
   judge: Judge | null;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState({
+  // A slug someone has to think up on the spot is exactly what slows down
+  // adding a name fast — so a new judge starts with one nobody had to type
+  // (see randomSlug), swapped for a real one derived from the name the
+  // moment that name gives up anything sluggable (see slugify). Editing an
+  // existing judge never does either — their slug already shows up as a
+  // URL, and quietly rewriting it here would break that link.
+  const [form, setForm] = useState(() => ({
     nameLo: judge?.nameLo ?? '',
     nameEn: judge?.nameEn ?? '',
+    slug: judge ? judge.slug : randomSlug('judge'),
     positionLo: judge?.positionLo ?? '',
     bioLo: judge?.bioLo ?? '',
-  });
+  }));
   const [avatarKey, setAvatarKey] = useState(judge?.avatarKey ?? null);
+  // Once the slug field itself has been typed into, the name no longer
+  // overwrites it — a deliberate edit should stick.
+  const [slugTouched, setSlugTouched] = useState(judge !== null);
   // Reset synchronously during render, not in an effect — the dialog element
   // (ui/dialog.tsx) never unmounts on close, only `.close()`s, so without
   // this, saving one judge and opening "add" again showed the one just
@@ -168,11 +180,21 @@ function JudgeDialog({
       setForm({
         nameLo: judge?.nameLo ?? '',
         nameEn: judge?.nameEn ?? '',
+        slug: judge ? judge.slug : randomSlug('judge'),
         positionLo: judge?.positionLo ?? '',
         bioLo: judge?.bioLo ?? '',
       });
       setAvatarKey(judge?.avatarKey ?? null);
+      setSlugTouched(judge !== null);
     }
+  }
+
+  function setNameLo(nameLo: string) {
+    setForm((f) => {
+      if (slugTouched) return { ...f, nameLo };
+      const derived = slugify(nameLo);
+      return { ...f, nameLo, slug: derived || f.slug };
+    });
   }
 
   const create = useApiMutation<Record<string, unknown>>('/admin/judges', 'POST', ['/admin/judges']);
@@ -206,6 +228,7 @@ function JudgeDialog({
             {
               nameLo: form.nameLo,
               nameEn: emptyToNull(form.nameEn),
+              slug: form.slug,
               positionLo: form.positionLo,
               bioLo: emptyToNull(form.bioLo),
               avatarKey: avatarKey ?? null,
@@ -215,10 +238,20 @@ function JudgeDialog({
         }}
       >
         <Field label="ຊື່ (ລາວ)">
+          <Input required value={form.nameLo} onChange={(event) => setNameLo(event.target.value)} />
+        </Field>
+        <Field
+          label="slug"
+          help={`ໜ້າໂປຣໄຟລ໌ — /judges/${form.slug || '…'} · ສ້າງໃຫ້ອັດຕະໂນມັດຈາກຊື່ ພິມແກ້ໄດ້ທຸກເວລາ`}
+        >
           <Input
             required
-            value={form.nameLo}
-            onChange={(event) => setForm({ ...form, nameLo: event.target.value })}
+            pattern="[a-z0-9\-]+"
+            value={form.slug}
+            onChange={(event) => {
+              setSlugTouched(true);
+              setForm({ ...form, slug: slugify(event.target.value) });
+            }}
           />
         </Field>
         <Field label="ຕຳແໜ່ງ / ອົງກອນ" help="ຂຶ້ນກ້ອງຊື່ໃນໜ້າປີ">

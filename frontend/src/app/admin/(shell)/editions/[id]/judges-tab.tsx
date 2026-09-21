@@ -12,6 +12,7 @@ import { EmptyState, ErrorNote, LoadingBlock } from '@/components/ui/feedback';
 import { Field, Input, Select } from '@/components/ui/field';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
+import { randomSlug } from '@/lib/utils';
 import type { Edition, EditionJudge, Judge, JudgeRole } from '@/types/api';
 
 export function JudgesTab({ edition }: { edition: Edition }) {
@@ -198,7 +199,9 @@ function PickJudgeDialog({
 
   function createAndAssign(role: JudgeRole) {
     create.mutate(
-      { nameLo: creating.nameLo, positionLo: creating.positionLo },
+      // A slug nobody has to think up on the spot — this flow is for
+      // speed, and a real one can be typed in later (see the note below).
+      { nameLo: creating.nameLo, slug: randomSlug('judge'), positionLo: creating.positionLo },
       {
         onSuccess: (judge) => {
           assign.mutate(
@@ -309,7 +312,7 @@ function PickJudgeDialog({
           </Button>
         </div>
         <p className="mt-2 text-[11px] text-ink-3">
-          ຮູບ ແລະ ປະຫວັດຫຍໍ້ ເພີ່ມພາຍຫຼັງໄດ້ທີ່ໜ້າ “ຄັງກຳມະການ”
+          ຮູບ, slug ແລະ ປະຫວັດຫຍໍ້ ເພີ່ມພາຍຫຼັງໄດ້ທີ່ໜ້າ “ຄັງກຳມະການ”
         </p>
       </div>
     </Dialog>

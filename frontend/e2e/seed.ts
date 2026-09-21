@@ -179,7 +179,7 @@ export default async function seed() {
 
   const judge = await api.post('admin/judges', {
     headers: auth,
-    data: { nameLo: 'ທ່ານ ສົມສັກ ພົມມະວົງ', positionLo: 'ຜູ້ອຳນວຍການ, Muan Media' },
+    data: { nameLo: 'ທ່ານ ສົມສັກ ພົມມະວົງ', slug: 'somsak-phommavong', positionLo: 'ຜູ້ອຳນວຍການ, Muan Media' },
   });
   const judgeId = (await judge.json()).data.id;
 
