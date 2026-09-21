@@ -259,7 +259,7 @@ export function CreatorCard({
         )}
       </div>
       <div className="px-3.5 pb-4 pt-3.5 text-center">
-        <p className="font-serif text-[17px] leading-tight text-ink">
+        <p className="font-serif text-[15px] leading-tight text-ink">
           <LaoText text={creator.nameLo} />
         </p>
         {creator.nameEn && <p className="mt-0.5 text-[11.5px] text-ink-3">{creator.nameEn}</p>}

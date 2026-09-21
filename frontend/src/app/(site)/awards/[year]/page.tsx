@@ -77,16 +77,22 @@ interface WinnerRowData {
   winner: { creator: { slug: string; nameLo: string; avatarKey: string | null } };
 }
 
-// A winner's card is one link, to the category's own page — where the
-// winner leads the nominee grid already marked out — rather than two
-// competing links (profile, category) fighting for the same width. That
-// freed width goes to the name; the category page one tap away is still
-// where the profile link lives.
-function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
+/** Matches the `id` the matching category's own `<details>` carries below. */
+function categoryAnchor(slug: string) {
+  return `cat-${slug}`;
+}
+
+// A winner's card is one link, to the matching category further down this
+// same page — a plain fragment link, not a route change. Landing inside a
+// closed <details> is a case browsers already handle on their own: they open
+// it and scroll it into view, no script needed, so the category one tap away
+// expands right where it lives instead of taking over the whole screen with
+// a near-duplicate page.
+function WinnerTile({ row }: { row: WinnerRowData }) {
   const { category, winner } = row;
   return (
-    <Link
-      href={`/awards/${editionSlug}/${category.slug}`}
+    <a
+      href={`#${categoryAnchor(category.slug)}`}
       className="stagger-item group relative flex min-w-0 items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-4 pr-10 transition-colors hover:border-ink-3"
     >
       <Avatar
@@ -96,7 +102,7 @@ function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: str
       />
       <div className="min-w-0">
         <p className="text-[10.5px] font-bold uppercase text-ink-3">{category.nameLo}</p>
-        <p className="truncate font-serif text-lg text-ink group-hover:underline">
+        <p className="truncate font-serif text-base text-ink group-hover:underline">
           <LaoText text={winner.creator.nameLo} />
         </p>
       </div>
@@ -104,7 +110,7 @@ function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: str
         className="absolute right-4 top-1/2 size-4 -translate-y-1/2 text-ink-3"
         aria-hidden
       />
-    </Link>
+    </a>
   );
 }
 
@@ -358,7 +364,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
         <Section eyebrow="ຜົນລາງວັນ" title="ຜູ້ຊະນະທຸກສາຂາ">
           <div className="grid gap-3">
             {winners.slice(0, WINNER_ROWS).map((row) => (
-              <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
+              <WinnerTile key={row.category.id} row={row} />
             ))}
           </div>
 
@@ -377,7 +383,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 <div className="overflow-hidden">
                   <div className="mt-3 grid gap-3">
                     {winners.slice(WINNER_ROWS).map((row) => (
-                      <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
+                      <WinnerTile key={row.category.id} row={row} />
                     ))}
                   </div>
                 </div>
@@ -442,7 +448,18 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   // height does the rest — <details> itself still controls
                   // open/close state, so keyboard support and the crawlable,
                   // no-JS fallback from PRD §7.6 are untouched.
-                  <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
+                  //
+                  // The id lives here, on a real (non-summary) child of the
+                  // <details>, rather than on the <details> itself — a
+                  // fragment link landing on the <details> element's own id
+                  // would not need opening (its summary is always visible),
+                  // but the browser's built-in "reveal hidden content" step
+                  // does open a closed <details> to show a descendant this
+                  // way, which is what the winner tiles above rely on.
+                  <div
+                    id={categoryAnchor(category.slug)}
+                    className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]"
+                  >
                     <div className="overflow-hidden">
                       <div className="border-t border-hairline px-5 py-5">
                         {/* A phone gets a swipeable strip rather than a column
