@@ -103,6 +103,9 @@ function SettingsForm({
     initial?.homeHighlightThumbnailKey ?? null,
   );
   const [highlightAutoplay, setHighlightAutoplay] = useState(initial?.homeHighlightAutoplay ?? false);
+  const [dividerPatternKey, setDividerPatternKey] = useState<string | null>(
+    initial?.dividerPatternKey ?? null,
+  );
   const [gallery, setGallery] = useState<string[]>(initial?.galleryImageKeys ?? []);
   const [socials, setSocials] = useState<Record<string, string>>(initial?.socialLinks ?? {});
   const [faq, setFaq] = useState<FaqItem[]>(initial?.faq ?? []);
@@ -184,6 +187,7 @@ function SettingsForm({
                 homeHighlightAutoplay: highlightAutoplay,
                 homeHighlightThumbnailKey: highlightThumbnailKey ?? null,
                 homeHighlightDescriptionLo: emptyToNull(form.homeHighlightDescriptionLo),
+                dividerPatternKey: dividerPatternKey ?? null,
               },
               { onSuccess: () => setSaved(true) },
             );
@@ -600,6 +604,25 @@ function SettingsForm({
                     onChange={(event) => setForm({ ...form, footerLocationLo: event.target.value })}
                   />
                 </Field>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader title="ລາຍເສັ້ນຂັ້ນລະຫວ່າງ section" />
+              <CardBody>
+                <Note>
+                  ຂຶ້ນເໜືອແຖບລຸ່ມສຸດຂອງທຸກໜ້າ ແລະ ໃນໜ້າຫຼັກ ກ່ອນສ່ວນ “ຜູ້ຊະນະລ່າສຸດ” —
+                  ອັບໂຫລດ PNG ພື້ນຫຼັງໂປ່ງໃສ 1 ໜ່ວຍລາຍທີ່ຂອບຊ້າຍ-ຂວາຕໍ່ກັນໄດ້ ລະບົບຈະຕໍ່ຄືນເອງອັດຕະໂນມັດ
+                  ບໍ່ວ່າຈໍໃດ · ຖ້າບໍ່ອັບໂຫລດ ຈະໃຊ້ລາຍຂັດແບບເດີມ
+                </Note>
+                <div className="mt-4">
+                  <ImageUpload
+                    hint="PNG ພື້ນຫຼັງໂປ່ງໃສ — ໜ່ວຍລາຍ 1 ຮອບ"
+                    folder="site"
+                    aspect="square"
+                    value={dividerPatternKey}
+                    onChange={setDividerPatternKey}
+                  />
+                </div>
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">

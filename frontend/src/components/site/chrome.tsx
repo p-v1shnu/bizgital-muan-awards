@@ -5,6 +5,7 @@ import { ArrowUpRight, Facebook, Instagram, Youtube } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MobileNav } from '@/components/site/mobile-nav';
 import type { NavItem } from '@/components/site/mobile-nav';
+import { PatternDivider } from '@/components/site/primitives';
 import { ScrollHeader } from '@/components/site/scroll-header';
 import { Watermark } from '@/components/site/watermark';
 import { tryGetPublic } from '@/lib/api/server';
@@ -95,7 +96,7 @@ export async function SiteHeader() {
               entirely on the narrowest phones, where the bar has to hold the
               button and the menu as well — the mark alone still identifies the
               site, and the link is labelled with the full name. */}
-          <span className="ml-2 hidden font-serif text-lg leading-none whitespace-nowrap text-ink min-[380px]:inline sm:hidden">
+          <span className="ml-2 hidden font-serif text-lg font-semibold leading-none whitespace-nowrap text-ink min-[380px]:inline sm:hidden">
             ມ່ວນອາວອດສ໌
           </span>
         </Link>
@@ -167,7 +168,7 @@ export async function SiteFooter() {
       {/* The woven divider from the design kit, which had been built and then
           used in exactly one place. Above the footer it appears on every page,
           which is what a section divider is for. */}
-      <div className="weave mt-24 h-3 border-y border-rule bg-panel-2" aria-hidden />
+      <PatternDivider imageKey={site?.dividerPatternKey} className="mt-24" />
       <footer className="relative overflow-hidden bg-ink text-[#e8e1d7]">
         <div className="foil h-[3px]" aria-hidden />
         {/* Whole mark, upper right, clear of the rule that crosses the bottom —

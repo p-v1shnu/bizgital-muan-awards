@@ -9,6 +9,55 @@ import { Watermark } from './watermark';
 import { imageUrl } from '@/lib/images';
 import type { Creator } from '@/types/api';
 
+/**
+ * The woven section divider (globals.css `weave`) is the built-in look;
+ * a team that uploads its own tile at /admin/site swaps it in here, tiled
+ * horizontally at this strip's own height so the tile's own width decides
+ * how many times it repeats — never stretched to fit (PRD §7.6 follow-up).
+ */
+export function PatternDivider({
+  imageKey,
+  className,
+}: {
+  imageKey?: string | null;
+  className?: string;
+}) {
+  const url = imageUrl(imageKey);
+  return url ? (
+    <div
+      className={cn('h-3 border-y border-rule bg-panel-2', className)}
+      style={{ backgroundImage: `url(${url})`, backgroundRepeat: 'repeat-x', backgroundSize: 'auto 100%' }}
+      aria-hidden
+    />
+  ) : (
+    <div className={cn('weave h-3 border-y border-rule bg-panel-2', className)} aria-hidden />
+  );
+}
+
+/**
+ * A Lao name can carry a trailing digit run (a disambiguating suffix, or
+ * test data like "ຄຣີເອເຕີທົດສອບ 22"). Left as one string inside a
+ * font-serif element, the digits render in Bodoni Moda — the only face in
+ * that stack with glyphs for them — while the Lao letters beside them fall
+ * through to Noto Sans Lao, so the two visibly clash. This keeps digits in
+ * the same face as the Lao text around them.
+ */
+export function LaoText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(\d+)/).map((part, i) =>
+        i % 2 === 1 ? (
+          <span key={i} style={{ fontFamily: 'var(--font-noto-sans-lao)' }}>
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 export function Section({
   eyebrow,
   title,
@@ -34,7 +83,7 @@ export function Section({
     <section
       id={id}
       className={cn(
-        'mx-auto max-w-6xl px-5 py-14 md:py-20',
+        'mx-auto max-w-6xl px-5 py-7 md:py-10',
         Heading === 'h1' && 'relative',
         className,
       )}
@@ -210,7 +259,9 @@ export function CreatorCard({
         )}
       </div>
       <div className="px-3.5 pb-4 pt-3.5 text-center">
-        <p className="font-serif text-[17px] leading-tight text-ink">{creator.nameLo}</p>
+        <p className="font-serif text-[17px] leading-tight text-ink">
+          <LaoText text={creator.nameLo} />
+        </p>
         {creator.nameEn && <p className="mt-0.5 text-[11.5px] text-ink-3">{creator.nameEn}</p>}
       </div>
     </div>

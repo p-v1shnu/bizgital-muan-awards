@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Facebook, Instagram, Youtube } from 'lucide-react';
 
-import { Avatar, EmptyNote, Section } from '@/components/site/primitives';
+import { Avatar, EmptyNote, LaoText, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { safeHttpUrl } from '@/lib/utils';
 import { apiPath, getPublicOrNotFound, tryGetPublic } from '@/lib/api/server';
@@ -80,7 +80,9 @@ export default async function CreatorPage({ params }: PageProps) {
             link that already names them — so it gets described. */}
         <Avatar creator={profile} size="lg" alt={profile.nameLo} />
         <div className="min-w-0">
-          <h1 className="font-serif text-4xl leading-tight text-ink">{profile.nameLo}</h1>
+          <h1 className="font-serif text-4xl leading-tight text-ink">
+            <LaoText text={profile.nameLo} />
+          </h1>
           {profile.nameEn && <p className="mt-1 text-[14px] text-ink-3">{profile.nameEn}</p>}
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-ink-2">
