@@ -5,7 +5,8 @@ import { getPublic } from '@/lib/api/server';
 interface SitemapFeed {
   editions: { slug: string; updatedAt: string; categories: string[] }[];
   creators: { slug: string; updatedAt: string }[];
-  judges: { slug: string; updatedAt: string }[];
+  /** Optional: absent when the API answering this build predates this field. */
+  judges?: { slug: string; updatedAt: string }[];
 }
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://muanawards.com').replace(/\/$/, '');
@@ -46,7 +47,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  const judgePages = feed.judges.map((judge) => ({
+  // Defensive, not just tidy: a build can reach a backend one deploy behind
+  // this frontend image (this field is newer than `creators`), and that
+  // backend's /sitemap-entries simply has no `judges` key yet.
+  const judgePages = (feed.judges ?? []).map((judge) => ({
     url: `${SITE}/judges/${judge.slug}`,
     lastModified: new Date(judge.updatedAt),
     changeFrequency: 'yearly' as const,
