@@ -139,7 +139,7 @@ export default async function SubmitPage() {
         </div>
 
         <aside className="rounded-[var(--radius-box)] border border-rule bg-panel-2 p-5 text-[13px] leading-relaxed text-ink-2">
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
+          <p className="text-[10.5px] font-bold uppercase text-ink-3">
             ຫຼັງຈາກສົ່ງແລ້ວ
           </p>
           <ol className="mt-3 space-y-2.5 font-sans-looped">

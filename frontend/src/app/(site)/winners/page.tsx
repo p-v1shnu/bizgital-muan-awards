@@ -63,7 +63,7 @@ export default async function WinnersPage() {
                   {shown.length === 0 ? (
                     <p className="mt-3 text-[13.5px] text-ink-3">ຍັງບໍ່ໄດ້ບັນທຶກຜູ້ຊະນະ</p>
                   ) : (
-                    <ul className="mt-4 grid gap-x-6 gap-y-3 sm:grid-cols-2">
+                    <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
                       {shown.map((category) => (
                         <li key={category.id}>
                           <Link
@@ -76,7 +76,7 @@ export default async function WinnersPage() {
                               className="transition-[transform,border-color] duration-200 group-hover:scale-105 group-hover:border-ink-3"
                             />
                             <div className="min-w-0">
-                              <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-ink-3">
+                              <p className="truncate text-[11px] font-bold uppercase text-ink-3">
                                 {category.nameLo}
                               </p>
                               <p className="truncate font-serif text-[19px] leading-tight text-ink group-hover:underline">

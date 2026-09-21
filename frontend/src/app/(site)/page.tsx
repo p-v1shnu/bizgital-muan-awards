@@ -178,7 +178,7 @@ export default async function HomePage() {
                 // highest thing in the hero and therefore the one sitting on the
                 // least-darkened part of the picture, and it is small pale text:
                 // the belt as well as the braces.
-                <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 bg-ink/25 px-3.5 py-1.5 text-[11px] font-bold tracking-[0.14em] text-brand-edge backdrop-blur-[2px]">
+                <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/35 bg-ink/25 px-3.5 py-1.5 text-[11px] font-bold text-brand-edge backdrop-blur-[2px]">
                   <Star className="size-3.5" aria-hidden />
                   {heroKicker}
                 </p>
@@ -275,7 +275,7 @@ export default async function HomePage() {
               className="flex flex-col justify-between rounded-[var(--radius-box)] border border-rule bg-panel p-6 transition-colors hover:border-ink-3"
             >
               <div>
-                <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
+                <p className="text-[10.5px] font-bold uppercase text-ink-3">
                   ຕະຫຼອດທຸກປີ
                 </p>
                 <p className="mt-2 font-serif text-2xl text-ink">ທຳນຽບຜູ້ຊະນະ</p>
@@ -295,7 +295,7 @@ export default async function HomePage() {
       <Section>
         <div className="grid gap-8 md:grid-cols-[1.1fr_1fr] md:items-center">
           <div>
-            <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
+            <p className="text-[10.5px] font-bold uppercase text-ink-3">
               ກ່ຽວກັບງານ
             </p>
             <h2 className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
@@ -358,7 +358,7 @@ export default async function HomePage() {
                     />
                   </div>
                   <div className="px-3.5 pb-4 pt-3.5">
-                    <p className="text-[10.5px] font-bold uppercase tracking-[0.08em] text-ink-3">
+                    <p className="text-[10.5px] font-bold uppercase text-ink-3">
                       {category.nameLo}
                     </p>
                     <p className="mt-1 font-serif text-lg leading-tight text-ink">
@@ -396,7 +396,7 @@ export default async function HomePage() {
           pages used to hold a copy each and had already drifted apart. */}
       <Section eyebrow="ຄວາມໂປ່ງໃສ" title="ລາງວັນນີ້ຕັດສິນແນວໃດ">
         {judgingSteps.length > 0 ? (
-          <ol className="grid gap-4 md:grid-cols-4">
+          <ol className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {judgingSteps.map((step, index) => {
               // The icons are the page's, not the team's — a step past the
               // fourth is numbered and framed the same, just without one.
@@ -428,17 +428,21 @@ export default async function HomePage() {
       {/* 7 — the timeline, which grows on its own every year */}
       {editions && editions.length > 0 && (
         <Section eyebrow="ຍ້ອນເບິ່ງ" title="ປີທີ່ຜ່ານມາ" className="bg-panel-2/50">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* This list only ever grows — one more year, every year — so a
+              phone gets a swipeable strip rather than a grid whose row count
+              has no ceiling. No JS: a scroll-snap row, sm: and up reverting
+              to the grid this already was. */}
+          <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-3">
             {editions.map((edition) => (
               <Link
                 key={edition.id}
                 href={`/awards/${edition.slug}`}
-                className="group stagger-item overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-colors hover:border-ink-3"
+                className="group stagger-item w-[78%] shrink-0 snap-start overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-colors hover:border-ink-3 sm:w-auto sm:shrink sm:snap-none"
               >
                 <div className="relative aspect-[16/9] overflow-hidden bg-panel-2">
                   <SiteImage
                     imageKey={edition.heroImageKey}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
+                    sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 380px"
                     className="transition-transform group-hover:scale-105"
                   />
                 </div>
@@ -590,7 +594,7 @@ function CurrentEditionCard({
   return (
     <div className="flex flex-col justify-between rounded-[var(--radius-box)] border border-brand-edge bg-panel p-6">
       <div>
-        <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-brand-deep">
+        <p className="text-[10.5px] font-bold uppercase text-brand-deep">
           {shown.eyebrow} · {edition.year}
         </p>
         <p className="mt-2 font-serif text-2xl text-ink">{shown.title}</p>
