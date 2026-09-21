@@ -115,7 +115,7 @@ export default async function CreatorPage({ params }: PageProps) {
         <p className="mt-8 max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">{profile.bioLo}</p>
       )}
 
-      <h2 className="mt-12 text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
+      <h2 className="mt-12 text-[10.5px] font-bold uppercase text-ink-3">
         ປະຫວັດການເຂົ້າຊີງ
       </h2>
 

@@ -81,7 +81,7 @@ function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: str
   const { category, winner } = row;
   return (
     <div className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-4 transition-colors hover:border-ink-3">
-      <p className="mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.14em] text-ink-3">
+      <p className="mb-2.5 text-[10.5px] font-bold uppercase text-ink-3">
         {category.nameLo}
       </p>
       <Link
@@ -353,7 +353,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
           what stands between them and the answer (PRD §6.1.2). */}
       {winners.length > 0 && (
         <Section eyebrow="ຜົນລາງວັນ" title="ຜູ້ຊະນະທຸກສາຂາ">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             {winners.slice(0, WINNER_ROWS).map((row) => (
               <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
             ))}
@@ -372,7 +372,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               </summary>
               <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
                 <div className="overflow-hidden">
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-3 grid grid-cols-2 gap-3">
                     {winners.slice(WINNER_ROWS).map((row) => (
                       <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
                     ))}
@@ -404,7 +404,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             <div key={group} className="mb-8 last:mb-0">
               {/* Only a year that fills groupLo in gets headings (PRD §7.6). */}
               {group && (
-                <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.18em] text-ink-3">
+                <h3 className="mb-3 text-[11px] font-bold uppercase text-ink-3">
                   {group}
                 </h3>
               )}
@@ -412,6 +412,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             {categories.map((category) => (
               <details
                 key={category.id}
+                name="edition-categories"
                 open={category.isFeatured}
                 className="group overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel"
               >
@@ -441,17 +442,30 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
                     <div className="overflow-hidden">
                       <div className="border-t border-hairline px-5 py-5">
-                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        {/* A phone gets a swipeable strip rather than a column
+                            of full-width cards stacked one at a time — this
+                            is where a category with a dozen nominees used to
+                            turn into a long scroll. `-mx-5 px-5` bleeds the
+                            strip to the section's own edge so the next card
+                            peeks in, matching the reference (Grammy.com); a
+                            plain no-JS scroll-snap row, so it costs nothing
+                            over the old grid, which is what sm: and up still
+                            is. */}
+                        <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-4">
                           {[...category.nominees]
                             // The winner leads the grid when there is one.
                             .sort((a, b) => Number(b.isWinner) - Number(a.isWinner))
                             .map((nominee) => (
-                              <CreatorCard
+                              <div
                                 key={nominee.id}
-                                creator={nominee.creator}
-                                isWinner={nominee.isWinner}
-                                href={`/creators/${nominee.creator.slug}`}
-                              />
+                                className="w-[78%] shrink-0 snap-start sm:w-auto sm:shrink sm:snap-none"
+                              >
+                                <CreatorCard
+                                  creator={nominee.creator}
+                                  isWinner={nominee.isWinner}
+                                  href={`/creators/${nominee.creator.slug}`}
+                                />
+                              </div>
                             ))}
                         </div>
                         <Link
@@ -498,7 +512,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 6 — the panel for this year */}
       {edition.judges.length > 0 && (
         <Section eyebrow="ຄະນະກຳມະການ" title="ຜູ້ຕັດສິນປີນີ້">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {edition.judges.map((judge) => (
               <div
                 key={judge.id}
@@ -535,7 +549,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
             const logoFrame = LOGO_SIZE[sponsors[0].tierLogoSize];
             return (
               <div key={tierId} className="mb-8 last:mb-0">
-                <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.2em] text-ink-3">
+                <p className="mb-3 text-[10.5px] font-bold uppercase text-ink-3">
                   {sponsors[0].tierNameLo}
                 </p>
                 <div className="flex flex-wrap items-center gap-3">

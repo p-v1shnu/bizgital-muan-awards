@@ -115,10 +115,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         <EmptyNote className="mt-10">ລາຍຊື່ຜູ້ເຂົ້າຊີງສາຂານີ້ຈະປະກາດພາຍຫຼັງ</EmptyNote>
       ) : (
         <>
-          <p className="mt-8 text-[12px] font-bold uppercase tracking-[0.16em] text-ink-3">
+          <p className="mt-8 text-[12px] font-bold uppercase text-ink-3">
             ຜູ້ເຂົ້າຊີງ {nominees.length} ຄົນ
           </p>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-3 grid grid-cols-2 gap-4 lg:grid-cols-4">
             {nominees.map((nominee) => (
               <CreatorCard
                 key={nominee.id}

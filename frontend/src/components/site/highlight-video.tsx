@@ -161,7 +161,7 @@ export function HighlightVideo({
               the same fix: the browser's Lao line-breaker doesn't know this
               brand name and splits it mid-syllable ("ມ່ວນອາວ / ອດສ໌")
               otherwise. */}
-          <p className="text-[10.5px] font-bold uppercase tracking-[0.22em] text-brand-edge">
+          <p className="text-[10.5px] font-bold uppercase text-brand-edge">
             ຈາກ<span className="whitespace-nowrap">ມ່ວນອາວອດສ໌</span>
           </p>
           <h2 className="mt-2 font-serif text-3xl leading-tight text-white md:text-4xl">

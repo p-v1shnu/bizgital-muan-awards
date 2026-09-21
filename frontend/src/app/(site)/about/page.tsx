@@ -51,7 +51,7 @@ function Channel({
         <Icon className="size-[18px]" />
       </span>
       <span className="min-w-0">
-        <span className="block text-[10.5px] font-bold uppercase tracking-[0.22em] text-ink-3">
+        <span className="block text-[10.5px] font-bold uppercase text-ink-3">
           {label}
         </span>
         <span
@@ -123,7 +123,7 @@ export default async function AboutPage() {
           pages, which is how they stop describing the process differently. */}
       <Section id="judging" eyebrow="ວິທີການຕັດສິນ" title="ຂັ້ນຕອນ" className="bg-panel-2/50">
         {judgingSteps.length > 0 ? (
-          <ol className="grid gap-4 md:grid-cols-2">
+          <ol className="grid grid-cols-2 gap-4">
             {judgingSteps.map((step, index) => (
               <li
                 key={`${index}-${step.titleLo}`}
