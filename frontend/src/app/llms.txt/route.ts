@@ -46,6 +46,7 @@ collected on their own page.
 - A year: \`${SITE}/awards/<year>\` — for example \`${SITE}/awards/2025\`
 - One award category in that year: \`${SITE}/awards/<year>/<category-slug>\`
 - One creator, across all years: \`${SITE}/creators/<creator-slug>\`
+- One judge, across all years they served on the panel: \`${SITE}/judges/<judge-slug>\`
 - \`${SITE}/awards/latest\` always redirects to the most recent published year.
 
 ${years.length ? `## Years published\n\n${years.map((year) => `- [${year}](${SITE}/awards/${year})`).join('\n')}\n` : ''}

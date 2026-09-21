@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Mail, Phone } from 'lucide-react';
+import { ChevronDown, Mail, Phone } from 'lucide-react';
 
 import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
 import { cn } from '@/lib/utils';
@@ -150,8 +150,12 @@ export default async function AboutPage() {
                 key={`${position}-${item.questionLo}`}
                 className="group border-b border-hairline last:border-b-0"
               >
-                <summary className="cursor-pointer list-none px-5 py-4 font-serif text-[19px] text-ink">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 font-serif text-[19px] text-ink">
                   {item.questionLo}
+                  <ChevronDown
+                    aria-hidden
+                    className="size-4 shrink-0 text-ink-3 transition-transform duration-200 group-open:rotate-180"
+                  />
                 </summary>
                 <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
                   <div className="overflow-hidden">

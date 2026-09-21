@@ -149,6 +149,7 @@ export class PublicSiteService {
       judges: judges.map((assignment) => ({
         id: assignment.id,
         role: assignment.role,
+        slug: assignment.judge.slug,
         nameLo: assignment.judge.nameLo,
         nameEn: assignment.judge.nameEn,
         positionLo: assignment.judge.positionLo,
@@ -366,6 +367,46 @@ export class PublicSiteService {
     };
   }
 
+  // ── judge profile ───────────────────────────────────────────
+
+  /**
+   * A judge's own page — one credential the panel section of a year page
+   * could only gesture at before. Only years the public may see (same rule
+   * as `creator`), so a judge's page cannot reveal a year nobody has
+   * announced yet.
+   */
+  async judge(slug: string) {
+    const judge = await this.prisma.judge.findFirst({
+      where: { slug, deletedAt: null },
+      include: {
+        editions: {
+          where: { edition: { phase: { in: VISIBLE } } },
+          include: { edition: true },
+        },
+      },
+    });
+    if (!judge) throw new NotFoundException('Judge not found');
+
+    return {
+      id: judge.id,
+      slug: judge.slug,
+      nameLo: judge.nameLo,
+      nameEn: judge.nameEn,
+      positionLo: judge.positionLo,
+      positionEn: judge.positionEn,
+      bioLo: judge.bioLo,
+      avatarKey: judge.avatarKey,
+      panels: judge.editions
+        .map((assignment) => ({
+          role: assignment.role,
+          year: assignment.edition.year,
+          editionSlug: assignment.edition.slug,
+          editionTitleLo: assignment.edition.titleLo,
+        }))
+        .sort((a, b) => b.year - a.year),
+    };
+  }
+
   /**
    * The running totals on the homepage. Counted from the data rather than
    * typed in, so they stay true when a year is added and nobody remembers to
@@ -397,6 +438,10 @@ export class PublicSiteService {
       where: { deletedAt: null, nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } } },
       select: { slug: true, updatedAt: true },
     });
+    const judges = await this.prisma.judge.findMany({
+      where: { deletedAt: null, editions: { some: { edition: { phase: { in: VISIBLE } } } } },
+      select: { slug: true, updatedAt: true },
+    });
 
     return {
       editions: editions.map((edition) => ({
@@ -405,6 +450,7 @@ export class PublicSiteService {
         categories: edition.categories.map((category) => category.slug),
       })),
       creators,
+      judges,
     };
   }
 

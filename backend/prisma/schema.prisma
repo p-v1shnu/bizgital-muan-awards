@@ -240,6 +240,7 @@ model Creator {
 
 model Judge {
   id     String  @id @default(cuid())
+  slug   String  @unique
   nameLo String
   nameEn String?
 

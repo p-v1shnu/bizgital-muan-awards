@@ -5,6 +5,7 @@ import { getPublic } from '@/lib/api/server';
 interface SitemapFeed {
   editions: { slug: string; updatedAt: string; categories: string[] }[];
   creators: { slug: string; updatedAt: string }[];
+  judges: { slug: string; updatedAt: string }[];
 }
 
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://muanawards.com').replace(/\/$/, '');
@@ -45,5 +46,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...editionPages, ...creatorPages];
+  const judgePages = feed.judges.map((judge) => ({
+    url: `${SITE}/judges/${judge.slug}`,
+    lastModified: new Date(judge.updatedAt),
+    changeFrequency: 'yearly' as const,
+    priority: 0.4,
+  }));
+
+  return [...staticPages, ...editionPages, ...creatorPages, ...judgePages];
 }

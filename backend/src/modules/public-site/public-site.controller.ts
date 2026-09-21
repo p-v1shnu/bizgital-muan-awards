@@ -115,6 +115,13 @@ export class PublicSiteController {
   }
 
   @Public()
+  @Get('judges/:slug')
+  @ApiOperation({ summary: 'A judge profile and the years they served on the panel' })
+  judge(@Param('slug') slug: string) {
+    return this.site.judge(slug);
+  }
+
+  @Public()
   @Get('sitemap-entries')
   @ApiOperation({ summary: 'Every public URL, for building sitemap.xml' })
   sitemap() {

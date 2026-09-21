@@ -9,7 +9,7 @@ import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { apiPath, getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
-import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd } from '@/lib/structured-data';
+import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd, siteUrl } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorLogoSize } from '@/types/api';
 import type { PublicEdition } from '@/types/public';
@@ -184,6 +184,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
           data={judgePanelJsonLd(edition, edition.judges.map((judge) => ({
             nameLo: judge.nameLo,
             nameEn: judge.nameEn,
+            profileUrl: siteUrl(`/judges/${judge.slug}`),
             avatarUrl: imageUrl(judge.avatarKey),
             positionLo: judge.positionLo,
             role: judge.role,
@@ -538,9 +539,10 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               centred card grid. */}
           <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             {edition.judges.map((judge) => (
-              <div
+              <Link
                 key={judge.id}
-                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 sm:flex-col sm:gap-0 sm:p-5 sm:text-center"
+                href={`/judges/${judge.slug}`}
+                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)] sm:flex-col sm:gap-0 sm:p-5 sm:text-center"
               >
                 <Avatar
                   creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }}
@@ -558,7 +560,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   </p>
                   <p className="mt-1 text-[12.5px] text-ink-3">{judge.positionLo}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </Section>

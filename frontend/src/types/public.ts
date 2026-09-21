@@ -72,6 +72,7 @@ export interface PublicEdition extends PublicEditionSummary {
   judges: {
     id: string;
     role: JudgeRole;
+    slug: string;
     nameLo: string;
     nameEn: string | null;
     positionLo: string;
@@ -113,6 +114,24 @@ export interface PublicProfile extends PublicCreator {
     categorySlug: string;
     categoryNameLo: string;
     isWinner: boolean;
+  }[];
+}
+
+/** A judge's own page — /judges/[slug]. */
+export interface PublicJudgeProfile {
+  id: string;
+  slug: string;
+  nameLo: string;
+  nameEn: string | null;
+  positionLo: string;
+  positionEn: string | null;
+  bioLo: string | null;
+  avatarKey: string | null;
+  panels: {
+    role: JudgeRole;
+    year: number;
+    editionSlug: string;
+    editionTitleLo: string;
   }[];
 }
 

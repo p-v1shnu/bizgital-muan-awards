@@ -20,6 +20,8 @@ interface PersonLike {
   nameLo: string;
   nameEn?: string | null;
   slug?: string;
+  /** This person's own page, when it is not a creator profile — a judge's, say. */
+  profileUrl?: string;
   avatarUrl?: string | null;
   socialLinks?: Record<string, string> | null;
 }
@@ -41,6 +43,7 @@ export function personJsonLd(person: PersonLike) {
   const sameAs = Object.values(person.socialLinks ?? {})
     .map(safeHttpUrl)
     .filter((url): url is string => Boolean(url));
+  const url = person.profileUrl ?? (person.slug ? siteUrl(`/creators/${person.slug}`) : undefined);
 
   return {
     '@type': 'Person',
@@ -49,7 +52,7 @@ export function personJsonLd(person: PersonLike) {
     // in English — "who won Muan Awards 2025" — has nothing to match against a
     // site written entirely in Lao script.
     ...(person.nameEn ? { alternateName: person.nameEn } : {}),
-    ...(person.slug ? { url: siteUrl(`/creators/${person.slug}`) } : {}),
+    ...(url ? { url } : {}),
     ...(person.avatarUrl ? { image: person.avatarUrl } : {}),
     ...(sameAs.length ? { sameAs } : {}),
   };
@@ -254,6 +257,34 @@ export function creatorJsonLd(creator: {
       '@type': 'Event',
       name: `Muan Awards ${appearance.year}`,
       url: siteUrl(`/awards/${appearance.editionSlug}/${appearance.categorySlug}`),
+      organizer: ORGANISER,
+    })),
+  };
+}
+
+export function judgeJsonLd(judge: {
+  nameLo: string;
+  nameEn: string | null;
+  slug: string;
+  positionLo: string;
+  bioLo: string | null;
+  avatarUrl: string | null;
+  panels: { year: number; editionSlug: string; editionTitleLo: string; role: string }[];
+}) {
+  return {
+    '@context': 'https://schema.org',
+    ...personJsonLd({
+      nameLo: judge.nameLo,
+      nameEn: judge.nameEn,
+      profileUrl: siteUrl(`/judges/${judge.slug}`),
+      avatarUrl: judge.avatarUrl,
+    }),
+    jobTitle: judge.positionLo,
+    ...(judge.bioLo ? { description: judge.bioLo } : {}),
+    subjectOf: judge.panels.map((panel) => ({
+      '@type': 'Event',
+      name: panel.editionTitleLo,
+      url: siteUrl(`/awards/${panel.editionSlug}`),
       organizer: ORGANISER,
     })),
   };

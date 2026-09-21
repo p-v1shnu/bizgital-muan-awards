@@ -8,12 +8,19 @@ import {
   IsInt,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
   ValidateNested,
 } from 'class-validator';
 
 export class CreateJudgeDto {
+  @ApiProperty({ example: 'somsak-phommavong' })
+  @IsString()
+  @Matches(/^[a-z0-9-]+$/, { message: 'slug may contain lowercase letters, numbers and dashes only' })
+  @MaxLength(80)
+  slug!: string;
+
   @ApiProperty({ example: 'ທ່ານ ສົມສັກ ພົມມະວົງ' })
   @IsString()
   @MinLength(1)
