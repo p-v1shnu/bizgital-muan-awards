@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
-import { ActionLink, Avatar, EmptyNote, Section } from '@/components/site/primitives';
+import { ActionLink, Avatar, EmptyNote, LaoText, Section } from '@/components/site/primitives';
 import { SiteImage } from '@/components/site/site-image';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
@@ -80,7 +80,7 @@ export default async function WinnersPage() {
                                 {category.nameLo}
                               </p>
                               <p className="truncate font-serif text-[19px] leading-tight text-ink group-hover:underline">
-                                {category.winner.nameLo}
+                                <LaoText text={category.winner.nameLo} />
                               </p>
                             </div>
                           </Link>

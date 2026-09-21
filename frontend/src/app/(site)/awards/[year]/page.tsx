@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { CalendarDays, ChevronDown, Clock, Eye, MapPin, Play } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronRight, Clock, Eye, MapPin, Play } from 'lucide-react';
 
-import { ActionLink, Avatar, CreatorCard, Placeholder, Section } from '@/components/site/primitives';
+import { ActionLink, Avatar, CreatorCard, LaoText, Placeholder, Section } from '@/components/site/primitives';
 import { Gallery } from '@/components/site/gallery';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
@@ -77,31 +77,34 @@ interface WinnerRowData {
   winner: { creator: { slug: string; nameLo: string; avatarKey: string | null } };
 }
 
+// A winner's card is one link, to the category's own page — where the
+// winner leads the nominee grid already marked out — rather than two
+// competing links (profile, category) fighting for the same width. That
+// freed width goes to the name; the category page one tap away is still
+// where the profile link lives.
 function WinnerTile({ row, editionSlug }: { row: WinnerRowData; editionSlug: string }) {
   const { category, winner } = row;
   return (
-    <div className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-4 transition-colors hover:border-ink-3">
-      <p className="mb-2.5 text-[10.5px] font-bold uppercase text-ink-3">
-        {category.nameLo}
-      </p>
-      <Link
-        href={`/creators/${winner.creator.slug}`}
-        className="group flex min-w-0 items-center gap-3 font-serif text-lg text-ink hover:underline"
-      >
-        <Avatar
-          creator={winner.creator}
-          size="md"
-          className="transition-[transform,border-color] duration-200 group-hover:scale-105 group-hover:border-ink-3"
-        />
-        <span className="truncate">{winner.creator.nameLo}</span>
-      </Link>
-      <Link
-        href={`/awards/${editionSlug}/${category.slug}`}
-        className="mt-2.5 inline-block text-[12.5px] text-brand-deep hover:underline"
-      >
-        ເບິ່ງຜູ້ເຂົ້າຊີງ →
-      </Link>
-    </div>
+    <Link
+      href={`/awards/${editionSlug}/${category.slug}`}
+      className="stagger-item group relative flex min-w-0 items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-4 pr-10 transition-colors hover:border-ink-3"
+    >
+      <Avatar
+        creator={winner.creator}
+        size="md"
+        className="shrink-0 transition-[transform,border-color] duration-200 group-hover:scale-105 group-hover:border-ink-3"
+      />
+      <div className="min-w-0">
+        <p className="text-[10.5px] font-bold uppercase text-ink-3">{category.nameLo}</p>
+        <p className="truncate font-serif text-lg text-ink group-hover:underline">
+          <LaoText text={winner.creator.nameLo} />
+        </p>
+      </div>
+      <ChevronRight
+        className="absolute right-4 top-1/2 size-4 -translate-y-1/2 text-ink-3"
+        aria-hidden
+      />
+    </Link>
   );
 }
 
@@ -353,7 +356,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
           what stands between them and the answer (PRD §6.1.2). */}
       {winners.length > 0 && (
         <Section eyebrow="ຜົນລາງວັນ" title="ຜູ້ຊະນະທຸກສາຂາ">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-3">
             {winners.slice(0, WINNER_ROWS).map((row) => (
               <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
             ))}
@@ -372,7 +375,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               </summary>
               <div className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]">
                 <div className="overflow-hidden">
-                  <div className="mt-3 grid grid-cols-2 gap-3">
+                  <div className="mt-3 grid gap-3">
                     {winners.slice(WINNER_ROWS).map((row) => (
                       <WinnerTile key={row.category.id} row={row} editionSlug={edition.slug} />
                     ))}
@@ -418,7 +421,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
               >
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4">
                   <div className="min-w-0">
-                    <h3 className="font-serif text-xl text-ink">{category.nameLo}</h3>
+                    <h3 className="font-serif text-base text-ink">{category.nameLo}</h3>
                     {category.descriptionLo && (
                       <p className="mt-0.5 font-sans-looped text-[13px] text-ink-2">{category.descriptionLo}</p>
                     )}
@@ -458,7 +461,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                             .map((nominee) => (
                               <div
                                 key={nominee.id}
-                                className="w-[78%] shrink-0 snap-start sm:w-auto sm:shrink sm:snap-none"
+                                className="w-[44%] shrink-0 snap-start sm:w-auto sm:shrink sm:snap-none"
                               >
                                 <CreatorCard
                                   creator={nominee.creator}
@@ -512,22 +515,32 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 6 — the panel for this year */}
       {edition.judges.length > 0 && (
         <Section eyebrow="ຄະນະກຳມະການ" title="ຜູ້ຕັດສິນປີນີ້">
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {/* One row per judge on a phone, matching the winner tiles above —
+              a 2-column grid here left wide empty margins beside a small
+              avatar and one or two lines of text. sm: and up restores the
+              centred card grid. */}
+          <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             {edition.judges.map((judge) => (
               <div
                 key={judge.id}
-                className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-5 text-center"
+                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 sm:flex-col sm:gap-0 sm:p-5 sm:text-center"
               >
-                <div className="flex justify-center">
-                  <Avatar creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }} alt={judge.nameLo} />
+                <Avatar
+                  creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }}
+                  alt={judge.nameLo}
+                  className="shrink-0"
+                />
+                <div className="min-w-0 sm:mt-3">
+                  {judge.role === 'CHAIR' && (
+                    <span className="mb-1 inline-block rounded-full border border-brand-edge bg-brand-soft px-2.5 py-0.5 text-[10.5px] font-bold text-brand-deep">
+                      ປະທານ
+                    </span>
+                  )}
+                  <p className="truncate font-serif text-[19px] leading-tight text-ink">
+                    <LaoText text={judge.nameLo} />
+                  </p>
+                  <p className="mt-1 text-[12.5px] text-ink-3">{judge.positionLo}</p>
                 </div>
-                {judge.role === 'CHAIR' && (
-                  <span className="mt-3 inline-block rounded-full border border-brand-edge bg-brand-soft px-2.5 py-0.5 text-[10.5px] font-bold text-brand-deep">
-                    ປະທານ
-                  </span>
-                )}
-                <p className="mt-2 font-serif text-[19px] leading-tight text-ink">{judge.nameLo}</p>
-                <p className="mt-1 text-[12.5px] text-ink-3">{judge.positionLo}</p>
               </div>
             ))}
           </div>
@@ -568,7 +581,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                     return (
                       <div
                         key={sponsor.id}
-                        className="inline-grid place-items-center rounded-[var(--radius-sm)] border border-rule bg-panel p-2"
+                        className="inline-grid place-items-center rounded-[var(--radius-sm)] border border-rule bg-white p-2"
                       >
                         {safeHttpUrl(sponsor.websiteUrl) ? (
                           <a href={safeHttpUrl(sponsor.websiteUrl) as string} target="_blank" rel="noreferrer">

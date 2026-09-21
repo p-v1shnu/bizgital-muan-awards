@@ -365,4 +365,12 @@ export class UpdateSiteSettingsDto {
   @IsString()
   @MaxLength(120)
   footerLocationLo?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Object storage key for a team-uploaded tile that replaces the built-in woven section divider, never a full URL; unset keeps the CSS pattern',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  dividerPatternKey?: string | null;
 }

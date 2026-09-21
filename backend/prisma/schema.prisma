@@ -557,6 +557,12 @@ model SiteSetting {
   /// The line beside the copyright in the footer. Where the organisation is,
   /// which is the kind of fact that changes without a developer being involved.
   footerLocationLo String?
+  /// A team-uploaded tile (object storage key, never a full URL) that replaces
+  /// the built-in CSS "weave" section divider — the strip above the footer on
+  /// every page, and above the homepage's "latest winners" section. Goes
+  /// through the same JPEG/PNG/WebP/AVIF upload pipeline as every other image
+  /// key on this model; unset keeps the CSS pattern.
+  dividerPatternKey String?
 
   updatedAt DateTime @updatedAt
 

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 'lucide-react';
 
-import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
+import { ActionLink, LaoText, PatternDivider, Placeholder, Section } from '@/components/site/primitives';
 import { CountUp } from '@/components/site/count-up';
 import { HighlightVideo } from '@/components/site/highlight-video';
 import { PhotoWall } from '@/components/site/photo-wall';
@@ -337,7 +337,7 @@ export default async function HomePage() {
       {/* 4 — the latest winners, which swap themselves when a new year announces */}
       {featuredWinners.length > 0 && latestWinners && (
         <>
-          <div className="weave h-3 border-y border-rule bg-panel-2" aria-hidden />
+          <PatternDivider imageKey={site?.dividerPatternKey} />
           <Section
             eyebrow={`ຜູ້ຊະນະປີ ${latestWinners.year}`}
             title="ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ"
@@ -362,7 +362,7 @@ export default async function HomePage() {
                       {category.nameLo}
                     </p>
                     <p className="mt-1 font-serif text-lg leading-tight text-ink">
-                      {category.winner.nameLo}
+                      <LaoText text={category.winner.nameLo} />
                     </p>
                     {category.winner.nameEn && (
                       <p className="mt-0.5 text-[11.5px] text-ink-3">{category.winner.nameEn}</p>

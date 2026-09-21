@@ -55,7 +55,7 @@ function Channel({
           {label}
         </span>
         <span
-          className="mt-1 block break-words font-serif text-[19px] leading-snug text-ink"
+          className="mt-1 block break-words font-sans text-[17px] leading-snug text-ink"
           dir="ltr"
         >
           {value}
