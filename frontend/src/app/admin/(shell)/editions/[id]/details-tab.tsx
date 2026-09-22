@@ -189,7 +189,8 @@ export function DetailsTab({ edition }: { edition: Edition }) {
           <GalleryEditor keys={gallery} onChange={setGallery} folder="editions" />
           <Note>
             ຮູບພວກນີ້ຂຶ້ນທ້າຍໜ້າປີ — ໃສ່ຫຼັງງານຈົບ · ຮູບຂອງໜ້າຫຼັກແຍກຕ່າງຫາກຢູ່ “ເນື້ອຫາເວັບສ່ວນກາງ” ·
-            ແນະນຳ 1200 × 900 px, ບໍ່ເກີນ 1.5MB ຕໍ່ຮູບ
+            ແນະນຳ 1200 × 900 px, ບໍ່ເກີນ 1.5MB ຕໍ່ຮູບ · ອັບໂຫລດໄດ້ສູງສຸດ 60 ຮູບ — ໜ້າປີສະແດງທຸກຮູບ
+            ບໍ່ຕັດ
           </Note>
         </CardBody>
       </Card>

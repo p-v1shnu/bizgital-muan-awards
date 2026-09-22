@@ -4,6 +4,7 @@ import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 
 
 import { ActionLink, LaoText, PatternDivider, Placeholder, Section } from '@/components/site/primitives';
 import { CountUp } from '@/components/site/count-up';
+import { Gallery } from '@/components/site/gallery';
 import { HighlightVideo } from '@/components/site/highlight-video';
 import { PhotoWall } from '@/components/site/photo-wall';
 import { INK_FALLBACK, SiteImage } from '@/components/site/site-image';
@@ -479,25 +480,11 @@ export default async function HomePage() {
       {/* 8 — the gallery the team curates by hand */}
       {gallery.length > 0 && (
         <Section eyebrow="ບັນຍາກາດ" title="ຄັງພາບ">
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-            {gallery.slice(0, 6).map((key) => (
-              <div
-                key={key}
-                className="group stagger-item relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-panel-2"
-              >
-                <SiteImage
-                  imageKey={key}
-                  alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌"
-                  sizes="(max-width: 768px) 50vw, 380px"
-                  className="transition-transform duration-500 group-hover:scale-[1.07]"
-                />
-                <div
-                  className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-                  aria-hidden
-                />
-              </div>
-            ))}
-          </div>
+          {/* Opens full-size in a lightbox on click, same as a year's own
+              gallery — a photo grid a visitor cannot tap through was the
+              one interactive-looking thing on the homepage that did
+              nothing. */}
+          <Gallery imageKeys={gallery.slice(0, 6)} alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌" />
 
           {/* Photos of a night belong to the year they were taken in, so the
               way through to the rest is that year's page, not a page here. */}
