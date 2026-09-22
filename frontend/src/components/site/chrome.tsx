@@ -69,8 +69,14 @@ export async function SiteHeader() {
     <ScrollHeader>
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-5 py-3">
         {/* The lockups are chosen per background, never recoloured with a CSS
-            filter (PRD §6.0.2) — the horizontal one already carries the name,
-            so the wordmark is not repeated in text beside it. */}
+            filter (PRD §6.0.2). One lockup everywhere from 380px up: it
+            already carries the name, and at 104px wide it is narrower than
+            the icon-plus-typed-name combination this replaced — switching to
+            it never costs a phone more header width than it already had.
+            Dropped entirely on the narrowest phones, where the bar has to
+            hold the CTA button and the menu as well — the icon alone still
+            identifies the site, and the link is labelled with the full
+            name. */}
         <Link href="/" className="flex items-center" aria-label="ມ່ວນອາວອດສ໌ · Muan Awards">
           <Image
             src="/brand/horizontal-black.png"
@@ -81,24 +87,16 @@ export async function SiteHeader() {
             width={104}
             height={32}
             priority
-            className="hidden h-8 w-auto sm:block"
+            className="hidden h-8 w-auto min-[380px]:block"
           />
           <Image
             src="/brand/brandmark-black.png"
-            alt=""
+            alt="ມ່ວນອາວອດສ໌"
             width={41}
             height={32}
             priority
-            className="h-8 w-auto sm:hidden"
+            className="h-8 w-auto min-[380px]:hidden"
           />
-          {/* Never wrapped: it is a name, and "ມ່ວນອາວ / ອດສ໌" across two lines
-              is what dragged the whole header onto a second line. Dropped
-              entirely on the narrowest phones, where the bar has to hold the
-              button and the menu as well — the mark alone still identifies the
-              site, and the link is labelled with the full name. */}
-          <span className="ml-2 hidden font-serif text-lg font-semibold leading-none whitespace-nowrap text-ink min-[380px]:inline sm:hidden">
-            ມ່ວນອາວອດສ໌
-          </span>
         </Link>
 
         <nav className="ml-auto flex items-center gap-1 text-[13px]">
