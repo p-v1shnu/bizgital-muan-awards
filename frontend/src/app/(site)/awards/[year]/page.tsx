@@ -601,16 +601,43 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                     ) : (
                       <span className="text-[13px] text-ink-2">{sponsor.name}</span>
                     );
+                    const websiteUrl = safeHttpUrl(sponsor.websiteUrl);
                     return (
                       <div
                         key={sponsor.id}
                         className="inline-grid place-items-center rounded-[var(--radius-sm)] border border-rule bg-white p-2"
                       >
-                        {safeHttpUrl(sponsor.websiteUrl) ? (
-                          <a href={safeHttpUrl(sponsor.websiteUrl) as string} target="_blank" rel="noreferrer">
+                        {websiteUrl ? (
+                          // Tapping this already leads to the sponsor's own
+                          // site, where the name is obvious — no tooltip
+                          // competing with that tap for a mobile visitor.
+                          <a href={websiteUrl} target="_blank" rel="noreferrer">
                             {inner}
                           </a>
+                        ) : sponsor.logoKey ? (
+                          // No site to click through to, so the logo is all
+                          // a visitor has — this reveals the name on hover
+                          // *and* on tap (`:focus`/`:active`, not just
+                          // `:hover`), since a phone has no hover state at
+                          // all to reveal it through otherwise.
+                          <button
+                            type="button"
+                            className="group/tip relative focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+                          >
+                            {inner}
+                            {/* Decorative only — the button's accessible name
+                                already comes from the logo's own alt text,
+                                so a screen reader must not read this too. */}
+                            <span
+                              aria-hidden="true"
+                              className="pointer-events-none absolute -top-2 left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-ink px-2 py-1 text-[11px] text-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,.2)] transition-opacity duration-150 group-hover/tip:opacity-100 group-focus/tip:opacity-100 group-active/tip:opacity-100"
+                            >
+                              {sponsor.name}
+                            </span>
+                          </button>
                         ) : (
+                          // No logo either — `inner` is already the name as
+                          // plain text, so there is nothing left to reveal.
                           inner
                         )}
                       </div>
