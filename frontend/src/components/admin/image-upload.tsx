@@ -132,6 +132,11 @@ export function ImageUpload({
             <Button type="button" size="sm" variant="danger" onClick={() => onChange(null)} disabled={busy}>
               <Trash2 className="size-3.5" /> ເອົາອອກ
             </Button>
+            {/* Shown here too, not just in the empty dropzone below — a field
+                that already has a picture (the common case once the team has
+                actually used the site) hid the recommended size entirely,
+                which is exactly when someone reaches for "ປ່ຽນຮູບ" and needs it. */}
+            {hint && <span className="text-[11px] text-ink-3">{hint}</span>}
           </div>
         </div>
       ) : (
