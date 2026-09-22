@@ -286,7 +286,7 @@ function CreatorDialog({
         <div className="mb-4">
           <ImageUpload
             label="ຮູບໂປຣໄຟລ໌"
-            hint="ຮູບຈະຖືກຕັດເປັນວົງມົນ"
+            hint="ຮູບຈະຖືກຕັດເປັນວົງມົນ · ແນະນຳ 800 × 800 px"
             folder="creators"
             aspect="square"
             value={avatarKey}

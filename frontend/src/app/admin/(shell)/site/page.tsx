@@ -380,7 +380,10 @@ function SettingsForm({
             <Card className="xl:col-span-2">
               <CardHeader title="ຄັງພາບໜ້າຫຼັກ" aside={`${gallery.length} ຮູບ`} />
               <CardBody>
-                <GalleryEditor keys={gallery} onChange={setGallery} folder="site" />
+                <Note>ແນະນຳ 1200 × 900 px, ບໍ່ເກີນ 1.5MB ຕໍ່ຮູບ</Note>
+                <div className="mt-3">
+                  <GalleryEditor keys={gallery} onChange={setGallery} folder="site" />
+                </div>
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">
@@ -436,7 +439,7 @@ function SettingsForm({
                   <div className="mt-4">
                     <ImageUpload
                       label="ພາບປົກວິດີໂອ"
-                      hint="ບໍ່ບັງຄັບ — ວິດີໂອ YouTube ຈະໃຊ້ພາບປົກຂອງ YouTube ເອງຖ້າບໍ່ໄດ້ອັບໂຫລດໄວ້ບ່ອນນີ້ ແຕ່ Facebook ຕ້ອງອັບໂຫລດ ບໍ່ດັ່ງນັ້ນຈະຂຶ້ນເປັນປຸ່ມ play ເປົ່າໆ"
+                      hint="ບໍ່ບັງຄັບ — ວິດີໂອ YouTube ຈະໃຊ້ພາບປົກຂອງ YouTube ເອງຖ້າບໍ່ໄດ້ອັບໂຫລດໄວ້ບ່ອນນີ້ ແຕ່ Facebook ຕ້ອງອັບໂຫລດ ບໍ່ດັ່ງນັ້ນຈະຂຶ້ນເປັນປຸ່ມ play ເປົ່າໆ · ແນະນຳ 1600 × 900 px ບໍ່ເກີນ 800KB (ຮູບນີ້ບໍ່ຖືກຫຍໍ້ໃຫ້ອັດຕະໂນມັດ)"
                       folder="site"
                       value={highlightThumbnailKey}
                       onChange={setHighlightThumbnailKey}
@@ -616,7 +619,7 @@ function SettingsForm({
                 </Note>
                 <div className="mt-4">
                   <ImageUpload
-                    hint="PNG ພື້ນຫຼັງໂປ່ງໃສ — ໜ່ວຍລາຍ 1 ຮອບ"
+                    hint="PNG ພື້ນຫຼັງໂປ່ງໃສ — ໜ່ວຍລາຍ 1 ຮອບ · ແນະນຳ 200–400 px ບໍ່ເກີນ 100KB (ບໍ່ຖືກຫຍໍ້ໃຫ້ອັດຕະໂນມັດ)"
                     folder="site"
                     aspect="square"
                     value={dividerPatternKey}

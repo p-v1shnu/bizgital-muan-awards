@@ -610,7 +610,7 @@ function SponsorDialog({
         <div className="mb-4">
           <ImageUpload
             label="ໂລໂກ້"
-            hint="PNG ພື້ນໃສ ຈະງາມທີ່ສຸດ"
+            hint="PNG ພື້ນໃສ ຈະງາມທີ່ສຸດ · ດ້ານຍາວສຸດປະມານ 600 px ກໍ່ພໍແລ້ວ (ໂລໂກ້ຂຶ້ນຈໍນ້ອຍຫຼາຍ)"
             folder="sponsors"
             value={logoKey}
             onChange={setLogoKey}
