@@ -483,8 +483,11 @@ export default async function HomePage() {
           {/* Opens full-size in a lightbox on click, same as a year's own
               gallery — a photo grid a visitor cannot tap through was the
               one interactive-looking thing on the homepage that did
-              nothing. */}
-          <Gallery imageKeys={gallery.slice(0, 6)} alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌" />
+              nothing. The grid itself still only features 6 — visibleCount
+              — but the full library goes in, so Next inside the lightbox
+              keeps paging through whatever the team uploaded beyond those
+              6 instead of looping back after them. */}
+          <Gallery imageKeys={gallery} alt="ບັນຍາກາດງານ ມ່ວນອາວອດສ໌" visibleCount={6} />
 
           {/* Photos of a night belong to the year they were taken in, so the
               way through to the rest is that year's page, not a page here. */}
