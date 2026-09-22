@@ -11,8 +11,24 @@ import { SiteImage } from './site-image';
  * linking anywhere — there is nowhere further to send a visitor from the
  * night's own photo set (unlike the homepage's curated preview, which links
  * onward to the year page these live on).
+ *
+ * `visibleCount` caps how many tiles the grid itself shows (the homepage
+ * only has room to feature a handful) without capping the set the lightbox
+ * can page through — Next/Prev keeps going past the last visible tile, all
+ * the way through whatever the team uploaded, rather than looping back
+ * after only the first few. Omit it where the grid already shows every
+ * photo (a year's own gallery) and there is nothing extra to reach.
  */
-export function Gallery({ imageKeys, alt }: { imageKeys: string[]; alt: string }) {
+export function Gallery({
+  imageKeys,
+  alt,
+  visibleCount,
+}: {
+  imageKeys: string[];
+  alt: string;
+  visibleCount?: number;
+}) {
+  const shown = imageKeys.slice(0, visibleCount ?? imageKeys.length);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const reduceMotion = useReducedMotion();
   const triggers = useRef<(HTMLButtonElement | null)[]>([]);
@@ -20,7 +36,10 @@ export function Gallery({ imageKeys, alt }: { imageKeys: string[]; alt: string }
 
   const close = () => {
     setOpenIndex((current) => {
-      if (current !== null) triggers.current[current]?.focus();
+      // `current` can point past the tiles actually rendered — Next/Prev
+      // reaches photos the grid never gave a trigger to. The nearest real
+      // trigger is the closest thing to "where this was opened from".
+      if (current !== null) triggers.current[Math.min(current, shown.length - 1)]?.focus();
       return null;
     });
   };
@@ -47,7 +66,7 @@ export function Gallery({ imageKeys, alt }: { imageKeys: string[]; alt: string }
   return (
     <>
       <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
-        {imageKeys.map((key, index) => (
+        {shown.map((key, index) => (
           <button
             key={key}
             ref={(el) => {
@@ -126,14 +145,26 @@ export function Gallery({ imageKeys, alt }: { imageKeys: string[]; alt: string }
             <AnimatePresence mode="wait">
               <motion.div
                 key={openIndex}
-                className="relative aspect-[4/3] max-h-full w-full max-w-3xl"
+                // Not aspect-[4/3] — that's the grid tile's own crop, right
+                // for a uniform wall of thumbnails but wrong for "view this
+                // photo full size": a portrait or 16:9 shot forced into a
+                // 4:3 box here would still be cropped, exactly what opening
+                // it was supposed to undo. object-contain below never
+                // crops regardless of the photo's own ratio; this box just
+                // bounds how large that letterboxes within.
+                className="relative h-[min(75vh,700px)] w-full max-w-3xl"
                 initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
                 transition={{ duration: reduceMotion ? 0 : 0.2 }}
                 onClick={(event) => event.stopPropagation()}
               >
-                <SiteImage imageKey={imageKeys[openIndex]} alt={alt} sizes="100vw" />
+                <SiteImage
+                  imageKey={imageKeys[openIndex]}
+                  alt={alt}
+                  sizes="100vw"
+                  className="object-contain"
+                />
               </motion.div>
             </AnimatePresence>
           </motion.div>
