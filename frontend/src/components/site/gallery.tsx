@@ -55,9 +55,20 @@ export function Gallery({ imageKeys, alt }: { imageKeys: string[]; alt: string }
             }}
             type="button"
             onClick={() => setOpenIndex(index)}
-            className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2"
+            className="group relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-panel-2"
           >
-            <SiteImage imageKey={key} alt={alt} sizes="(max-width: 768px) 50vw, 380px" />
+            <SiteImage
+              imageKey={key}
+              alt={alt}
+              sizes="(max-width: 768px) 50vw, 380px"
+              className="transition-transform duration-500 group-hover:scale-[1.07]"
+            />
+            {/* The only visible cue this tile opens something — a plain grid
+                gives a mouse user no other reason to expect a click here. */}
+            <div
+              className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-ink/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+              aria-hidden
+            />
           </button>
         ))}
       </div>

@@ -407,7 +407,11 @@ function SettingsForm({
             <Card className="xl:col-span-2">
               <CardHeader title="ຄັງພາບໜ້າຫຼັກ" aside={`${gallery.length} ຮູບ`} />
               <CardBody>
-                <Note>ແນະນຳ 1200 × 900 px, ບໍ່ເກີນ 1.5MB ຕໍ່ຮູບ</Note>
+                <Note>
+                  ແນະນຳ 1200 × 900 px, ບໍ່ເກີນ 1.5MB ຕໍ່ຮູບ · ອັບໂຫລດໄດ້ສູງສຸດ 24 ຮູບ — ແຕ່ໜ້າຫຼັກໃຊ້
+                  ພຽງ 8 ຮູບທຳອິດ (ຮູບເລື່ອນອັດຕະໂນມັດ) ແລະ 6 ຮູບທຳອິດ (ຄັງພາບລຸ່ມສຸດ) ຕາມລຳດັບທີ່ຈັດໄວ້
+                  — ຮູບທີ່ເຫຼືອຍັງເກັບໄວ້ໃນຄັງ ແຕ່ບໍ່ຂຶ້ນ ຈົນກວ່າຈະຍ້າຍລຳດັບຂຶ້ນມາ
+                </Note>
                 <div className="mt-3">
                   <GalleryEditor keys={gallery} onChange={setGallery} folder="site" />
                 </div>
