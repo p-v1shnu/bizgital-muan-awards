@@ -533,23 +533,23 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 6 — the panel for this year */}
       {edition.judges.length > 0 && (
         <Section eyebrow="ຄະນະກຳມະການ" title="ຜູ້ຕັດສິນປີນີ້">
-          {/* One row per judge on a phone, matching the winner tiles above —
-              a 2-column grid here left wide empty margins beside a small
-              avatar and one or two lines of text. sm: and up restores the
-              centred card grid. */}
+          {/* One row per judge on a phone, matching the winner tiles above.
+              sm: and up switches to a photo-forward card — the same visual
+              weight the nominee grid beside it gives each entry, rather than
+              a small circular avatar adrift in a wide column. */}
           <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
             {edition.judges.map((judge) => (
               <Link
                 key={judge.id}
                 href={`/judges/${judge.slug}`}
-                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)] sm:flex-col sm:gap-0 sm:p-5 sm:text-center"
+                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink-3 sm:block sm:overflow-hidden sm:border-0 sm:bg-panel sm:p-0 sm:shadow-[0_1px_2px_rgba(20,14,10,.05),0_1px_10px_rgba(20,14,10,.04)] sm:hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)]"
               >
                 <Avatar
                   creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }}
                   alt={judge.nameLo}
-                  className="shrink-0"
+                  className="shrink-0 sm:hidden"
                 />
-                <div className="min-w-0 sm:mt-3">
+                <div className="min-w-0 sm:hidden">
                   {judge.role === 'CHAIR' && (
                     <span className="mb-1 inline-block rounded-full border border-brand-edge bg-brand-soft px-2.5 py-0.5 text-[10.5px] font-bold text-brand-deep">
                       ປະທານ
@@ -559,6 +559,27 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                     <LaoText text={judge.nameLo} />
                   </p>
                   <p className="mt-1 text-[12.5px] text-ink-3">{judge.positionLo}</p>
+                </div>
+
+                <div className="hidden sm:block">
+                  <div className="relative aspect-square overflow-hidden bg-panel-2">
+                    <SiteImage
+                      imageKey={judge.avatarKey}
+                      alt={judge.nameLo}
+                      sizes="(max-width: 1024px) 50vw, 25vw"
+                    />
+                    {judge.role === 'CHAIR' && (
+                      <span className="absolute bottom-2.5 left-2.5 rounded-full bg-brand-deep px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_1px_4px_rgba(0,0,0,.25)]">
+                        ປະທານ
+                      </span>
+                    )}
+                  </div>
+                  <div className="px-3.5 pb-4 pt-3.5 text-center">
+                    <p className="truncate font-serif text-[15px] leading-tight text-ink">
+                      <LaoText text={judge.nameLo} />
+                    </p>
+                    <p className="mt-0.5 truncate text-[11.5px] text-ink-3">{judge.positionLo}</p>
+                  </div>
                 </div>
               </Link>
             ))}
