@@ -325,11 +325,16 @@ export default async function HomePage() {
       {/* What a "creator" means here — team feedback that the section above
           alone left visitors unclear on who the awards are actually for.
           Text only, on purpose: the section right above it already carries
-          the event's own photos, and a definition is read, not looked at. */}
-      <Section
-        eyebrow="ຄຣີເອເຕີ"
-        title={site?.creatorDefinitionTitleLo || 'ຄຣີເອເຕີຂອງມ່ວນອາວອດສ໌ແມ່ນຫຍັງ?'}
-      >
+          the event's own photos, and a definition is read, not looked at.
+          Header built by hand rather than via Section's eyebrow/title props,
+          to carry the same foil underline as the band right above it —
+          Section's own header never draws one. */}
+      <Section>
+        <p className="text-[10.5px] font-bold uppercase text-ink-3">ຄຣີເອເຕີ</p>
+        <h2 className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
+          {site?.creatorDefinitionTitleLo || 'ຄຣີເອເຕີຂອງມ່ວນອາວອດສ໌ແມ່ນຫຍັງ?'}
+        </h2>
+        <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
         <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">
           {site?.creatorDefinitionBodyLo || (
             <Placeholder>ນິຍາມຄຣີເອເຕີ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
