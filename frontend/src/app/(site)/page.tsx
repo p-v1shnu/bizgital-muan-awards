@@ -322,6 +322,21 @@ export default async function HomePage() {
         </div>
       </Section>
 
+      {/* What a "creator" means here — team feedback that the section above
+          alone left visitors unclear on who the awards are actually for.
+          Text only, on purpose: the section right above it already carries
+          the event's own photos, and a definition is read, not looked at. */}
+      <Section
+        eyebrow="ຄຣີເອເຕີ"
+        title={site?.creatorDefinitionTitleLo || 'ຄຣີເອເຕີຂອງມ່ວນອາວອດສ໌ແມ່ນຫຍັງ?'}
+      >
+        <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">
+          {site?.creatorDefinitionBodyLo || (
+            <Placeholder>ນິຍາມຄຣີເອເຕີ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+          )}
+        </p>
+      </Section>
+
       {/* A team-set video, independent of any year — a recap, a highlight
           reel, whatever they want to show (PRD §6.0.3). Absent entirely with
           nothing set, rather than an empty section. */}

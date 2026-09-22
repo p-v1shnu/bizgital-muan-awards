@@ -236,6 +236,18 @@ export class UpdateSiteSettingsDto {
   @MaxLength(2000)
   aboutSummaryLo?: string;
 
+  @ApiPropertyOptional({ description: 'Heading of the homepage "what is a creator" section' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  creatorDefinitionTitleLo?: string;
+
+  @ApiPropertyOptional({ description: 'Body of the homepage "what is a creator" section' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  creatorDefinitionBodyLo?: string | null;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
