@@ -533,32 +533,36 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
       {/* 6 — the panel for this year */}
       {edition.judges.length > 0 && (
         <Section eyebrow="ຄະນະກຳມະການ" title="ຜູ້ຕັດສິນປີນີ້">
-          {/* One row per judge on a phone, matching the winner tiles above —
-              a 2-column grid here left wide empty margins beside a small
-              avatar and one or two lines of text. sm: and up restores the
-              centred card grid. */}
-          <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+          {/* A row per judge — a photo left, name and position right —
+              at every width. sm: and up just scales the photo and the
+              padding up, rather than a small circular avatar adrift in a
+              wide column. Two columns even on a wide screen: a judge's
+              panel rarely runs past a handful of names, and a third or
+              fourth column left the row feeling stretched. */}
+          <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 sm:gap-4">
             {edition.judges.map((judge) => (
               <Link
                 key={judge.id}
                 href={`/judges/${judge.slug}`}
-                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)] sm:flex-col sm:gap-0 sm:p-5 sm:text-center"
+                className="stagger-item flex items-center gap-3 rounded-[var(--radius-box)] border border-rule bg-panel p-3.5 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-ink-3 hover:shadow-[0_2px_4px_rgba(20,14,10,.08),0_4px_18px_rgba(20,14,10,.07)] sm:gap-4 sm:p-5"
               >
-                <Avatar
-                  creator={{ nameLo: judge.nameLo, avatarKey: judge.avatarKey }}
-                  alt={judge.nameLo}
-                  className="shrink-0"
-                />
-                <div className="min-w-0 sm:mt-3">
+                <div className="relative size-16 shrink-0 overflow-hidden rounded-[20%] border border-rule bg-panel-2 sm:size-24">
+                  <SiteImage
+                    imageKey={judge.avatarKey}
+                    alt={judge.nameLo}
+                    sizes="(max-width: 640px) 64px, 96px"
+                  />
+                </div>
+                <div className="min-w-0">
                   {judge.role === 'CHAIR' && (
                     <span className="mb-1 inline-block rounded-full border border-brand-edge bg-brand-soft px-2.5 py-0.5 text-[10.5px] font-bold text-brand-deep">
                       ປະທານ
                     </span>
                   )}
-                  <p className="truncate font-serif text-[19px] leading-tight text-ink">
+                  <p className="truncate font-serif text-[19px] leading-tight text-ink sm:text-[20px]">
                     <LaoText text={judge.nameLo} />
                   </p>
-                  <p className="mt-1 text-[12.5px] text-ink-3">{judge.positionLo}</p>
+                  <p className="mt-1 text-[12.5px] text-ink-3 sm:text-[13px]">{judge.positionLo}</p>
                 </div>
               </Link>
             ))}
