@@ -272,6 +272,7 @@ function JudgeDialog({
         <div className="mb-4">
           <ImageUpload
             label="ຮູບໂປຣໄຟລ໌"
+            hint="ຮູບຈະຖືກຕັດເປັນວົງມົນ · ແນະນຳ 800 × 800 px"
             folder="judges"
             aspect="square"
             value={avatarKey}
