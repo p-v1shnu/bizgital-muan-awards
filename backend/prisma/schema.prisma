@@ -460,6 +460,15 @@ model SiteSetting {
   aboutTitleLo     String  @default("ມ່ວນອາວອດສ໌ ຄືຫຍັງ")
   aboutSummaryLo   String  @db.Text
   aboutSummaryEn   String? @db.Text
+  /// Heading of the homepage section explaining what a Muan Awards
+  /// "creator" is, added after the "ກ່ຽວກັບງານ" band alone left visitors
+  /// unclear on who the awards are actually for. Same hardcode-then-ask
+  /// shape as aboutTitleLo above.
+  creatorDefinitionTitleLo String  @default("ຄຣີເອເຕີຂອງມ່ວນອາວອດສ໌ແມ່ນຫຍັງ?")
+  /// Body of the section above. Nullable rather than defaulted — unlike the
+  /// title, there is no existing copy to preserve, so the page shows an
+  /// explicit placeholder until the team writes this.
+  creatorDefinitionBodyLo  String? @db.Text
   /// Heading + body of the homepage's closing call-to-action, just above the
   /// "ສົ່ງລາຍຊື່" button. Same story again.
   ctaTitleLo       String  @default("ຢາກສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກບໍ່?")

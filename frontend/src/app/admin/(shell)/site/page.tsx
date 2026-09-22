@@ -85,6 +85,8 @@ function SettingsForm({
     brandStatementLo: initial?.brandStatementLo ?? '',
     aboutTitleLo: initial?.aboutTitleLo ?? '',
     aboutSummaryLo: initial?.aboutSummaryLo ?? '',
+    creatorDefinitionTitleLo: initial?.creatorDefinitionTitleLo ?? '',
+    creatorDefinitionBodyLo: initial?.creatorDefinitionBodyLo ?? '',
     aboutHistoryLo: initial?.aboutHistoryLo ?? '',
     ctaTitleLo: initial?.ctaTitleLo ?? '',
     ctaBodyLo: initial?.ctaBodyLo ?? '',
@@ -164,6 +166,8 @@ function SettingsForm({
                 brandStatementLo: form.brandStatementLo,
                 aboutTitleLo: form.aboutTitleLo,
                 aboutSummaryLo: form.aboutSummaryLo,
+                creatorDefinitionTitleLo: form.creatorDefinitionTitleLo,
+                creatorDefinitionBodyLo: emptyToNull(form.creatorDefinitionBodyLo),
                 aboutHistoryLo: emptyToNull(form.aboutHistoryLo),
                 ctaTitleLo: form.ctaTitleLo,
                 ctaBodyLo: form.ctaBodyLo,
@@ -237,6 +241,29 @@ function SettingsForm({
                     className="min-h-32"
                     value={form.aboutSummaryLo}
                     onChange={(event) => setForm({ ...form, aboutSummaryLo: event.target.value })}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader title="ຂໍ້ຄວາມສ່ວນ “ຄຣີເອເຕີແມ່ນຫຍັງ”" />
+              <CardBody>
+                <Field label="ຫົວຂໍ້" help="ຫົວຂໍ້ໃຫຍ່ຂອງສ່ວນອະທິບາຍນິຍາມຄຣີເອເຕີ ຂຶ້ນຫຼັງສ່ວນ “ກ່ຽວກັບງານ”">
+                  <Input
+                    required
+                    value={form.creatorDefinitionTitleLo}
+                    onChange={(event) =>
+                      setForm({ ...form, creatorDefinitionTitleLo: event.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="ຄຳອະທິບາຍ" hint="— ບໍ່ບັງຄັບ" help="ນິຍາມວ່າ “ຄຣີເອເຕີ” ຂອງມ່ວນອາວອດສ໌ແມ່ນໃຜ">
+                  <Textarea
+                    className="min-h-32"
+                    value={form.creatorDefinitionBodyLo}
+                    onChange={(event) =>
+                      setForm({ ...form, creatorDefinitionBodyLo: event.target.value })
+                    }
                   />
                 </Field>
               </CardBody>

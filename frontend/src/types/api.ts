@@ -205,6 +205,10 @@ export interface SiteSettings {
   brandStatementLo: string;
   aboutTitleLo: string;
   aboutSummaryLo: string;
+  /** Heading of the homepage "what is a creator" section. */
+  creatorDefinitionTitleLo: string;
+  /** Body of the section above. Null until the team writes it. */
+  creatorDefinitionBodyLo: string | null;
   ctaTitleLo: string;
   ctaBodyLo: string;
   galleryImageKeys: string[] | null;
