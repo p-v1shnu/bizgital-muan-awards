@@ -1,10 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion, type PanInfo } from 'motion/react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 import { SiteImage } from './site-image';
+
+// A quick flick with little travel should swipe just as reliably as a slow
+// drag all the way across — weighting offset by velocity (the standard
+// Framer Motion carousel formula) catches both, rather than picking one
+// fixed distance threshold that's wrong for the other case.
+const SWIPE_THRESHOLD = 10000;
+function swipePower(offset: number, velocity: number) {
+  return Math.abs(offset) * velocity;
+}
 
 /**
  * A grid of event photos that opens full-size in a lightbox instead of
@@ -30,6 +39,10 @@ export function Gallery({
 }) {
   const shown = imageKeys.slice(0, visibleCount ?? imageKeys.length);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // Which way the slide should animate from — set by whichever of
+  // button/keyboard/swipe triggered the change, so all three feel like the
+  // same gesture instead of swipe sliding while the buttons merely fade.
+  const [direction, setDirection] = useState(1);
   const reduceMotion = useReducedMotion();
   const triggers = useRef<(HTMLButtonElement | null)[]>([]);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -44,6 +57,17 @@ export function Gallery({
     });
   };
 
+  const go = (delta: 1 | -1) => {
+    setDirection(delta);
+    setOpenIndex((i) => (i === null ? i : (i + delta + imageKeys.length) % imageKeys.length));
+  };
+
+  const onDragEnd = (_event: unknown, info: PanInfo) => {
+    const power = swipePower(info.offset.x, info.velocity.x);
+    if (power < -SWIPE_THRESHOLD) go(1);
+    else if (power > SWIPE_THRESHOLD) go(-1);
+  };
+
   // Same pattern as MobileNav: Escape closes it and hands focus back to the
   // thumbnail that opened it, so focus is never left on an element that just
   // left the screen. Arrow keys page through the set without closing it.
@@ -52,12 +76,8 @@ export function Gallery({
     closeButton.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') close();
-      if (event.key === 'ArrowRight') {
-        setOpenIndex((i) => (i === null ? i : (i + 1) % imageKeys.length));
-      }
-      if (event.key === 'ArrowLeft') {
-        setOpenIndex((i) => (i === null ? i : (i - 1 + imageKeys.length) % imageKeys.length));
-      }
+      if (event.key === 'ArrowRight') go(1);
+      if (event.key === 'ArrowLeft') go(-1);
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
@@ -122,7 +142,7 @@ export function Gallery({
                   aria-label="ຮູບກ່ອນໜ້າ"
                   onClick={(event) => {
                     event.stopPropagation();
-                    setOpenIndex((i) => (i === null ? i : (i - 1 + imageKeys.length) % imageKeys.length));
+                    go(-1);
                   }}
                   className="absolute left-4 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
                 >
@@ -133,7 +153,7 @@ export function Gallery({
                   aria-label="ຮູບຕໍ່ໄປ"
                   onClick={(event) => {
                     event.stopPropagation();
-                    setOpenIndex((i) => (i === null ? i : (i + 1) % imageKeys.length));
+                    go(1);
                   }}
                   className="absolute right-4 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
                 >
@@ -149,7 +169,7 @@ export function Gallery({
                 for the fade's duration instead of sitting on top of each
                 other. */}
             <div className="relative h-[min(75vh,700px)] w-full max-w-3xl">
-              <AnimatePresence initial={false}>
+              <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={openIndex}
                   // Not aspect-[4/3] — that's the grid tile's own crop,
@@ -164,19 +184,38 @@ export function Gallery({
                   // Crossfades (both slides visible at once, briefly)
                   // instead of the old exit-then-enter sequence, which made
                   // Next/Prev feel like it queued up and lagged behind taps
-                  // when pressed more than once in quick succession.
-                  className="absolute inset-0"
-                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
+                  // when pressed more than once in quick succession. The
+                  // slide direction (custom={direction}) makes buttons,
+                  // arrow keys and touch swipes all animate the same way,
+                  // rather than swipes sliding while the others merely fade.
+                  className="absolute inset-0 touch-pan-y"
+                  custom={direction}
+                  variants={{
+                    enter: (dir: number) => ({
+                      x: reduceMotion ? 0 : dir * 60,
+                      opacity: 0,
+                    }),
+                    center: { x: 0, opacity: 1 },
+                    exit: (dir: number) => ({
+                      x: reduceMotion ? 0 : dir * -60,
+                      opacity: 0,
+                    }),
+                  }}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
                   transition={{ duration: reduceMotion ? 0 : 0.2 }}
+                  drag={imageKeys.length > 1 ? 'x' : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={1}
+                  onDragEnd={onDragEnd}
                   onClick={(event) => event.stopPropagation()}
                 >
                   <SiteImage
                     imageKey={imageKeys[openIndex]}
                     alt={alt}
                     sizes="100vw"
-                    className="object-contain"
+                    className="pointer-events-none object-contain"
                   />
                 </motion.div>
               </AnimatePresence>
