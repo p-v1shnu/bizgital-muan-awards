@@ -453,8 +453,16 @@ export default async function HomePage() {
               phone gets a swipeable strip rather than a grid whose row count
               has no ceiling. No JS: a scroll-snap row, sm: and up reverting
               to the grid this already was. Scrollbar hidden — a peek-and-
-              swipe carousel, not a scroll list. */}
-          <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-3 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              swipe carousel, not a scroll list.
+
+              `scroll-pl-5` matches the `px-5` gutter for a different reason:
+              a snap container's own padding is not itself a valid resting
+              scroll position for `scroll-snap-align: start` — the first
+              card's snap point pulled scrollLeft past it on load, eating the
+              whole left gutter and landing the first card flush against the
+              screen edge. `scroll-padding` is what the snap algorithm
+              actually consults for how much edge space to leave alone. */}
+          <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-pl-5 px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:scroll-pl-0 sm:px-0 sm:py-0 lg:grid-cols-3 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {editions.map((edition) => (
               <Link
                 key={edition.id}
