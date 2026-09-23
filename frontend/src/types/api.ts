@@ -170,6 +170,10 @@ export interface FaqItem {
 export interface JudgingStep {
   titleLo: string;
   bodyLo: string;
+  /** A preset icon key (see lib/judging-step-icons.ts) — ignored once iconImageKey is set. */
+  iconName?: string | null;
+  /** Object storage key for a team-uploaded PNG icon, never a full URL — takes priority over iconName when set. */
+  iconImageKey?: string | null;
 }
 
 /**

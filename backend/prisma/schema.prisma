@@ -530,14 +530,21 @@ model SiteSetting {
   /// Nullable: /about shows a placeholder rather than an empty accordion, and
   /// the five entries the page used to hard-code are seeded as the starting set.
   faq Json?
-  /// How the awards are judged, in order: `[{ titleLo, bodyLo }]`. Two pages
-  /// describe this — the homepage's "how this is judged" band and /about's own
-  /// steps — and each carried its own copy of the words, which had already
-  /// drifted apart by three of the four steps. One list, read by both.
+  /// How the awards are judged, in order:
+  /// `[{ titleLo, bodyLo, iconName?, iconImageKey? }]`. Two pages describe
+  /// this — the homepage's "how this is judged" band and /about's own steps —
+  /// and each carried its own copy of the words, which had already drifted
+  /// apart by three of the four steps. One list, read by both.
   ///
   /// Any number of steps: the homepage lays them out in a row of cards, so a
   /// fifth is a design decision the team can see the result of. Nullable, and
   /// the four steps the pages used to hold are seeded as the starting set.
+  ///
+  /// The icon is one of a fixed preset (`iconName`, see
+  /// frontend/src/lib/judging-step-icons.ts) or a team-uploaded PNG
+  /// (`iconImageKey`, an object storage key, never a full URL) — the upload
+  /// wins when both are set. Both are optional; a step with neither renders
+  /// with no icon, same as before this pair of fields existed.
   judgingSteps Json?
   /// The copy on the two cards under the homepage hero, keyed by what the site
   /// is currently able to say: `{ noYear|draft|published|nominees|winners

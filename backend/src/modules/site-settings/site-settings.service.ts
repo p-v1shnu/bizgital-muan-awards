@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
 import { AuditService } from '../audit/audit.service';
-import { cleanEntries } from '../../common/utils/entries';
 import { cleanFaq } from '../../common/utils/faq';
 import { cleanHomeCards } from '../../common/utils/home-cards';
+import { cleanJudgingSteps } from '../../common/utils/judging-steps';
 import { cleanPageSeo } from '../../common/utils/page-seo';
 import { cleanSocialLinks } from '../../common/utils/social-links';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -39,7 +39,7 @@ export class SiteSettingsService {
         socialLinks: dto.socialLinks === undefined ? undefined : cleanSocialLinks(dto.socialLinks),
         faq: dto.faq === undefined ? undefined : cleanFaq(dto.faq),
         judgingSteps:
-          dto.judgingSteps === undefined ? undefined : cleanEntries(dto.judgingSteps),
+          dto.judgingSteps === undefined ? undefined : cleanJudgingSteps(dto.judgingSteps),
         homeCards: dto.homeCards === undefined ? undefined : cleanHomeCards(dto.homeCards),
         pageSeo: dto.pageSeo === undefined ? undefined : cleanPageSeo(dto.pageSeo),
       },

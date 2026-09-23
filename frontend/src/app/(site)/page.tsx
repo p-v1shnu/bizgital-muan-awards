@@ -1,15 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, ClipboardList, Gavel, Megaphone, Play, Star, Trophy } from 'lucide-react';
+import { ArrowRight, Play, Star } from 'lucide-react';
 
 import { ActionLink, LaoText, PatternDivider, Placeholder, Section } from '@/components/site/primitives';
 import { CountUp } from '@/components/site/count-up';
 import { Gallery } from '@/components/site/gallery';
 import { HighlightVideo } from '@/components/site/highlight-video';
 import { PhotoWall } from '@/components/site/photo-wall';
-import { INK_FALLBACK, SiteImage } from '@/components/site/site-image';
+import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-image';
 import { JsonLd, organisationJsonLd } from '@/lib/structured-data';
 import { getPublic } from '@/lib/api/server';
+import { judgingStepIcon } from '@/lib/judging-step-icons';
 import { pageSeo } from '@/lib/page-seo';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { imageKeyList } from '@/lib/images';
@@ -47,12 +48,6 @@ interface WinnersYear {
  * That is why sponsors, judges and this year's category list are absent —
  * they belong to a year, and they live on the year page (PRD §6.1.1).
  */
-/**
- * The icon each judging step is drawn with, by position. The steps themselves
- * are the team's and live in /admin/site; these belong to the page, so a list
- * the team makes longer simply runs past the end of them.
- */
-const STEP_ICONS = [ClipboardList, Megaphone, Gavel, Trophy];
 
 export default async function HomePage() {
   const [site, current, winnerYears, editions, stats, openEdition] = await Promise.all([
@@ -419,18 +414,31 @@ export default async function HomePage() {
         {judgingSteps.length > 0 ? (
           <ol className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {judgingSteps.map((step, index) => {
-              // The icons are the page's, not the team's — a step past the
-              // fourth is numbered and framed the same, just without one.
-              const Icon = STEP_ICONS[index];
+              // The team's own choice now, not the page's: a preset icon or
+              // an uploaded PNG, set per step in /admin/site. The upload wins
+              // when both are somehow set, and a step with neither is
+              // numbered and framed the same, just without one.
+              const Icon = judgingStepIcon(step.iconName);
               return (
                 <li
                   key={`${index}-${step.titleLo}`}
                   className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-5"
                 >
-                  {Icon && (
-                    <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
-                      <Icon className="size-4.5" />
+                  {step.iconImageKey ? (
+                    <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft">
+                      <SiteImageFixed
+                        imageKey={step.iconImageKey}
+                        width={18}
+                        height={18}
+                        className="size-4.5 object-contain"
+                      />
                     </span>
+                  ) : (
+                    Icon && (
+                      <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
+                        <Icon className="size-4.5" />
+                      </span>
+                    )
                   )}
                   <p className="mt-3 text-lg text-ink">
                     <span className="mr-1.5 text-ink-3">{index + 1}.</span>

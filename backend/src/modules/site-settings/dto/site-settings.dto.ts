@@ -5,6 +5,7 @@ import {
   IsArray,
   IsBoolean,
   IsEmail,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsObject,
@@ -16,6 +17,31 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
+
+/**
+ * The fixed set of icons a judging step can pick from, mirrored by hand in
+ * frontend/src/lib/judging-step-icons.ts (the frontend owns the actual
+ * lucide-react component each key draws) — kept here too so a step can't be
+ * saved pointing at a key the picker never offered.
+ */
+export const JUDGING_STEP_ICON_NAMES = [
+  'clipboard-list',
+  'megaphone',
+  'users',
+  'gavel',
+  'scale',
+  'eye',
+  'search',
+  'check-circle',
+  'star',
+  'award',
+  'trophy',
+  'calendar',
+  'file-text',
+  'vote',
+  'thumbs-up',
+  'shield-check',
+] as const;
 
 /**
  * One question and its answer on /about. A question with no answer behind it is
@@ -53,6 +79,22 @@ export class JudgingStepDto {
   @IsNotEmpty()
   @MaxLength(300)
   bodyLo!: string;
+
+  @ApiPropertyOptional({
+    enum: JUDGING_STEP_ICON_NAMES,
+    description: 'A preset icon key — ignored once iconImageKey is set',
+  })
+  @IsOptional()
+  @IsIn(JUDGING_STEP_ICON_NAMES)
+  iconName?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Object storage key for a team-uploaded PNG icon, never a full URL — takes priority over iconName when set',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  iconImageKey?: string | null;
 }
 
 /**
