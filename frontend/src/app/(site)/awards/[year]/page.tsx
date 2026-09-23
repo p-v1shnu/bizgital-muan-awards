@@ -484,8 +484,12 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                             peeks in, matching the reference (Grammy.com); a
                             plain no-JS scroll-snap row, so it costs nothing
                             over the old grid, which is what sm: and up still
-                            is. */}
-                        <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-4">
+                            is. The scrollbar is hidden — this is meant to
+                            read as a peek-and-swipe carousel, not a scroll
+                            list, and the OS scrollbar/scroll-indicator drawn
+                            under it looked like a stray UI element sitting
+                            below the cards. */}
+                        <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                           {[...category.nominees]
                             // The winner leads the grid when there is one.
                             .sort((a, b) => Number(b.isWinner) - Number(a.isWinner))
