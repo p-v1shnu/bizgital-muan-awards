@@ -63,7 +63,7 @@ export default async function WinnersPage() {
                   {shown.length === 0 ? (
                     <p className="mt-3 text-[13.5px] text-ink-3">ຍັງບໍ່ໄດ້ບັນທຶກຜູ້ຊະນະ</p>
                   ) : (
-                    <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3">
+                    <ul className="mt-4 flex flex-col gap-3">
                       {shown.map((category) => (
                         <li key={category.id}>
                           <Link
