@@ -74,6 +74,8 @@ export async function uploadImage(file: File, folder: Folder) {
   return (payload?.data as UploadResult).key;
 }
 
+const DEFAULT_ACCEPT = 'image/jpeg,image/png,image/webp,image/avif';
+
 export function ImageUpload({
   value,
   onChange,
@@ -81,6 +83,7 @@ export function ImageUpload({
   label,
   hint,
   aspect = 'wide',
+  accept = DEFAULT_ACCEPT,
 }: {
   value: string | null;
   onChange: (key: string | null) => void;
@@ -88,6 +91,9 @@ export function ImageUpload({
   label?: string;
   hint?: string;
   aspect?: 'wide' | 'square';
+  /** Narrows the file picker and the browser's own type check — still just a
+   * client-side nudge, since the backend sniffs the real bytes regardless. */
+  accept?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -170,7 +176,7 @@ export function ImageUpload({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/avif"
+        accept={accept}
         className="hidden"
         onChange={(event) => {
           void handleFile(event.target.files?.[0]);

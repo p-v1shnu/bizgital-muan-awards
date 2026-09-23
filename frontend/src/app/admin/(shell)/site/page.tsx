@@ -10,6 +10,7 @@ import { EntryListEditor } from '@/components/admin/entry-list-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
+import { StepsEditor } from '@/components/admin/steps-editor';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
@@ -508,27 +509,11 @@ function SettingsForm({
               <CardBody>
                 <Note>
                   ລາຍການນີ້ຂຶ້ນ<b>ສອງບ່ອນ</b> — ແຖບ “ລາງວັນນີ້ຕັດສິນແນວໃດ” ໃນໜ້າຫຼັກ ແລະ ຫົວຂໍ້
-                  “ຂັ້ນຕອນ” ໃນໜ້າ /about · ແກ້ບ່ອນນີ້ບ່ອນດຽວ ປ່ຽນທັງສອງໜ້າພ້ອມກັນ ·
-                  ໜ້າຫຼັກມີໄອຄອນໃຫ້ 4 ຂັ້ນທຳອິດ ຂັ້ນທີ່ເພີ່ມມາຈະມີແຕ່ເລກລຳດັບ
+                  “ຂັ້ນຕອນ” ໃນໜ້າ /about · ແກ້ບ່ອນນີ້ບ່ອນດຽວ ປ່ຽນທັງສອງໜ້າພ້ອມກັນ · ໄອຄອນ
+                  (ຖ້າຕັ້ງໄວ້) ສະແດງສະເພາະໜ້າຫຼັກ
                 </Note>
                 <div className="mt-4">
-                  <EntryListEditor
-                    items={steps}
-                    onChange={setSteps}
-                    blank={{ titleLo: '', bodyLo: '' }}
-                    entryLabel={(position) => `ຂັ້ນ ${position}`}
-                    addLabel="ເພີ່ມຂັ້ນຕອນ"
-                    removeLabel="ລຶບຂັ້ນຕອນນີ້"
-                    fields={[
-                      { key: 'titleLo', label: 'ຊື່ຂັ້ນຕອນ', placeholder: 'ຄັດກອງ' },
-                      {
-                        key: 'bodyLo',
-                        label: 'ຄຳອະທິບາຍ',
-                        multiline: true,
-                        help: 'ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າຫຼັກວາງເປັນ Card ແຄບ',
-                      },
-                    ]}
-                  />
+                  <StepsEditor items={steps} onChange={setSteps} />
                 </div>
               </CardBody>
             </Card>

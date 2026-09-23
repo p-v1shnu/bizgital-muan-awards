@@ -652,8 +652,8 @@ describe('public site', () => {
 
       const response = await api(h).get(path('/site')).expect(200);
       expect(response.body.data.judgingSteps).toEqual([
-        { titleLo: 'ສະເໜີຊື່', bodyLo: 'ໃຜກໍສົ່ງໄດ້' },
-        { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ' },
+        { titleLo: 'ສະເໜີຊື່', bodyLo: 'ໃຜກໍສົ່ງໄດ້', iconName: null, iconImageKey: null },
+        { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ', iconName: null, iconImageKey: null },
       ]);
     });
 
@@ -662,6 +662,44 @@ describe('public site', () => {
         .put(path('/admin/site'))
         .set(h.auth)
         .send({ judgingSteps: [{ titleLo: 'ຂັ້ນລອຍໆ' }] })
+        .expect(400);
+    });
+
+    it('keeps a step with only an icon and no title or body, exactly like any other blank step — dropped', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ judgingSteps: [{ titleLo: ' ', bodyLo: ' ', iconName: 'trophy' }] })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.judgingSteps).toEqual([]);
+    });
+
+    it('saves a preset icon, and an uploaded icon key, on separate steps', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({
+          judgingSteps: [
+            { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ', iconName: 'search' },
+            { titleLo: 'ຕັດສິນ', bodyLo: 'ຄະນະກຳມະການໃຫ້ຄະແນນ', iconImageKey: 'site/icon.png' },
+          ],
+        })
+        .expect(200);
+
+      const response = await api(h).get(path('/site')).expect(200);
+      expect(response.body.data.judgingSteps).toEqual([
+        { titleLo: 'ຄັດກອງ', bodyLo: 'ທີມງານກວດ', iconName: 'search', iconImageKey: null },
+        { titleLo: 'ຕັດສິນ', bodyLo: 'ຄະນະກຳມະການໃຫ້ຄະແນນ', iconName: null, iconImageKey: 'site/icon.png' },
+      ]);
+    });
+
+    it('refuses an icon name outside the preset list', async () => {
+      await api(h)
+        .put(path('/admin/site'))
+        .set(h.auth)
+        .send({ judgingSteps: [{ titleLo: 'ຂັ້ນ', bodyLo: 'ອະທິບາຍ', iconName: 'not-a-real-icon' }] })
         .expect(400);
     });
   });
