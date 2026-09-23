@@ -424,7 +424,15 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                 key={category.id}
                 name="edition-categories"
                 open={category.isFeatured}
-                className="group overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel"
+                // No overflow-hidden here (only rounded corners need it, and
+                // every child is already inset by its own padding) — it would
+                // otherwise sit between the fragment target below and the
+                // page's real scroller, and a browser stops honouring that
+                // target's own scroll-margin-top past a hidden-overflow
+                // ancestor, landing the winner tiles' link exactly on the
+                // nominee photos with the heading that names the category
+                // scrolled out from under the sticky header.
+                className="group rounded-[var(--radius-box)] border border-rule bg-panel"
               >
                 <summary className="flex cursor-pointer list-none items-center gap-3 px-5 py-4">
                   <div className="min-w-0">
@@ -459,7 +467,12 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                   // way, which is what the winner tiles above rely on.
                   <div
                     id={categoryAnchor(category.slug)}
-                    className="grid grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]"
+                    // Keeps the sticky header (~57px) and this category's own
+                    // summary above it in view when a winner tile's fragment
+                    // link lands here — without it, the browser aligns this
+                    // div's own top edge to the viewport top, pushing the
+                    // heading that says which category this is off-screen.
+                    className="grid scroll-mt-[176px] grid-rows-[0fr] transition-[grid-template-rows] duration-300 ease-out group-open:grid-rows-[1fr]"
                   >
                     <div className="overflow-hidden">
                       <div className="border-t border-hairline px-5 py-5">
