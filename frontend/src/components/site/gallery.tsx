@@ -142,31 +142,45 @@ export function Gallery({
               </>
             )}
 
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={openIndex}
-                // Not aspect-[4/3] — that's the grid tile's own crop, right
-                // for a uniform wall of thumbnails but wrong for "view this
-                // photo full size": a portrait or 16:9 shot forced into a
-                // 4:3 box here would still be cropped, exactly what opening
-                // it was supposed to undo. object-contain below never
-                // crops regardless of the photo's own ratio; this box just
-                // bounds how large that letterboxes within.
-                className="relative h-[min(75vh,700px)] w-full max-w-3xl"
-                initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
-                transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <SiteImage
-                  imageKey={imageKeys[openIndex]}
-                  alt={alt}
-                  sizes="100vw"
-                  className="object-contain"
-                />
-              </motion.div>
-            </AnimatePresence>
+            {/* relative + each slide absolute: lets the outgoing and incoming
+                photo overlap and crossfade in place. Without this, swapping
+                `mode="wait"` for a crossfade would briefly render both
+                motion.divs as flex siblings and they'd jump side by side
+                for the fade's duration instead of sitting on top of each
+                other. */}
+            <div className="relative h-[min(75vh,700px)] w-full max-w-3xl">
+              <AnimatePresence initial={false}>
+                <motion.div
+                  key={openIndex}
+                  // Not aspect-[4/3] — that's the grid tile's own crop,
+                  // right for a uniform wall of thumbnails but wrong for
+                  // "view this photo full size": a portrait or 16:9 shot
+                  // forced into a 4:3 box here would still be cropped,
+                  // exactly what opening it was supposed to undo.
+                  // object-contain below never crops regardless of the
+                  // photo's own ratio; this box just bounds how large that
+                  // letterboxes within.
+                  //
+                  // Crossfades (both slides visible at once, briefly)
+                  // instead of the old exit-then-enter sequence, which made
+                  // Next/Prev feel like it queued up and lagged behind taps
+                  // when pressed more than once in quick succession.
+                  className="absolute inset-0"
+                  initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: reduceMotion ? 1 : 0.97 }}
+                  transition={{ duration: reduceMotion ? 0 : 0.2 }}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <SiteImage
+                    imageKey={imageKeys[openIndex]}
+                    alt={alt}
+                    sizes="100vw"
+                    className="object-contain"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
