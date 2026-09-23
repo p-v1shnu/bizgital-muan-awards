@@ -452,8 +452,9 @@ export default async function HomePage() {
           {/* This list only ever grows — one more year, every year — so a
               phone gets a swipeable strip rather than a grid whose row count
               has no ceiling. No JS: a scroll-snap row, sm: and up reverting
-              to the grid this already was. */}
-          <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-3">
+              to the grid this already was. Scrollbar hidden — a peek-and-
+              swipe carousel, not a scroll list. */}
+          <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:py-0 lg:grid-cols-3 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             {editions.map((edition) => (
               <Link
                 key={edition.id}
