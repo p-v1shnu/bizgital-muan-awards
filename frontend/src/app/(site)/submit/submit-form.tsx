@@ -194,7 +194,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
 
       <fieldset className="mb-5 last:mb-0">
         <legend className="mb-1.5 text-[13px] font-semibold text-ink">
-          ເປັນຫຍັງຄວນໄດ້ລາງວັນ<span className="ml-1 text-brand-deep">*</span>
+          ຍ້ອນຫຍັງເຈົ້າຈຶ່ງມັກຄອນເທັນຄຣີເອເຕີຄົນ/ກຸ່ມນີ້?<span className="ml-1 text-brand-deep">*</span>
         </legend>
         <div className="space-y-2">
           {SUBMISSION_REASON_TAGS.map((tag) => {
