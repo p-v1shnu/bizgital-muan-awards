@@ -86,6 +86,8 @@ function paragraphs(value: string | null | undefined) {
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
   const history = paragraphs(site?.aboutHistoryLo);
+  const rights = paragraphs(site?.aboutRightsLo);
+  const submissionTerms = paragraphs(site?.aboutSubmissionTermsLo);
 
   // How to reach the team: an address and a number. The team's Facebook page is
   // not repeated here — the footer already carries it on every page.
@@ -119,6 +121,38 @@ export default async function AboutPage() {
         ) : (
           <p className="mt-4 max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
             <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+          </p>
+        )}
+      </Section>
+
+      <Section id="rights" title="ຂໍ້ສະຫງວນສິດຂອງມ່ວນອາວອດສ໌" className="bg-panel-2/50">
+        {rights.length > 0 ? (
+          <div className="max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-2">
+            {rights.map((paragraph, index) => (
+              <p key={index}>
+                <RichText text={paragraph} />
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
+            <Placeholder>ຂໍ້ສະຫງວນສິດ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+          </p>
+        )}
+      </Section>
+
+      <Section id="submission-terms" title="ເງື່ອນໄຂການສະເໜີຊື່">
+        {submissionTerms.length > 0 ? (
+          <div className="max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-2">
+            {submissionTerms.map((paragraph, index) => (
+              <p key={index}>
+                <RichText text={paragraph} />
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
+            <Placeholder>ເງື່ອນໄຂການສະເໜີຊື່ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           </p>
         )}
       </Section>

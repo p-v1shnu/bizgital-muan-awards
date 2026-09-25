@@ -226,6 +226,8 @@ export interface SiteSettings {
   homeHighlightDescriptionLo: string | null;
   socialLinks: Record<string, string> | null;
   aboutHistoryLo: string | null;
+  aboutRightsLo: string | null;
+  aboutSubmissionTermsLo: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   faq: FaqItem[] | null;

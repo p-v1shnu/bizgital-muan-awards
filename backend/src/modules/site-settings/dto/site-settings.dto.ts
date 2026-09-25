@@ -359,6 +359,18 @@ export class UpdateSiteSettingsDto {
   @MaxLength(3000)
   aboutHistoryLo?: string | null;
 
+  @ApiPropertyOptional({ description: '"ຂໍ້ສະຫງວນສິດຂອງມ່ວນອາວອດສ໌" section on /about, one paragraph per line' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(3000)
+  aboutRightsLo?: string | null;
+
+  @ApiPropertyOptional({ description: '"ເງື່ອນໄຂການສະເໜີຊື່" section on /about, one paragraph per line' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(3000)
+  aboutSubmissionTermsLo?: string | null;
+
   @ApiPropertyOptional({ description: 'Team address for the contact box on /about' })
   @IsOptional()
   @IsEmail({}, { message: 'contactEmail must be an email address' })

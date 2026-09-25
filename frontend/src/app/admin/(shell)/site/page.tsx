@@ -90,6 +90,8 @@ function SettingsForm({
     creatorDefinitionTitleLo: initial?.creatorDefinitionTitleLo ?? '',
     creatorDefinitionBodyLo: initial?.creatorDefinitionBodyLo ?? '',
     aboutHistoryLo: initial?.aboutHistoryLo ?? '',
+    aboutRightsLo: initial?.aboutRightsLo ?? '',
+    aboutSubmissionTermsLo: initial?.aboutSubmissionTermsLo ?? '',
     ctaTitleLo: initial?.ctaTitleLo ?? '',
     ctaBodyLo: initial?.ctaBodyLo ?? '',
     heroCaptionLo: initial?.heroCaptionLo ?? '',
@@ -172,6 +174,8 @@ function SettingsForm({
                 creatorDefinitionTitleLo: form.creatorDefinitionTitleLo,
                 creatorDefinitionBodyLo: emptyToNull(form.creatorDefinitionBodyLo),
                 aboutHistoryLo: emptyToNull(form.aboutHistoryLo),
+                aboutRightsLo: emptyToNull(form.aboutRightsLo),
+                aboutSubmissionTermsLo: emptyToNull(form.aboutSubmissionTermsLo),
                 ctaTitleLo: form.ctaTitleLo,
                 ctaBodyLo: form.ctaBodyLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
@@ -501,6 +505,38 @@ function SettingsForm({
                     className="min-h-40"
                     value={form.aboutHistoryLo}
                     onChange={(next) => setForm({ ...form, aboutHistoryLo: next })}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader title="ຂໍ້ສະຫງວນສິດຂອງມ່ວນອາວອດສ໌ (ໜ້າ /about)" />
+              <CardBody>
+                <Field
+                  label="ເນື້ອຫາ"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
+                >
+                  <RichTextarea
+                    className="min-h-40"
+                    value={form.aboutRightsLo}
+                    onChange={(next) => setForm({ ...form, aboutRightsLo: next })}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader title="ເງື່ອນໄຂການສະເໜີຊື່ (ໜ້າ /about)" />
+              <CardBody>
+                <Field
+                  label="ເນື້ອຫາ"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
+                >
+                  <RichTextarea
+                    className="min-h-40"
+                    value={form.aboutSubmissionTermsLo}
+                    onChange={(next) => setForm({ ...form, aboutSubmissionTermsLo: next })}
                   />
                 </Field>
               </CardBody>

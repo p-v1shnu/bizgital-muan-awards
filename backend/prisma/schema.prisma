@@ -512,6 +512,11 @@ model SiteSetting {
   /// defaulted, since /about shows an explicit placeholder until this is
   /// filled in. One paragraph per line, same convention as Edition.activitiesLo.
   aboutHistoryLo String? @db.Text
+  /// Two more /about sections after the intro, same "nullable, explicit
+  /// placeholder until filled in" convention as aboutHistoryLo above, and the
+  /// same one-paragraph-per-line splitting on render.
+  aboutRightsLo String? @db.Text
+  aboutSubmissionTermsLo String? @db.Text
   /// How to reach the team, shown in /about's contact box. Two promises on that
   /// page already depend on it: the privacy section tells a submitter to write
   /// in to have their name removed, and the FAQ answers where to ask about
