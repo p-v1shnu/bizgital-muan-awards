@@ -131,7 +131,7 @@ export default async function SubmitPage() {
       eyebrow={`ງານປີ ${form.edition.year}`}
       title="ສະເໜີຊື່ຄຣີເອເຕີ"
       titleAs="h1"
-      intro="ໃຜກໍສົ່ງໄດ້ ບໍ່ຕ້ອງລົງທະບຽນ · ສົ່ງໄດ້ຫຼາຍຄົນ ຫຼາຍສາຂາ"
+      intro={site?.submitIntroLo || 'ໃຜກໍສົ່ງໄດ້ ບໍ່ຕ້ອງລົງທະບຽນ · ສົ່ງໄດ້ຫຼາຍຄົນ ຫຼາຍສາຂາ'}
     >
       <div className="grid gap-8 lg:grid-cols-[1fr_300px] lg:items-start">
         <div className="max-w-2xl">

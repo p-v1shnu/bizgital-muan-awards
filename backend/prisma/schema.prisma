@@ -562,6 +562,11 @@ model SiteSetting {
   /// What happens after someone sends a name in, listed on /submit. One item per
   /// line, same convention as Edition.activitiesLo.
   submitAfterLo String? @db.Text
+  /// The line under the "ສະເໜີຊື່ຄຣີເອເຕີ" heading on /submit — was hardcoded on
+  /// the page; the team asked to type it themselves like everything else here.
+  /// Blank falls back to the page's own words, same convention as the rest of
+  /// this model.
+  submitIntroLo String?
   /// The browser-tab title and search-result description of the pages that have
   /// no year or person of their own: `{ home|about|submit|winners: { titleLo,
   /// descriptionLo } }`. A year, a category and a creator build theirs from their

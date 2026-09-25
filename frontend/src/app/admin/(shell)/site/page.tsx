@@ -96,6 +96,7 @@ function SettingsForm({
     contactEmail: initial?.contactEmail ?? '',
     contactPhone: initial?.contactPhone ?? '',
     submitAfterLo: initial?.submitAfterLo ?? '',
+    submitIntroLo: initial?.submitIntroLo ?? '',
     footerLocationLo: initial?.footerLocationLo ?? '',
     homeHighlightVideoUrl: initial?.homeHighlightVideoUrl ?? '',
     homeHighlightDescriptionLo: initial?.homeHighlightDescriptionLo ?? '',
@@ -182,6 +183,7 @@ function SettingsForm({
                 judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
                 homeCards: cards,
                 submitAfterLo: emptyToNull(form.submitAfterLo),
+                submitIntroLo: emptyToNull(form.submitIntroLo),
                 pageSeo: seo,
                 footerLocationLo: emptyToNull(form.footerLocationLo),
                 heroImageKey: heroImageKey ?? null,
@@ -592,6 +594,20 @@ function SettingsForm({
           </FormSection>
 
           <FormSection id="submit" title="ໜ້າ ສົ່ງລາຍຊື່ (/submit)">
+            <Card className="xl:col-span-2">
+              <CardHeader title="ຫົວຂໍ້ “ສະເໜີຊື່ຄຣີເອເຕີ” (ໜ້າ /submit)" />
+              <CardBody>
+                <Field
+                  label="ຄຳອະທິບາຍໃຕ້ຫົວຂໍ້"
+                  help="ຖ້າເວັ້ນວ່າງ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ"
+                >
+                  <Input
+                    value={form.submitIntroLo}
+                    onChange={(event) => setForm({ ...form, submitIntroLo: event.target.value })}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
             <Card className="xl:col-span-2">
               <CardHeader title="“ຫຼັງຈາກສົ່ງແລ້ວ” (ໜ້າ /submit)" />
               <CardBody>

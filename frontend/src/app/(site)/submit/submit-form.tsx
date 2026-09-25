@@ -16,8 +16,9 @@ declare global {
 }
 
 /**
- * The public form. Personal details are optional on purpose (PRD §10): the
- * point is to learn about a creator, not to collect a database of senders.
+ * The public form. It asks nothing about the sender — no name, no email —
+ * only what the entry is about: the point is to learn about a creator, not
+ * to collect a database of senders.
  */
 export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
   const [values, setValues] = useState({
@@ -25,8 +26,6 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
     creatorNameRaw: '',
     creatorLink: '',
     reason: '',
-    submitterName: '',
-    submitterEmail: '',
     website: '', // honeypot
   });
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -47,8 +46,6 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
           creatorNameRaw: values.creatorNameRaw,
           creatorLink: values.creatorLink || undefined,
           reason: values.reason || undefined,
-          submitterName: values.submitterName || undefined,
-          submitterEmail: values.submitterEmail || undefined,
           website: values.website || undefined,
         }),
       });
@@ -203,32 +200,6 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
           className="w-full resize-y rounded-[var(--radius-sm)] border border-rule bg-white px-3.5 py-2.5 text-[14px] leading-relaxed text-ink"
         />
       </Field>
-
-      <fieldset className="mt-6 border-t border-hairline pt-5">
-        <legend className="sr-only">ຂໍ້ມູນຜູ້ສົ່ງ</legend>
-        <p className="mb-4 text-[12.5px] text-ink-3">
-          ສອງຊ່ອງລຸ່ມນີ້ <b className="text-ink-2">ບໍ່ບັງຄັບ</b> — ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ ·
-          ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບ ແລະ ລຶບພາຍໃນ 12 ເດືອນ{' '}
-          <a href="/about#privacy" className="text-brand-deep underline">
-            ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ
-          </a>
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="ຊື່ຂອງທ່ານ">
-            <Input
-              value={values.submitterName}
-              onChange={(event) => setValues({ ...values, submitterName: event.target.value })}
-            />
-          </Field>
-          <Field label="ອີເມວ">
-            <Input
-              type="email"
-              value={values.submitterEmail}
-              onChange={(event) => setValues({ ...values, submitterEmail: event.target.value })}
-            />
-          </Field>
-        </div>
-      </fieldset>
 
       {/* Hidden from people, irresistible to bots. */}
       <div aria-hidden className="absolute left-[-9999px]">

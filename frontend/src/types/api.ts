@@ -232,6 +232,7 @@ export interface SiteSettings {
   judgingSteps: JudgingStep[] | null;
   homeCards: HomeCards | null;
   submitAfterLo: string | null;
+  submitIntroLo: string | null;
   pageSeo: Partial<Record<'home' | 'about' | 'submit' | 'winners', PageSeo>> | null;
   footerLocationLo: string | null;
   /** A team-uploaded tile that replaces the built-in woven section divider. Null keeps the CSS pattern. */

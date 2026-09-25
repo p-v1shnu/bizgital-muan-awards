@@ -408,6 +408,12 @@ export class UpdateSiteSettingsDto {
   @MaxLength(1200)
   submitAfterLo?: string | null;
 
+  @ApiPropertyOptional({ description: 'The line under the "ສະເໜີຊື່ຄຣີເອເຕີ" heading on /submit' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  submitIntroLo?: string | null;
+
   @ApiPropertyOptional({ type: PageSeoMapDto, description: 'Tab title and search-result description per page' })
   @IsOptional()
   @ValidateNested()
