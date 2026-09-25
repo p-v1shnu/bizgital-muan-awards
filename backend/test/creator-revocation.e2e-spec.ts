@@ -61,12 +61,6 @@ describe('creator revocation', () => {
     nominationId = nomination.body.data.id;
 
     await api(h)
-      .patch(path(`/admin/nominations/${nominationId}/winner`))
-      .set(h.auth)
-      .send({ isWinner: true })
-      .expect(200);
-
-    await api(h)
       .patch(path(`/admin/editions/${editionId}/phase`))
       .set(h.auth)
       .send({ phase: 'PUBLISHED' })
@@ -75,6 +69,12 @@ describe('creator revocation', () => {
       .patch(path(`/admin/editions/${editionId}/phase`))
       .set(h.auth)
       .send({ phase: 'NOMINEES_ANNOUNCED' })
+      .expect(200);
+    // A winner can only be picked once the shortlist is announced.
+    await api(h)
+      .patch(path(`/admin/nominations/${nominationId}/winner`))
+      .set(h.auth)
+      .send({ isWinner: true })
       .expect(200);
     await api(h)
       .patch(path(`/admin/editions/${editionId}/phase`))

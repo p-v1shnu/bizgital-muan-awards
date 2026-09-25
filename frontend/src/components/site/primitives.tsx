@@ -78,9 +78,10 @@ export function RichText({ text }: { text: string }) {
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
   let key = 0;
-  RICH_TEXT_TOKEN.lastIndex = 0;
+  // A fresh copy per render: a global regex carries lastIndex between calls.
+  const token = new RegExp(RICH_TEXT_TOKEN);
   let match: RegExpExecArray | null;
-  while ((match = RICH_TEXT_TOKEN.exec(text))) {
+  while ((match = token.exec(text))) {
     if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
     const [, linkText, linkUrl, bold, italic] = match;
     if (linkText !== undefined) {
@@ -105,7 +106,7 @@ export function RichText({ text }: { text: string }) {
     } else {
       nodes.push(<em key={key++}>{italic}</em>);
     }
-    lastIndex = RICH_TEXT_TOKEN.lastIndex;
+    lastIndex = token.lastIndex;
   }
   if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
   return <>{nodes}</>;
