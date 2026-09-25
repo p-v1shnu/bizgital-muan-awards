@@ -100,7 +100,10 @@ export default async function seed() {
       // Deliberately not the page's own three lines: the spec asserts these two
       // exactly, which is what proves the list is read from here and not from
       // the fallback still sitting in the page.
-      submitAfterLo: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື\nຜົນຕັດສິນມາຈາກຄະນະກຳມະການ',
+      submitAfterSteps: [
+        { bodyLo: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື' },
+        { bodyLo: 'ຜົນຕັດສິນມາຈາກຄະນະກຳມະການ' },
+      ],
       // The judging steps, which the homepage band and /about both render — the
       // spec reads them off both pages and compares.
       judgingSteps: [

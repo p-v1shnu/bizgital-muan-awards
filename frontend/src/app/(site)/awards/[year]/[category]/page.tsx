@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 
 import { CreatorCard, EmptyNote, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
+import { SiteImage } from '@/components/site/site-image';
 import { apiPath, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, categoryJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
@@ -105,11 +106,22 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
         <span className="text-ink">{page.nameLo}</span>
       </nav>
 
-      <div className="foil mb-5 h-[3px] w-16 rounded-sm" aria-hidden />
-      <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">{page.nameLo}</h1>
-      {page.descriptionLo && (
-        <p className="mt-3 max-w-2xl font-sans-looped text-[15px] leading-relaxed text-ink-2">{page.descriptionLo}</p>
-      )}
+      <div className="flex flex-col gap-6 md:flex-row-reverse md:items-start">
+        <div className="min-w-0 flex-1">
+          <div className="foil mb-5 h-[3px] w-16 rounded-sm" aria-hidden />
+          <h1 className="font-serif text-4xl leading-tight text-ink md:text-5xl">{page.nameLo}</h1>
+          {page.descriptionLo && (
+            <p className="mt-3 max-w-2xl font-sans-looped text-[15px] leading-relaxed text-ink-2">
+              {page.descriptionLo}
+            </p>
+          )}
+        </div>
+        {page.imageKey && (
+          <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-[var(--radius-box)] bg-panel-2 md:w-64">
+            <SiteImage imageKey={page.imageKey} alt={page.nameLo} sizes="(max-width: 768px) 100vw, 256px" />
+          </div>
+        )}
+      </div>
 
       {nominees.length === 0 ? (
         <EmptyNote className="mt-10">ລາຍຊື່ຜູ້ເຂົ້າຊີງສາຂານີ້ຈະປະກາດພາຍຫຼັງ</EmptyNote>

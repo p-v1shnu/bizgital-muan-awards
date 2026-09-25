@@ -26,6 +26,14 @@ export class CreateCategoryTemplateDto {
   @IsOptional()
   @IsString()
   descriptionLo?: string | null;
+
+  @ApiPropertyOptional({
+    description: 'Object storage key for a 1:1 photo, never a full URL — copied into imageKey the moment a category picks this template',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  imageKey?: string | null;
 }
 
 export class UpdateCategoryTemplateDto extends PartialType(CreateCategoryTemplateDto) {}

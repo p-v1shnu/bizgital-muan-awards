@@ -158,6 +158,13 @@ model Category {
   descriptionLo String? @db.Text
   descriptionEn String? @db.Text
 
+  /// A 1:1 photo shown beside descriptionLo — object storage key, never a
+  /// full URL. Copied from the template at creation and kept in sync the
+  /// same way descriptionLo is (CategoriesService blocks editing it directly
+  /// on a templated category; CategoryTemplatesService.update() cascades a
+  /// change here onto every edition using that template).
+  imageKey String?
+
   /// Optional grouping heading, used when a year runs long (PRD §7.6).
   /// Blank on every category means a flat list.
   groupLo String?
@@ -198,11 +205,17 @@ model CategoryTemplate {
   nameLo String
   nameEn String?
 
-  /// Typed once here, then copied by the admin UI into a Category's own
-  /// descriptionLo the moment a template is picked — a starting value, not
-  /// a live link, so a year can still reword it and a later edit here never
-  /// reaches back into an edition that already picked this template.
+  /// Copied by the admin UI into a Category's own descriptionLo the moment a
+  /// template is picked, then kept live: CategoryTemplatesService.update()
+  /// pushes a later edit here onto every Category already using this
+  /// template too (see the model doc comment above), old editions included —
+  /// which is why CategoriesService.update() refuses this field once
+  /// templateId is set, rather than letting a year reword its own copy.
   descriptionLo String? @db.Text
+
+  /// The template's own copy of Category.imageKey — see that field's doc
+  /// comment for how it moves between the two.
+  imageKey String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -231,10 +244,23 @@ model Creator {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  /// Separate from deletedAt on purpose: deletedAt only ever applies to a
+  /// creator with zero nominations (CreatorsService.remove enforces that),
+  /// while a revoked creator is exactly the opposite case — someone with
+  /// nomination/winner history the team needs to strike from the public site
+  /// after the fact, without losing the historical record. Nothing about
+  /// their nominations or isWinner rows changes; every public query that
+  /// joins a creator filters both fields the same way, so revoking has the
+  /// same effect the public site over as if they had never been entered —
+  /// a category they won shows no winner, same as one not yet decided.
+  revokedAt     DateTime?
+  revokedReason String?   @db.Text
+
   nominations       Nomination[]
   matchedSubmission PublicSubmission[]
 
   @@index([deletedAt])
+  @@index([revokedAt])
   @@map("creators")
 }
 
@@ -387,10 +413,13 @@ model PublicSubmission {
   /// in is ever thrown away.
   originalNameRaw String?
   creatorLink    String?
-  reason         String? @db.Text
 
-  submitterName  String?
-  submitterEmail String?
+  /// What the sender checked, replacing a free-text "why should they win" box
+  /// (the team decided a fixed set of reasons was more useful for screening
+  /// than open text). A JSON array of keys into SUBMISSION_REASON_TAGS
+  /// (frontend/src/lib/submission-reason-tags.ts) — MySQL has no native array
+  /// column, same reason judgingSteps and galleryImageKeys are Json here.
+  reasonTags Json?
 
   /// Hashed, never the raw address (PRD §10 privacy).
   ipHash String
@@ -509,6 +538,11 @@ model SiteSetting {
   /// defaulted, since /about shows an explicit placeholder until this is
   /// filled in. One paragraph per line, same convention as Edition.activitiesLo.
   aboutHistoryLo String? @db.Text
+  /// Two more /about sections after the intro, same "nullable, explicit
+  /// placeholder until filled in" convention as aboutHistoryLo above, and the
+  /// same one-paragraph-per-line splitting on render.
+  aboutRightsLo String? @db.Text
+  aboutSubmissionTermsLo String? @db.Text
   /// How to reach the team, shown in /about's contact box. Two promises on that
   /// page already depend on it: the privacy section tells a submitter to write
   /// in to have their name removed, and the FAQ answers where to ask about
@@ -559,9 +593,17 @@ model SiteSetting {
   /// of the page it leads to, and the nav and footer say it too. Editable there
   /// and fixed in the chrome is an inconsistency the team could not then fix.
   homeCards Json?
-  /// What happens after someone sends a name in, listed on /submit. One item per
-  /// line, same convention as Edition.activitiesLo.
-  submitAfterLo String? @db.Text
+  /// What happens after someone sends a name in, listed on /submit, drawn as a
+  /// numbered journey ending in a fixed "results announced" flag that is not
+  /// itself one of these entries. `[{ bodyLo }]`, same array-of-records shape
+  /// as faq and judgingSteps above (and edited the same way, with
+  /// EntryListEditor) — replaces what used to be one newline-separated string.
+  submitAfterSteps Json?
+  /// The line under the "ສະເໜີຊື່ຄຣີເອເຕີ" heading on /submit — was hardcoded on
+  /// the page; the team asked to type it themselves like everything else here.
+  /// Blank falls back to the page's own words, same convention as the rest of
+  /// this model.
+  submitIntroLo String?
   /// The browser-tab title and search-result description of the pages that have
   /// no year or person of their own: `{ home|about|submit|winners: { titleLo,
   /// descriptionLo } }`. A year, a category and a creator build theirs from their

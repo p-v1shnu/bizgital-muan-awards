@@ -6,7 +6,7 @@ import { memoryStorage } from 'multer';
 
 import { MAX_UPLOAD_BYTES, StorageService, type UploadFolder } from './storage.service';
 
-const FOLDERS = ['creators', 'judges', 'sponsors', 'editions', 'site'] as const;
+const FOLDERS = ['creators', 'judges', 'sponsors', 'editions', 'site', 'categories'] as const;
 
 export class UploadImageDto {
   @ApiProperty({ enum: FOLDERS })

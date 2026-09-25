@@ -56,7 +56,7 @@ test.describe('homepage', () => {
     const main = page.getByRole('main');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌');
     await expect(main.getByText('ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ')).toBeVisible();
-    await expect(main.getByText('ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ')).toBeVisible();
+    await expect(main.getByText('ໄຮໄລທ໌ຜູ້ຊະນະຫຼ້າສຸດ')).toBeVisible();
     await expect(main.getByText('ປີທີ່ຜ່ານມາ')).toBeVisible();
   });
 
@@ -287,13 +287,14 @@ test('the submission form accepts an entry', async ({ page }) => {
 
   // Scoped to main: the nav carries the same year label.
   await expect(page.getByRole('main').getByText('ງານປີ 2026')).toBeVisible();
-  await expect(page.getByText('ບໍ່ບັງຄັບ')).toBeVisible();
 
   await page.selectOption('form select', { index: 1 });
   // By name, not by position: with sixteen categories the form also carries a
   // filter box above the picker, which would otherwise be the first input.
   await page.getByRole('combobox', { name: /ຊື່ຄຣີເອເຕີ/ }).fill('ນັກສ້າງສັນ ທົດສອບ');
-  await page.locator('form textarea').fill('ຜົນງານດີຕະຫຼອດປີ');
+  // At least one reason is required — the submit button stays disabled until
+  // one is checked.
+  await page.getByRole('checkbox', { name: /ຄວາມຄິດສ້າງສັນ/ }).check();
   await page.locator('form button[type=submit]').click();
 
   await expect(page.getByText('ຮັບຊື່ແລ້ວ')).toBeVisible();
@@ -434,13 +435,10 @@ test('each page names one address, and says what it is to a machine', async ({ p
 });
 
 test('the site says what it does with what people type in', async ({ page }) => {
-  await page.goto('/submit');
-  await expect(page.getByRole('link', { name: 'ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ' })).toBeVisible();
-
   await page.goto('/about#privacy');
   const privacy = page.locator('#privacy');
   await expect(privacy.getByText('ເກັບໄວ້ດົນປານໃດ')).toBeVisible();
-  await expect(privacy.getByText('12 ເດືອນ')).toBeVisible();
+  await expect(privacy.getByText('ຖືກເກັບໄວ້ຖາວອນ')).toBeVisible();
 
   // The page has to describe the analytics that actually runs: it starts with
   // the page, so it must not claim to wait for permission.
@@ -567,9 +565,12 @@ test('the card copy and the submit list come from the back office', async ({ pag
 
   await page.goto('/submit');
   const after = page.getByRole('list').filter({ hasText: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື' });
+  // Each <li> also carries its own numbered circle (drawn beside the text,
+  // not part of the team's copy), so this checks the step text is present
+  // rather than an exact match against the whole item.
   await expect(after.getByRole('listitem')).toHaveText([
-    'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
-    'ຜົນຕັດສິນມາຈາກຄະນະກຳມະການ',
+    /ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື/,
+    /ຜົນຕັດສິນມາຈາກຄະນະກຳມະການ/,
   ]);
 });
 

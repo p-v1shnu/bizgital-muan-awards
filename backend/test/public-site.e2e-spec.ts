@@ -720,7 +720,7 @@ describe('public site', () => {
             entriesOpen: { titleLo: '  ເປີດຮັບແລ້ວ  ', bodyLo: 'ສົ່ງຊື່ໄດ້ເລີຍ' },
             draft: { titleLo: 'ກຳລັງຕຽມການ', bodyLo: '   ' },
           },
-          submitAfterLo: 'ຂໍ້ໜຶ່ງ\nຂໍ້ສອງ',
+          submitAfterSteps: [{ bodyLo: 'ຂໍ້ໜຶ່ງ' }, { bodyLo: 'ຂໍ້ສອງ' }],
         })
         .expect(200);
 
@@ -731,7 +731,10 @@ describe('public site', () => {
         // fall back rather than render an empty line.
         draft: { titleLo: 'ກຳລັງຕຽມການ' },
       });
-      expect(response.body.data.submitAfterLo).toBe('ຂໍ້ໜຶ່ງ\nຂໍ້ສອງ');
+      expect(response.body.data.submitAfterSteps).toEqual([
+        { bodyLo: 'ຂໍ້ໜຶ່ງ' },
+        { bodyLo: 'ຂໍ້ສອງ' },
+      ]);
     });
 
     it('refuses a state the system does not have', async () => {

@@ -6,6 +6,7 @@ import { PaginationDto, paginate } from '../../common/dto/pagination.dto';
 import { cleanSocialLinks } from '../../common/utils/social-links';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCreatorDto, UpdateCreatorDto } from './dto/creator.dto';
+import { RevokeCreatorDto } from './dto/revoke-creator.dto';
 
 @Injectable()
 export class CreatorsService {
@@ -132,6 +133,56 @@ export class CreatorsService {
       before: { slug: creator.slug, nameLo: creator.nameLo },
       ipAddress,
     });
+  }
+
+  /**
+   * Strikes a creator's history from the public site without touching it —
+   * every public query filters revokedAt the same way it already filters
+   * deletedAt (see the field's own doc comment in schema.prisma). Unlike
+   * remove() above, this works whether or not they hold any nominations,
+   * since a creator without history would just as well have used remove().
+   */
+  async revoke(id: string, dto: RevokeCreatorDto, actorId: string, ipAddress?: string) {
+    const creator = await this.prisma.creator.findFirst({ where: { id, deletedAt: null } });
+    if (!creator) throw new NotFoundException('Creator not found');
+    if (creator.revokedAt) throw new BadRequestException('Already revoked');
+
+    const after = await this.prisma.creator.update({
+      where: { id },
+      data: { revokedAt: new Date(), revokedReason: dto.reason },
+    });
+    await this.audit.log({
+      userId: actorId,
+      action: 'creator.revoked',
+      targetType: 'Creator',
+      targetId: id,
+      before: { slug: creator.slug, nameLo: creator.nameLo },
+      after: { revokedAt: after.revokedAt, reason: dto.reason },
+      ipAddress,
+    });
+    return after;
+  }
+
+  /** Reverses a revocation — an appeal upheld, or one made in error. */
+  async unrevoke(id: string, actorId: string, ipAddress?: string) {
+    const creator = await this.prisma.creator.findFirst({ where: { id, deletedAt: null } });
+    if (!creator) throw new NotFoundException('Creator not found');
+    if (!creator.revokedAt) throw new BadRequestException('Not revoked');
+
+    const after = await this.prisma.creator.update({
+      where: { id },
+      data: { revokedAt: null, revokedReason: null },
+    });
+    await this.audit.log({
+      userId: actorId,
+      action: 'creator.unrevoked',
+      targetType: 'Creator',
+      targetId: id,
+      before: { revokedAt: creator.revokedAt, reason: creator.revokedReason },
+      after: {},
+      ipAddress,
+    });
+    return after;
   }
 
   private async assertSlugFree(slug: string) {

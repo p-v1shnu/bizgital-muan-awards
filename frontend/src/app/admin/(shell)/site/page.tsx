@@ -10,9 +10,10 @@ import { EntryListEditor } from '@/components/admin/entry-list-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
+import { RichTextarea } from '@/components/admin/rich-textarea';
 import { StepsEditor } from '@/components/admin/steps-editor';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
+import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings, SubmitAfterStep } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -89,13 +90,15 @@ function SettingsForm({
     creatorDefinitionTitleLo: initial?.creatorDefinitionTitleLo ?? '',
     creatorDefinitionBodyLo: initial?.creatorDefinitionBodyLo ?? '',
     aboutHistoryLo: initial?.aboutHistoryLo ?? '',
+    aboutRightsLo: initial?.aboutRightsLo ?? '',
+    aboutSubmissionTermsLo: initial?.aboutSubmissionTermsLo ?? '',
     ctaTitleLo: initial?.ctaTitleLo ?? '',
     ctaBodyLo: initial?.ctaBodyLo ?? '',
     heroCaptionLo: initial?.heroCaptionLo ?? '',
     heroKickerLo: initial?.heroKickerLo ?? '',
     contactEmail: initial?.contactEmail ?? '',
     contactPhone: initial?.contactPhone ?? '',
-    submitAfterLo: initial?.submitAfterLo ?? '',
+    submitIntroLo: initial?.submitIntroLo ?? '',
     footerLocationLo: initial?.footerLocationLo ?? '',
     homeHighlightVideoUrl: initial?.homeHighlightVideoUrl ?? '',
     homeHighlightDescriptionLo: initial?.homeHighlightDescriptionLo ?? '',
@@ -113,6 +116,7 @@ function SettingsForm({
   const [socials, setSocials] = useState<Record<string, string>>(initial?.socialLinks ?? {});
   const [faq, setFaq] = useState<FaqItem[]>(initial?.faq ?? []);
   const [steps, setSteps] = useState<JudgingStep[]>(initial?.judgingSteps ?? []);
+  const [afterSteps, setAfterSteps] = useState<SubmitAfterStep[]>(initial?.submitAfterSteps ?? []);
   const [cards, setCards] = useState<HomeCards>(initial?.homeCards ?? {});
   const [seo, setSeo] = useState<Record<string, PageSeo>>(initial?.pageSeo ?? {});
   const [saved, setSaved] = useState(false);
@@ -170,6 +174,8 @@ function SettingsForm({
                 creatorDefinitionTitleLo: form.creatorDefinitionTitleLo,
                 creatorDefinitionBodyLo: emptyToNull(form.creatorDefinitionBodyLo),
                 aboutHistoryLo: emptyToNull(form.aboutHistoryLo),
+                aboutRightsLo: emptyToNull(form.aboutRightsLo),
+                aboutSubmissionTermsLo: emptyToNull(form.aboutSubmissionTermsLo),
                 ctaTitleLo: form.ctaTitleLo,
                 ctaBodyLo: form.ctaBodyLo,
                 heroCaptionLo: emptyToNull(form.heroCaptionLo),
@@ -181,7 +187,8 @@ function SettingsForm({
                 faq: faq.filter((item) => item.questionLo.trim() && item.answerLo.trim()),
                 judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
                 homeCards: cards,
-                submitAfterLo: emptyToNull(form.submitAfterLo),
+                submitAfterSteps: afterSteps.filter((step) => step.bodyLo.trim()),
+                submitIntroLo: emptyToNull(form.submitIntroLo),
                 pageSeo: seo,
                 footerLocationLo: emptyToNull(form.footerLocationLo),
                 heroImageKey: heroImageKey ?? null,
@@ -237,11 +244,11 @@ function SettingsForm({
                   />
                 </Field>
                 <Field label="ຫຍໍ້ໜ້າແນະນຳງານ" help="ຫຍໍ້ໜ້າສັ້ນໆ ຂຶ້ນໜ້າຫຼັກ ແລະ ຫົວໜ້າ “ກ່ຽວກັບ”">
-                  <Textarea
+                  <RichTextarea
                     required
                     className="min-h-32"
                     value={form.aboutSummaryLo}
-                    onChange={(event) => setForm({ ...form, aboutSummaryLo: event.target.value })}
+                    onChange={(next) => setForm({ ...form, aboutSummaryLo: next })}
                   />
                 </Field>
               </CardBody>
@@ -259,12 +266,10 @@ function SettingsForm({
                   />
                 </Field>
                 <Field label="ຄຳອະທິບາຍ" hint="— ບໍ່ບັງຄັບ" help="ນິຍາມວ່າ “ຄຣີເອເຕີ” ຂອງມ່ວນອາວອດສ໌ແມ່ນໃຜ">
-                  <Textarea
+                  <RichTextarea
                     className="min-h-32"
                     value={form.creatorDefinitionBodyLo}
-                    onChange={(event) =>
-                      setForm({ ...form, creatorDefinitionBodyLo: event.target.value })
-                    }
+                    onChange={(next) => setForm({ ...form, creatorDefinitionBodyLo: next })}
                   />
                 </Field>
               </CardBody>
@@ -496,10 +501,42 @@ function SettingsForm({
                   hint="— ບໍ່ບັງຄັບ"
                   help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
                 >
-                  <Textarea
+                  <RichTextarea
                     className="min-h-40"
                     value={form.aboutHistoryLo}
-                    onChange={(event) => setForm({ ...form, aboutHistoryLo: event.target.value })}
+                    onChange={(next) => setForm({ ...form, aboutHistoryLo: next })}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader title="ຂໍ້ສະຫງວນສິດຂອງມ່ວນອາວອດສ໌ (ໜ້າ /about)" />
+              <CardBody>
+                <Field
+                  label="ເນື້ອຫາ"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
+                >
+                  <RichTextarea
+                    className="min-h-40"
+                    value={form.aboutRightsLo}
+                    onChange={(next) => setForm({ ...form, aboutRightsLo: next })}
+                  />
+                </Field>
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader title="ເງື່ອນໄຂການສະເໜີຊື່ (ໜ້າ /about)" />
+              <CardBody>
+                <Field
+                  label="ເນື້ອຫາ"
+                  hint="— ບໍ່ບັງຄັບ"
+                  help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
+                >
+                  <RichTextarea
+                    className="min-h-40"
+                    value={form.aboutSubmissionTermsLo}
+                    onChange={(next) => setForm({ ...form, aboutSubmissionTermsLo: next })}
                   />
                 </Field>
               </CardBody>
@@ -593,18 +630,38 @@ function SettingsForm({
 
           <FormSection id="submit" title="ໜ້າ ສົ່ງລາຍຊື່ (/submit)">
             <Card className="xl:col-span-2">
-              <CardHeader title="“ຫຼັງຈາກສົ່ງແລ້ວ” (ໜ້າ /submit)" />
+              <CardHeader title="ຫົວຂໍ້ “ສະເໜີຊື່ຄຣີເອເຕີ” (ໜ້າ /submit)" />
               <CardBody>
                 <Field
-                  label="ລາຍການ"
-                  help="ໜຶ່ງແຖວ = ໜຶ່ງຂໍ້ · ຖ້າເວັ້ນວ່າງທັງໝົດ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ"
+                  label="ຄຳອະທິບາຍໃຕ້ຫົວຂໍ້"
+                  help="ຖ້າເວັ້ນວ່າງ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ"
                 >
-                  <Textarea
-                    className="min-h-28"
-                    value={form.submitAfterLo}
-                    onChange={(event) => setForm({ ...form, submitAfterLo: event.target.value })}
+                  <Input
+                    value={form.submitIntroLo}
+                    onChange={(event) => setForm({ ...form, submitIntroLo: event.target.value })}
                   />
                 </Field>
+              </CardBody>
+            </Card>
+            <Card className="xl:col-span-2">
+              <CardHeader title="“ຫຼັງຈາກສົ່ງແລ້ວ” (ໜ້າ /submit)" aside={`${afterSteps.length} ຂັ້ນ`} />
+              <CardBody>
+                <Note>
+                  ສະແດງເປັນເສັ້ນທາງທີ່ມີລຳດັບ 1, 2, 3… ຕໍ່ທ້າຍດ້ວຍທຸງ “ປະກາດຜົນ” ສະເໝີ —
+                  ທຸງນັ້ນຕິດມາໃນໜ້າເວັບເອງ ບໍ່ຕ້ອງພິມເພີ່ມເປັນຂໍ້ · ຖ້າຍັງບໍ່ໃສ່ຂໍ້ໃດເລີຍ ຈະໃຊ້
+                  ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ
+                </Note>
+                <div className="mt-4">
+                  <EntryListEditor
+                    items={afterSteps}
+                    onChange={setAfterSteps}
+                    blank={{ bodyLo: '' }}
+                    entryLabel={(position) => `ຂັ້ນ ${position}`}
+                    addLabel="ເພີ່ມຂັ້ນ"
+                    removeLabel="ລຶບຂັ້ນນີ້"
+                    fields={[{ key: 'bodyLo', label: 'ຂໍ້ຄວາມ', multiline: true }]}
+                  />
+                </div>
               </CardBody>
             </Card>
           </FormSection>
@@ -629,7 +686,7 @@ function SettingsForm({
               <CardHeader title="ລາຍເສັ້ນຂັ້ນລະຫວ່າງ section" />
               <CardBody>
                 <Note>
-                  ຂຶ້ນເໜືອແຖບລຸ່ມສຸດຂອງທຸກໜ້າ ແລະ ໃນໜ້າຫຼັກ ກ່ອນສ່ວນ “ຜູ້ຊະນະລ່າສຸດ” —
+                  ຂຶ້ນເໜືອແຖບລຸ່ມສຸດຂອງທຸກໜ້າ ແລະ ໃນໜ້າຫຼັກ ກ່ອນສ່ວນ “ຜູ້ຊະນະຫຼ້າສຸດ” —
                   ອັບໂຫລດ PNG ພື້ນຫຼັງໂປ່ງໃສ 1 ໜ່ວຍລາຍທີ່ຂອບຊ້າຍ-ຂວາຕໍ່ກັນໄດ້ ລະບົບຈະຕໍ່ຄືນເອງອັດຕະໂນມັດ
                   ບໍ່ວ່າຈໍໃດ · ຖ້າບໍ່ອັບໂຫລດ ຈະໃຊ້ລາຍຂັດແບບເດີມ
                 </Note>

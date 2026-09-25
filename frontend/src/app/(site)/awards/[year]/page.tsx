@@ -66,10 +66,10 @@ const WINNER_ROWS = 12;
  * its placeholder.
  */
 const LOGO_SIZE: Record<SponsorLogoSize, string> = {
-  S: 'h-8 w-[43px]',
-  M: 'h-10 w-[53px]',
-  L: 'h-14 w-[75px]',
-  XL: 'h-18 w-24',
+  S: 'h-[42px] w-[56px]',
+  M: 'h-[52px] w-[69px]',
+  L: 'h-[73px] w-[97px]',
+  XL: 'h-[94px] w-[125px]',
 };
 
 interface WinnerRowData {

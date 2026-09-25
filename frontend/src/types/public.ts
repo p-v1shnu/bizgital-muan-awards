@@ -50,6 +50,8 @@ export interface PublicCategory {
   nameLo: string;
   nameEn: string | null;
   descriptionLo: string | null;
+  /** Object storage key for a 1:1 photo shown beside the description, never a full URL. */
+  imageKey: string | null;
   groupLo: string | null;
   isFeatured: boolean;
   nominees: PublicNominee[];

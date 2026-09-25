@@ -6,6 +6,7 @@ import { cleanHomeCards } from '../../common/utils/home-cards';
 import { cleanJudgingSteps } from '../../common/utils/judging-steps';
 import { cleanPageSeo } from '../../common/utils/page-seo';
 import { cleanSocialLinks } from '../../common/utils/social-links';
+import { cleanSubmitAfterSteps } from '../../common/utils/submit-after-steps';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateSiteSettingsDto } from './dto/site-settings.dto';
 
@@ -42,6 +43,8 @@ export class SiteSettingsService {
           dto.judgingSteps === undefined ? undefined : cleanJudgingSteps(dto.judgingSteps),
         homeCards: dto.homeCards === undefined ? undefined : cleanHomeCards(dto.homeCards),
         pageSeo: dto.pageSeo === undefined ? undefined : cleanPageSeo(dto.pageSeo),
+        submitAfterSteps:
+          dto.submitAfterSteps === undefined ? undefined : cleanSubmitAfterSteps(dto.submitAfterSteps),
       },
     });
 

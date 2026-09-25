@@ -2,7 +2,8 @@
 
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
-import { Field, Input, Textarea } from '@/components/ui/field';
+import { Field, Input } from '@/components/ui/field';
+import { RichTextarea } from '@/components/admin/rich-textarea';
 
 /**
  * A list of short records the team owns outright: it writes every field, adds
@@ -96,11 +97,11 @@ export function EntryListEditor<T extends Record<string, string>>({
             {fields.map((field) => (
               <Field key={field.key} label={field.label} help={field.help}>
                 {field.multiline ? (
-                  <Textarea
+                  <RichTextarea
                     className="min-h-24"
                     placeholder={field.placeholder}
                     value={item[field.key]}
-                    onChange={(event) => edit(index, field.key, event.target.value)}
+                    onChange={(next) => edit(index, field.key, next)}
                   />
                 ) : (
                   <Input

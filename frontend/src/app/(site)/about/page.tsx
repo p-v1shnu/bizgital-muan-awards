@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { ChevronDown, Mail, Phone } from 'lucide-react';
 
-import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
+import { ActionLink, Placeholder, RichText, Section } from '@/components/site/primitives';
 import { cn } from '@/lib/utils';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
@@ -86,6 +86,8 @@ function paragraphs(value: string | null | undefined) {
 export default async function AboutPage() {
   const site = await getPublic<SiteSettings>('/site');
   const history = paragraphs(site?.aboutHistoryLo);
+  const rights = paragraphs(site?.aboutRightsLo);
+  const submissionTerms = paragraphs(site?.aboutSubmissionTermsLo);
 
   // How to reach the team: an address and a number. The team's Facebook page is
   // not repeated here — the footer already carries it on every page.
@@ -102,19 +104,55 @@ export default async function AboutPage() {
     <>
       <Section eyebrow="ກ່ຽວກັບງານ" title="ມ່ວນອາວອດສ໌" titleAs="h1">
         <p className="max-w-2xl font-sans-looped text-[15.5px] leading-[1.9] text-ink-2">
-          {site?.aboutSummaryLo || (
+          {site?.aboutSummaryLo ? (
+            <RichText text={site.aboutSummaryLo} />
+          ) : (
             <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           )}
         </p>
         {history.length > 0 ? (
           <div className="mt-4 max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-3">
             {history.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index}>
+                <RichText text={paragraph} />
+              </p>
             ))}
           </div>
         ) : (
           <p className="mt-4 max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
             <Placeholder>ທີ່ມາຂອງງານ ແລະ ເປົ້າໝາຍ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+          </p>
+        )}
+      </Section>
+
+      <Section id="rights" title="ຂໍ້ສະຫງວນສິດຂອງມ່ວນອາວອດສ໌" className="bg-panel-2/50">
+        {rights.length > 0 ? (
+          <div className="max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-2">
+            {rights.map((paragraph, index) => (
+              <p key={index}>
+                <RichText text={paragraph} />
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
+            <Placeholder>ຂໍ້ສະຫງວນສິດ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+          </p>
+        )}
+      </Section>
+
+      <Section id="submission-terms" title="ເງື່ອນໄຂການສະເໜີຊື່">
+        {submissionTerms.length > 0 ? (
+          <div className="max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-2">
+            {submissionTerms.map((paragraph, index) => (
+              <p key={index}>
+                <RichText text={paragraph} />
+              </p>
+            ))}
+          </div>
+        ) : (
+          <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.9] text-ink-3">
+            <Placeholder>ເງື່ອນໄຂການສະເໜີຊື່ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           </p>
         )}
       </Section>
@@ -133,7 +171,9 @@ export default async function AboutPage() {
                   <span className="mr-2 text-ink-3">{index + 1}.</span>
                   {step.titleLo}
                 </p>
-                <p className="mt-1.5 font-sans-looped text-[14px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+                <p className="mt-1.5 font-sans-looped text-[14px] leading-relaxed text-ink-2">
+                  <RichText text={step.bodyLo} />
+                </p>
               </li>
             ))}
           </ol>
@@ -161,7 +201,9 @@ export default async function AboutPage() {
                   <div className="overflow-hidden">
                     <div className="space-y-2 px-5 pb-4 font-sans-looped text-[14px] leading-relaxed text-ink-2">
                       {paragraphs(item.answerLo).map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
+                        <p key={index}>
+                          <RichText text={paragraph} />
+                        </p>
                       ))}
                     </div>
                   </div>
@@ -188,11 +230,6 @@ export default async function AboutPage() {
                 ທີມງານໃຊ້ເພື່ອຄັດເລືອກຜູ້ເຂົ້າຊີງ
               </li>
               <li>
-                <b className="text-ink">ຊື່ ແລະ ອີເມວຂອງທ່ານ</b> —{' '}
-                <b className="text-ink">ບໍ່ບັງຄັບ</b> ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ
-                ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງການສອບຖາມຄືນເທົ່ານັ້ນ
-              </li>
-              <li>
                 <b className="text-ink">ຮ່ອງຮອຍທາງເທັກນິກ</b> ເພື່ອກັນສະແປມ —
                 ທີ່ຢູ່ IP ຖືກ<b className="text-ink">ປ່ຽນເປັນລະຫັດຫຍໍ້</b> ກ່ອນບັນທຶກ
                 ເພື່ອໃຫ້ອ່ານກັບເປັນເລກເດີມບໍ່ໄດ້
@@ -203,8 +240,7 @@ export default async function AboutPage() {
           <div>
             <h3 className="font-serif text-[19px] text-ink">ເກັບໄວ້ດົນປານໃດ</h3>
             <p className="mt-2">
-              ຊື່ ແລະ ອີເມວຂອງຜູ້ສົ່ງຖືກລຶບອອກ <b className="text-ink">ພາຍໃນ 12 ເດືອນ</b>{' '}
-              ຫຼັງງານປີນັ້ນຈົບ · ສ່ວນຊື່ຄຣີເອເຕີ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງຈະຖືກເກັບໄວ້ຖາວອນ
+              ຂໍ້ມູນທີ່ສົ່ງເຂົ້າມາ ແລະ ຜົນລາງວັນ ເປັນບັນທຶກຂອງງານ ຈຶ່ງຖືກເກັບໄວ້ຖາວອນ
             </p>
           </div>
 
@@ -212,7 +248,7 @@ export default async function AboutPage() {
             <h3 className="font-serif text-[19px] text-ink">ເຮົາບໍ່ເຮັດຫຍັງກັບຂໍ້ມູນຂອງທ່ານ</h3>
             <p className="mt-2">
               ບໍ່ຂາຍ ບໍ່ແລກປ່ຽນ ແລະ ບໍ່ສົ່ງອີເມວໂຄສະນາ ·
-              ຄົນທີ່ເຫັນຂໍ້ມູນຜູ້ສົ່ງມີສະເພາະທີມງານທີ່ມີບັນຊີຫຼັງບ້ານ
+              ຄົນທີ່ເຫັນຂໍ້ມູນທີ່ສົ່ງເຂົ້າມາມີສະເພາະທີມງານທີ່ມີບັນຊີຫຼັງບ້ານ
             </p>
           </div>
 
@@ -244,8 +280,8 @@ export default async function AboutPage() {
           <div>
             <h3 className="font-serif text-[19px] text-ink">ຢາກໃຫ້ລຶບຂໍ້ມູນ</h3>
             <p className="mt-2">
-              ຂຽນມາຫາທີມງານຕາມຊ່ອງທາງຂ້າງລຸ່ມ ພ້ອມບອກຊື່ທີ່ທ່ານສົ່ງເຂົ້າມາ —
-              ເຮົາຈະລຶບຂໍ້ມູນຜູ້ສົ່ງອອກໃຫ້
+              ຂຽນມາຫາທີມງານຕາມຊ່ອງທາງຂ້າງລຸ່ມ ພ້ອມບອກຊື່ຄຣີເອເຕີ ແລະ ສາຂາທີ່ທ່ານສົ່ງເຂົ້າມາ —
+              ເຮົາຈະລຶບລາຍການນັ້ນອອກໃຫ້
             </p>
           </div>
         </div>

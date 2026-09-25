@@ -1,4 +1,4 @@
-import { Children, cloneElement, isValidElement, useId } from 'react';
+import { Children, cloneElement, forwardRef, isValidElement, useId } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -64,12 +64,17 @@ export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   return <input className={cn(controlStyles, className)} {...props} />;
 }
 
-export function Textarea({
-  className,
-  ...props
-}: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cn(controlStyles, 'min-h-20 resize-y leading-relaxed', className)} {...props} />;
-}
+export const Textarea = forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
+  function Textarea({ className, ...props }, ref) {
+    return (
+      <textarea
+        ref={ref}
+        className={cn(controlStyles, 'min-h-20 resize-y leading-relaxed', className)}
+        {...props}
+      />
+    );
+  },
+);
 
 export function Select({ className, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return <select className={cn(controlStyles, 'cursor-pointer', className)} {...props} />;

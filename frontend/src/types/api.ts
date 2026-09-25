@@ -44,6 +44,8 @@ export interface Category {
   nameLo: string;
   nameEn: string | null;
   descriptionLo: string | null;
+  /** Object storage key for a 1:1 photo shown beside the description, never a full URL. */
+  imageKey: string | null;
   groupLo: string | null;
   sortOrder: number;
   isFeatured: boolean;
@@ -59,6 +61,7 @@ export interface CategoryTemplate {
   nameLo: string;
   nameEn: string | null;
   descriptionLo: string | null;
+  imageKey: string | null;
   _count?: { categories: number };
 }
 
@@ -70,6 +73,9 @@ export interface Creator {
   bioLo: string | null;
   avatarKey: string | null;
   socialLinks: Record<string, string> | null;
+  /** Set once an admin has struck this creator's public history — see revoke()/unrevoke() in the admin creators API. */
+  revokedAt: string | null;
+  revokedReason: string | null;
   _count?: { nominations: number };
 }
 
@@ -142,8 +148,8 @@ export interface SubmissionEntry {
   /** Set when the team folded this entry into another spelling (PRD §7.2). */
   originalNameRaw: string | null;
   creatorLink: string | null;
-  reason: string | null;
-  submitterName: string | null;
+  /** Keys into SUBMISSION_REASON_TAGS — what the sender checked, replacing the old free-text reason. */
+  reasonTags: string[];
   status: SubmissionStatus;
   createdAt: string;
 }
@@ -164,6 +170,11 @@ export interface FaqItem {
   questionLo: string;
   /** One paragraph per line. */
   answerLo: string;
+}
+
+/** One step of "what happens after a name is sent in", shown on /submit as a journey ending in a fixed "results announced" flag. */
+export interface SubmitAfterStep {
+  bodyLo: string;
 }
 
 /** One step of "how this is judged", shown on the homepage and on /about. */
@@ -226,12 +237,15 @@ export interface SiteSettings {
   homeHighlightDescriptionLo: string | null;
   socialLinks: Record<string, string> | null;
   aboutHistoryLo: string | null;
+  aboutRightsLo: string | null;
+  aboutSubmissionTermsLo: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   faq: FaqItem[] | null;
   judgingSteps: JudgingStep[] | null;
   homeCards: HomeCards | null;
-  submitAfterLo: string | null;
+  submitAfterSteps: SubmitAfterStep[] | null;
+  submitIntroLo: string | null;
   pageSeo: Partial<Record<'home' | 'about' | 'submit' | 'winners', PageSeo>> | null;
   footerLocationLo: string | null;
   /** A team-uploaded tile that replaces the built-in woven section divider. Null keeps the CSS pattern. */

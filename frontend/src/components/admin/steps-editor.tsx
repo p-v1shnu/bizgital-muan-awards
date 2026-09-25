@@ -2,8 +2,9 @@
 
 import { ChevronDown, ChevronUp, Trash2, X } from 'lucide-react';
 
-import { Field, Input, Textarea } from '@/components/ui/field';
+import { Field, Input } from '@/components/ui/field';
 import { ImageUpload } from '@/components/admin/image-upload';
+import { RichTextarea } from '@/components/admin/rich-textarea';
 import { JUDGING_STEP_ICON_NAMES, JUDGING_STEP_ICONS } from '@/lib/judging-step-icons';
 import { cn } from '@/lib/utils';
 import type { JudgingStep } from '@/types/api';
@@ -88,10 +89,10 @@ export function StepsEditor({
                 />
               </Field>
               <Field label="ຄຳອະທິບາຍ" help="ສັ້ນໆ 1 ປະໂຫຍກ — ໜ້າຫຼັກວາງເປັນ Card ແຄບ">
-                <Textarea
+                <RichTextarea
                   className="min-h-24"
                   value={item.bodyLo}
-                  onChange={(event) => update(index, { bodyLo: event.target.value })}
+                  onChange={(next) => update(index, { bodyLo: next })}
                 />
               </Field>
 

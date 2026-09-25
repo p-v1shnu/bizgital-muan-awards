@@ -137,6 +137,14 @@ export function Gallery({
 
             {imageKeys.length > 1 && (
               <>
+                {/* z-10: the slide below sits at top-1/2 too (it's centred in
+                    the same flex box) and, being later in the DOM with no
+                    z-index of its own, would otherwise win the stacking order
+                    and swallow the tap before it ever reached this button —
+                    invisibly, since its own background is transparent. That
+                    read as "the arrows don't do anything" on a touch screen,
+                    where there is no hover state to reveal that the pointer
+                    never landed on the button at all. */}
                 <button
                   type="button"
                   aria-label="ຮູບກ່ອນໜ້າ"
@@ -144,7 +152,7 @@ export function Gallery({
                     event.stopPropagation();
                     go(-1);
                   }}
-                  className="absolute left-4 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                  className="absolute left-4 top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
                 >
                   <ChevronLeft className="size-5" />
                 </button>
@@ -155,7 +163,7 @@ export function Gallery({
                     event.stopPropagation();
                     go(1);
                   }}
-                  className="absolute right-4 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
+                  className="absolute right-4 top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/10 text-white hover:bg-white/20"
                 >
                   <ChevronRight className="size-5" />
                 </button>
@@ -220,6 +228,33 @@ export function Gallery({
                 </motion.div>
               </AnimatePresence>
             </div>
+
+            {/* The slide the visitor is looking at is the one this component
+                renders — Next/Prev only fetches the neighbour once tapped,
+                which is exactly the delay being worked around here. These
+                two sit off-screen (1x1, clipped, unreachable) purely to make
+                the browser start that fetch now: `loading="eager"` skips the
+                lazy-load intersection check an invisible element would
+                otherwise never pass, so by the time a visitor taps an arrow
+                the neighbour is already in cache instead of starting cold. */}
+            {imageKeys.length > 1 && (
+              <div aria-hidden className="absolute size-px overflow-hidden opacity-0">
+                <div className="relative size-px">
+                  <SiteImage
+                    imageKey={imageKeys[(openIndex + 1) % imageKeys.length]}
+                    sizes="100vw"
+                    loading="eager"
+                  />
+                </div>
+                <div className="relative size-px">
+                  <SiteImage
+                    imageKey={imageKeys[(openIndex - 1 + imageKeys.length) % imageKeys.length]}
+                    sizes="100vw"
+                    loading="eager"
+                  />
+                </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

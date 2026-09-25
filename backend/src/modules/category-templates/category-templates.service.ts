@@ -55,7 +55,7 @@ export class CategoryTemplatesService {
   /**
    * A templated category is a live copy now, not a one-time stamp — every
    * edition that picked this template moves with it (nameLo/nameEn/slug/
-   * descriptionLo), which is the whole reason CategoriesService.update()
+   * descriptionLo/imageKey), which is the whole reason CategoriesService.update()
    * refuses those same fields on the category side. The slug is the one
    * field that can collide: two categories in the same edition can't share
    * one, so a rename that would land on top of something an edition already
@@ -96,6 +96,7 @@ export class CategoryTemplatesService {
           ...(dto.nameEn !== undefined ? { nameEn: dto.nameEn } : {}),
           ...(dto.slug !== undefined ? { slug: dto.slug } : {}),
           ...(dto.descriptionLo !== undefined ? { descriptionLo: dto.descriptionLo } : {}),
+          ...(dto.imageKey !== undefined ? { imageKey: dto.imageKey } : {}),
         },
       }),
     ]);

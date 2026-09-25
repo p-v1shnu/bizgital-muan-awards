@@ -57,7 +57,7 @@ function sniffImageType(buffer: Buffer): string | null {
   return null;
 }
 
-export type UploadFolder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site';
+export type UploadFolder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site' | 'categories';
 
 @Injectable()
 export class StorageService {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 
 import { ActionLink } from '@/components/site/primitives';
+import { SUBMISSION_REASON_TAGS } from '@/lib/submission-reason-tags';
 import { useDebounced } from '@/lib/use-debounced';
 import type { OpenSubmissionForm } from '@/types/public';
 
@@ -16,17 +17,16 @@ declare global {
 }
 
 /**
- * The public form. Personal details are optional on purpose (PRD §10): the
- * point is to learn about a creator, not to collect a database of senders.
+ * The public form. It asks nothing about the sender — no name, no email —
+ * only what the entry is about: the point is to learn about a creator, not
+ * to collect a database of senders.
  */
 export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
   const [values, setValues] = useState({
     categoryId: form.categories[0]?.id ?? '',
     creatorNameRaw: '',
     creatorLink: '',
-    reason: '',
-    submitterName: '',
-    submitterEmail: '',
+    reasonTags: [] as string[],
     website: '', // honeypot
   });
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -46,9 +46,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
           categoryId: values.categoryId,
           creatorNameRaw: values.creatorNameRaw,
           creatorLink: values.creatorLink || undefined,
-          reason: values.reason || undefined,
-          submitterName: values.submitterName || undefined,
-          submitterEmail: values.submitterEmail || undefined,
+          reasonTags: values.reasonTags,
           website: values.website || undefined,
         }),
       });
@@ -86,7 +84,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
           <button
             type="button"
             onClick={() => {
-              setValues({ ...values, creatorNameRaw: '', creatorLink: '', reason: '' });
+              setValues({ ...values, creatorNameRaw: '', creatorLink: '', reasonTags: [] });
               setState('idle');
             }}
             className="rounded-[var(--radius-btn)] bg-ink px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-deep"
@@ -185,7 +183,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         onChange={(creatorNameRaw) => setValues({ ...values, creatorNameRaw })}
       />
 
-      <Field label="ລິງກ໌ຊ່ອງທາງ" help="Facebook, TikTok, YouTube ຫຼື Instagram — ຊ່ວຍໃຫ້ທີມງານຫາເຈົ້າຕົວໄດ້">
+      <Field label="ລິງກ໌ຊ່ອງທາງ" help="Facebook, TikTok, YouTube ຫຼື Instagram — ເພື່ອຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໄປເບິ່ງຜົນງານໄດ້">
         <Input
           type="url"
           placeholder="https://…"
@@ -194,39 +192,40 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         />
       </Field>
 
-      <Field label="ເປັນຫຍັງຄວນໄດ້ລາງວັນ" help="ບອກສັ້ນໆກໍພໍ ຊ່ວຍທີມງານໄດ້ຫຼາຍ">
-        <textarea
-          maxLength={1000}
-          rows={4}
-          value={values.reason}
-          onChange={(event) => setValues({ ...values, reason: event.target.value })}
-          className="w-full resize-y rounded-[var(--radius-sm)] border border-rule bg-white px-3.5 py-2.5 text-[14px] leading-relaxed text-ink"
-        />
-      </Field>
-
-      <fieldset className="mt-6 border-t border-hairline pt-5">
-        <legend className="sr-only">ຂໍ້ມູນຜູ້ສົ່ງ</legend>
-        <p className="mb-4 text-[12.5px] text-ink-3">
-          ສອງຊ່ອງລຸ່ມນີ້ <b className="text-ink-2">ບໍ່ບັງຄັບ</b> — ບໍ່ໃສ່ກໍສົ່ງໄດ້ປົກກະຕິ ·
-          ໃຊ້ສະເພາະເມື່ອທີມງານຕ້ອງຖາມກັບ ແລະ ລຶບພາຍໃນ 12 ເດືອນ{' '}
-          <a href="/about#privacy" className="text-brand-deep underline">
-            ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ
-          </a>
-        </p>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="ຊື່ຂອງທ່ານ">
-            <Input
-              value={values.submitterName}
-              onChange={(event) => setValues({ ...values, submitterName: event.target.value })}
-            />
-          </Field>
-          <Field label="ອີເມວ">
-            <Input
-              type="email"
-              value={values.submitterEmail}
-              onChange={(event) => setValues({ ...values, submitterEmail: event.target.value })}
-            />
-          </Field>
+      <fieldset className="mb-5 last:mb-0">
+        <legend className="mb-1.5 text-[13px] font-semibold text-ink">
+          ຍ້ອນຫຍັງເຈົ້າຈຶ່ງມັກຄອນເທັນຄຣີເອເຕີຄົນ/ກຸ່ມນີ້?<span className="ml-1 text-brand-deep">*</span>
+        </legend>
+        <div className="space-y-2">
+          {SUBMISSION_REASON_TAGS.map((tag) => {
+            const checked = values.reasonTags.includes(tag.key);
+            return (
+              <label
+                key={tag.key}
+                className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] border px-3.5 py-3 transition-colors ${
+                  checked ? 'border-ink bg-panel-2' : 'border-rule bg-white'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    setValues({
+                      ...values,
+                      reasonTags: checked
+                        ? values.reasonTags.filter((key) => key !== tag.key)
+                        : [...values.reasonTags, tag.key],
+                    })
+                  }
+                  className="mt-0.5 size-4 shrink-0 accent-ink"
+                />
+                <span>
+                  <span className="block text-[14px] font-medium text-ink">{tag.titleLo}</span>
+                  <span className="mt-0.5 block text-[12px] text-ink-3">{tag.hintLo}</span>
+                </span>
+              </label>
+            );
+          })}
         </div>
       </fieldset>
 
@@ -251,7 +250,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
 
       <button
         type="submit"
-        disabled={state === 'sending'}
+        disabled={state === 'sending' || values.reasonTags.length === 0}
         className="mt-6 w-full rounded-[var(--radius-btn)] bg-ink px-5 py-3.5 text-[15px] font-semibold text-white hover:bg-brand-deep disabled:opacity-50"
       >
         {state === 'sending' ? 'ກຳລັງສົ່ງ…' : 'ສົ່ງລາຍຊື່'}
@@ -365,7 +364,7 @@ function CreatorNameField({
         />
       </label>
       <span className="mt-1.5 block text-[12px] text-ink-3">
-        ຂຽນຕາມທີ່ຄົນຮູ້ຈັກ — ຊື່ເພຈ ຫຼື ຊື່ຈິງກໍໄດ້
+        ຊື່ຊ່ອງ ຫຼື ຊື່ເພຈ ຂອງຄຣີເອເຕີ
       </span>
 
       {visible && (

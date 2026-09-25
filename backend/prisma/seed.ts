@@ -83,11 +83,11 @@ const STARTING_HOME_CARDS = {
   hallOfWinners: { bodyLo: 'ຜູ້ຊະນະທຸກສາຂາ ທຸກປີ ນັບແຕ່ປີທຳອິດ' },
 };
 
-const STARTING_SUBMIT_AFTER = [
+const STARTING_SUBMIT_AFTER_STEPS = [
   'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
   'ຊື່ທີ່ຖືກສົ່ງຫຼາຍຄັ້ງຈະຖືກລວມເປັນລາຍການດຽວ ບໍ່ນັບເປັນຄະແນນ',
   'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກສະເໜີ',
-].join('\n');
+].map((bodyLo) => ({ bodyLo }));
 
 /**
  * What the browser tab and a search result say for the pages that have no year
@@ -128,7 +128,7 @@ async function main() {
       faq: STARTING_FAQ,
       judgingSteps: STARTING_JUDGING_STEPS,
       homeCards: STARTING_HOME_CARDS,
-      submitAfterLo: STARTING_SUBMIT_AFTER,
+      submitAfterSteps: STARTING_SUBMIT_AFTER_STEPS,
       pageSeo: STARTING_PAGE_SEO,
       footerLocationLo: 'ນະຄອນຫຼວງວຽງຈັນ, ສປປ ລາວ',
     },

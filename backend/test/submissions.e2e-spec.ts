@@ -40,7 +40,10 @@ describe('public submissions and the screening queue', () => {
    * otherwise it is really testing the dedupe rule and getting one row.
    */
   const send = (body: Record<string, unknown>, from = '203.0.113.1') =>
-    api(h).post(path('/submissions')).set('X-Forwarded-For', from).send(body);
+    api(h)
+      .post(path('/submissions'))
+      .set('X-Forwarded-For', from)
+      .send({ reasonTags: ['creativity'], ...body });
 
   it('refuses entries while the form is closed', async () => {
     await send({ categoryId, creatorNameRaw: 'ຄົນໜຶ່ງ' }).expect(403);
@@ -53,7 +56,7 @@ describe('public submissions and the screening queue', () => {
       .send({ submissionsOpen: true })
       .expect(200);
 
-    await send({ categoryId, creatorNameRaw: 'ບຸນມີ', reason: 'ເນື້ອຫາດີ' }).expect(201);
+    await send({ categoryId, creatorNameRaw: 'ບຸນມີ' }).expect(201);
   });
 
   it('answers a honeypot filler as if it worked, and stores nothing', async () => {
@@ -208,7 +211,7 @@ describe('public submissions and the screening queue', () => {
    */
   describe('when two things happen at the same instant', () => {
     it('stores one entry when the same name is sent three times at once', async () => {
-      const body = { categoryId, creatorNameRaw: 'ພ້ອມກັນ' };
+      const body = { categoryId, creatorNameRaw: 'ພ້ອມກັນ', reasonTags: ['creativity'] };
       const sent = await Promise.all(
         [0, 1, 2].map(() =>
           api(h).post(path('/submissions')).set('X-Forwarded-For', '198.51.100.60').send(body),
@@ -224,7 +227,7 @@ describe('public submissions and the screening queue', () => {
       await api(h)
         .post(path('/submissions'))
         .set('X-Forwarded-For', '198.51.100.61')
-        .send({ categoryId, creatorNameRaw: 'ກົດສອງເທື່ອ' })
+        .send({ categoryId, creatorNameRaw: 'ກົດສອງເທື່ອ', reasonTags: ['creativity'] })
         .expect(201);
 
       const entry = await h.prisma.publicSubmission.findFirst({
@@ -279,7 +282,7 @@ describe('public submissions and the screening queue', () => {
       api(h)
         .post(path('/submissions'))
         .set('X-Forwarded-For', from)
-        .send({ categoryId, creatorNameRaw: name })
+        .send({ categoryId, creatorNameRaw: name, reasonTags: ['creativity'] })
         .expect(201);
 
     const pendingGroups = async () => {
@@ -326,7 +329,7 @@ describe('public submissions and the screening queue', () => {
       await api(h)
         .post(path('/submissions'))
         .set('X-Forwarded-For', '203.0.113.4')
-        .send({ categoryId: other.body.data.id, creatorNameRaw: 'ຄຳຫຼ້າ ສີສຸວັນ' })
+        .send({ categoryId: other.body.data.id, creatorNameRaw: 'ຄຳຫຼ້າ ສີສຸວັນ', reasonTags: ['creativity'] })
         .expect(201);
 
       const groups = await pendingGroups();
