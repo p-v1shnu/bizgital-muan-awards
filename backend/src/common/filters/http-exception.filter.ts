@@ -27,6 +27,17 @@ function fromPrisma(exception: unknown) {
   const field = Array.isArray(target) ? target.join(', ') : String(target ?? 'value');
 
   switch (exception.code) {
+    // A value longer than its column. The DTOs are meant to stop these first,
+    // but several allow more than the VARCHAR(191) they are stored in, and a
+    // value that is too long is the sender's to shorten, not a fault here.
+    case 'P2000': {
+      const column = exception.meta?.column_name;
+      return {
+        status: HttpStatus.BAD_REQUEST,
+        message: `That ${typeof column === 'string' ? column : 'value'} is too long`,
+        error: 'Bad Request',
+      };
+    }
     case 'P2002':
       return { status: HttpStatus.CONFLICT, message: `That ${field} is already taken`, error: 'Conflict' };
     case 'P2025':
