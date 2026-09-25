@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 
 import { ActionLink } from '@/components/site/primitives';
+import { SUBMISSION_REASON_TAGS } from '@/lib/submission-reason-tags';
 import { useDebounced } from '@/lib/use-debounced';
 import type { OpenSubmissionForm } from '@/types/public';
 
@@ -25,7 +26,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
     categoryId: form.categories[0]?.id ?? '',
     creatorNameRaw: '',
     creatorLink: '',
-    reason: '',
+    reasonTags: [] as string[],
     website: '', // honeypot
   });
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -45,7 +46,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
           categoryId: values.categoryId,
           creatorNameRaw: values.creatorNameRaw,
           creatorLink: values.creatorLink || undefined,
-          reason: values.reason || undefined,
+          reasonTags: values.reasonTags,
           website: values.website || undefined,
         }),
       });
@@ -83,7 +84,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
           <button
             type="button"
             onClick={() => {
-              setValues({ ...values, creatorNameRaw: '', creatorLink: '', reason: '' });
+              setValues({ ...values, creatorNameRaw: '', creatorLink: '', reasonTags: [] });
               setState('idle');
             }}
             className="rounded-[var(--radius-btn)] bg-ink px-5 py-3 text-[14px] font-semibold text-white hover:bg-brand-deep"
@@ -191,15 +192,42 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         />
       </Field>
 
-      <Field label="ເປັນຫຍັງຄວນໄດ້ລາງວັນ" help="ບອກສັ້ນໆກໍພໍ ຊ່ວຍທີມງານໄດ້ຫຼາຍ">
-        <textarea
-          maxLength={1000}
-          rows={4}
-          value={values.reason}
-          onChange={(event) => setValues({ ...values, reason: event.target.value })}
-          className="w-full resize-y rounded-[var(--radius-sm)] border border-rule bg-white px-3.5 py-2.5 text-[14px] leading-relaxed text-ink"
-        />
-      </Field>
+      <fieldset className="mb-5 last:mb-0">
+        <legend className="mb-1.5 text-[13px] font-semibold text-ink">
+          ເປັນຫຍັງຄວນໄດ້ລາງວັນ<span className="ml-1 text-brand-deep">*</span>
+        </legend>
+        <div className="space-y-2">
+          {SUBMISSION_REASON_TAGS.map((tag) => {
+            const checked = values.reasonTags.includes(tag.key);
+            return (
+              <label
+                key={tag.key}
+                className={`flex cursor-pointer items-start gap-3 rounded-[var(--radius-sm)] border px-3.5 py-3 transition-colors ${
+                  checked ? 'border-ink bg-panel-2' : 'border-rule bg-white'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() =>
+                    setValues({
+                      ...values,
+                      reasonTags: checked
+                        ? values.reasonTags.filter((key) => key !== tag.key)
+                        : [...values.reasonTags, tag.key],
+                    })
+                  }
+                  className="mt-0.5 size-4 shrink-0 accent-ink"
+                />
+                <span>
+                  <span className="block text-[14px] font-medium text-ink">{tag.titleLo}</span>
+                  <span className="mt-0.5 block text-[12px] text-ink-3">{tag.hintLo}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
 
       {/* Hidden from people, irresistible to bots. */}
       <div aria-hidden className="absolute left-[-9999px]">
@@ -222,7 +250,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
 
       <button
         type="submit"
-        disabled={state === 'sending'}
+        disabled={state === 'sending' || values.reasonTags.length === 0}
         className="mt-6 w-full rounded-[var(--radius-btn)] bg-ink px-5 py-3.5 text-[15px] font-semibold text-white hover:bg-brand-deep disabled:opacity-50"
       >
         {state === 'sending' ? 'ກຳລັງສົ່ງ…' : 'ສົ່ງລາຍຊື່'}

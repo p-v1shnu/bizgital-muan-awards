@@ -142,7 +142,8 @@ export interface SubmissionEntry {
   /** Set when the team folded this entry into another spelling (PRD §7.2). */
   originalNameRaw: string | null;
   creatorLink: string | null;
-  reason: string | null;
+  /** Keys into SUBMISSION_REASON_TAGS — what the sender checked, replacing the old free-text reason. */
+  reasonTags: string[];
   status: SubmissionStatus;
   createdAt: string;
 }

@@ -14,8 +14,13 @@ import { Pager } from '@/components/admin/pager';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { randomSlug, safeHttpUrl, slugify } from '@/lib/utils';
 import { useDebounced } from '@/lib/use-debounced';
+import { SUBMISSION_REASON_TAGS } from '@/lib/submission-reason-tags';
 import type { Category, Edition, SubmissionGroup, SubmissionStatus } from '@/types/api';
 import { formatDateTime } from '@/lib/dates';
+
+const REASON_TAG_LABEL: Record<string, string> = Object.fromEntries(
+  SUBMISSION_REASON_TAGS.map((tag) => [tag.key, tag.titleLo]),
+);
 
 const STATUS_LABEL: Record<SubmissionStatus, string> = {
   PENDING: 'ລໍຖ້າຄັດກອງ',
@@ -235,8 +240,16 @@ function GroupRow({ group }: { group: SubmissionGroup }) {
           )}
           {group.entries.map((entry) => (
             <li key={entry.id} className="border-b border-hairline py-2 last:border-b-0">
-              <p className="text-[12.5px] text-ink-2">
-                {entry.reason || <span className="text-ink-3">ບໍ່ໄດ້ຂຽນເຫດຜົນ</span>}
+              <p className="flex flex-wrap gap-1.5">
+                {entry.reasonTags.length > 0 ? (
+                  entry.reasonTags.map((key) => (
+                    <Badge key={key} tone="neutral">
+                      {REASON_TAG_LABEL[key] ?? key}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-[12.5px] text-ink-3">ບໍ່ໄດ້ເລືອກເຫດຜົນ</span>
+                )}
               </p>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-3">
                 <span>{formatDateTime(entry.createdAt)}</span>

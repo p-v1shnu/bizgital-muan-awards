@@ -287,13 +287,14 @@ test('the submission form accepts an entry', async ({ page }) => {
 
   // Scoped to main: the nav carries the same year label.
   await expect(page.getByRole('main').getByText('ງານປີ 2026')).toBeVisible();
-  await expect(page.getByText('ບໍ່ບັງຄັບ')).toBeVisible();
 
   await page.selectOption('form select', { index: 1 });
   // By name, not by position: with sixteen categories the form also carries a
   // filter box above the picker, which would otherwise be the first input.
   await page.getByRole('combobox', { name: /ຊື່ຄຣີເອເຕີ/ }).fill('ນັກສ້າງສັນ ທົດສອບ');
-  await page.locator('form textarea').fill('ຜົນງານດີຕະຫຼອດປີ');
+  // At least one reason is required — the submit button stays disabled until
+  // one is checked.
+  await page.getByRole('checkbox', { name: /ຄວາມຄິດສ້າງສັນ/ }).check();
   await page.locator('form button[type=submit]').click();
 
   await expect(page.getByText('ຮັບຊື່ແລ້ວ')).toBeVisible();

@@ -387,7 +387,13 @@ model PublicSubmission {
   /// in is ever thrown away.
   originalNameRaw String?
   creatorLink    String?
-  reason         String? @db.Text
+
+  /// What the sender checked, replacing a free-text "why should they win" box
+  /// (the team decided a fixed set of reasons was more useful for screening
+  /// than open text). A JSON array of keys into SUBMISSION_REASON_TAGS
+  /// (frontend/src/lib/submission-reason-tags.ts) — MySQL has no native array
+  /// column, same reason judgingSteps and galleryImageKeys are Json here.
+  reasonTags Json?
 
   /// Hashed, never the raw address (PRD §10 privacy).
   ipHash String

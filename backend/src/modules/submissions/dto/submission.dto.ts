@@ -2,7 +2,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubmissionStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
+  ArrayMinSize,
+  IsArray,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -12,6 +15,21 @@ import {
 } from 'class-validator';
 
 import { PaginationDto } from '../../../common/dto/pagination.dto';
+
+/**
+ * Keys into the fixed set of reasons a sender can check on /submit — kept in
+ * sync by hand with frontend/src/lib/submission-reason-tags.ts. A validated
+ * preset rather than a full Prisma enum, the same way site-settings.dto.ts's
+ * JUDGING_STEP_ICON_NAMES is, since the column itself is Json (PublicSubmission
+ * has no reasonTags enum column, just an array of these strings).
+ */
+export const SUBMISSION_REASON_TAGS = [
+  'creativity',
+  'relevance',
+  'quality',
+  'consistency',
+  'engagement',
+] as const;
 
 export class CreateSubmissionDto {
   // Trimmed for the same reason as the name below, so that a whitespace id and
@@ -44,11 +62,15 @@ export class CreateSubmissionDto {
   @IsUrl({ require_protocol: true })
   creatorLink?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  @MaxLength(1000)
-  reason?: string;
+  @ApiProperty({
+    enum: SUBMISSION_REASON_TAGS,
+    isArray: true,
+    description: 'Why they should win — at least one, checked from a fixed set',
+  })
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsIn(SUBMISSION_REASON_TAGS, { each: true })
+  reasonTags!: string[];
 
   /**
    * Honeypot. Real people never see this field, so anything in it is a bot.

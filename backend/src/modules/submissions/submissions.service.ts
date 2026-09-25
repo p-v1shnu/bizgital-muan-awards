@@ -73,7 +73,7 @@ export class SubmissionsService {
           categoryId: dto.categoryId,
           creatorNameRaw,
           creatorLink: dto.creatorLink,
-          reason: dto.reason,
+          reasonTags: dto.reasonTags,
           ipHash,
           dedupeKey: dedupeKey(dto.categoryId, creatorNameRaw, ipHash),
         },

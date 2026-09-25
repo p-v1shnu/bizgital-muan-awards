@@ -629,7 +629,7 @@ erDiagram
         string categoryId FK
         string creatorNameRaw "ชื่อตามที่ผู้ส่งพิมพ์"
         string creatorLink "nullable"
-        string reason "nullable"
+        string reasonTags "JSON array, nullable"
         string ipHash
         string status "PENDING | ACCEPTED | REJECTED | MERGED"
         string matchedCreatorId FK "nullable — ผูกเมื่อแอดมินจับคู่แล้ว"
