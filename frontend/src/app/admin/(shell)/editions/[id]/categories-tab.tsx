@@ -379,7 +379,7 @@ function CategoryDialog({
             <Field label="ຮູບປະກອບ (1:1)" help="ມາຈາກຄັງສາຂາ — ໄປແກ້ທີ່ນັ້ນແທນ">
               <div className="size-20 overflow-hidden rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={imagePublicUrl(imageKeyPreview)} alt="" className="size-full object-cover" />
+                <img src={imagePublicUrl(imageKeyPreview) ?? ''} alt="" className="size-full object-cover" />
               </div>
             </Field>
           )
