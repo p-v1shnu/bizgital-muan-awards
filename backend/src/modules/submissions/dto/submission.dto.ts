@@ -60,9 +60,16 @@ export class CreateSubmissionDto {
   @MaxLength(160)
   creatorNameRaw!: string;
 
-  @ApiPropertyOptional({ description: 'Link to their page, so the team can find them' })
+  /**
+   * Bounded by the column, which is VARCHAR(191). `IsUrl` alone allows 2,084
+   * characters, so a longer link passed validation and was refused by the
+   * database instead — a 500 anyone could send without signing in, and ten of
+   * those in five minutes is the spike /health/errors wakes somebody up for.
+   */
+  @ApiPropertyOptional({ description: 'Link to their page, so the team can find them', maxLength: 191 })
   @IsOptional()
   @IsUrl({ require_protocol: true })
+  @MaxLength(191)
   creatorLink?: string;
 
   @ApiProperty({

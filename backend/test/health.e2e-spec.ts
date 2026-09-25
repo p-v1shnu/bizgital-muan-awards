@@ -57,6 +57,28 @@ describe('health probes', () => {
    * is deliberately the alarm that waits until morning (§10) and must not trip
    * the one that wakes people.
    */
+  /**
+   * The other side of the counter: a 400 the database gave rather than the DTO.
+   * Several fields accept more than the VARCHAR(191) they are stored in, and a
+   * value that is too long is the sender's to fix — answered as a 500, it said
+   * the server was broken and moved the alarm towards going off.
+   */
+  it('answers a value too long for its column as a 400, not a counted 500', async () => {
+    await api(h)
+      .post(path('/admin/editions'))
+      .set(h.auth)
+      .send({
+        year: 2031,
+        slug: '2031',
+        titleLo: 'ງານ 2031',
+        ticketUrl: `https://tickets.example.com/${'a'.repeat(200)}`,
+      })
+      .expect(400);
+
+    const response = await api(h).get(path('/health/errors')).expect(200);
+    expect(response.body.data.serverErrors).toBe(0);
+  });
+
   it('leaves its own 503 out of the count', async () => {
     const threshold = Number(process.env.ERROR_SPIKE_THRESHOLD ?? 10);
     for (let i = 0; i < threshold; i += 1) recordServerError();

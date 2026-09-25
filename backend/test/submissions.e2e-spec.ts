@@ -1,4 +1,5 @@
 import { api, categoryTemplate, createHarness, path, type Harness } from './harness';
+import { resetServerErrors, serverErrorsInWindow } from '../src/common/server-errors';
 
 describe('public submissions and the screening queue', () => {
   let h: Harness;
@@ -202,6 +203,21 @@ describe('public submissions and the screening queue', () => {
   it('stores the submitter IP hashed, never in the clear', async () => {
     const row = await h.prisma.publicSubmission.findFirst();
     expect(row?.ipHash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  /**
+   * The column is VARCHAR(191) and `IsUrl` alone allows ten times that, so a
+   * long link used to reach the database and come back as a 500 — from a form
+   * anyone can post to, counted towards the spike /health/errors alarms on.
+   */
+  it('refuses a link longer than its column, without counting a server error', async () => {
+    resetServerErrors();
+    const creatorLink = `https://example.com/${'a'.repeat(200)}`;
+
+    await send({ categoryId, creatorNameRaw: 'ລິ້ງຍາວ', creatorLink }, '198.51.100.40').expect(400);
+
+    expect(serverErrorsInWindow()).toBe(0);
+    expect(await h.prisma.publicSubmission.count({ where: { creatorNameRaw: 'ລິ້ງຍາວ' } })).toBe(0);
   });
 
   it('counts the same name from the same address on the same day only once', async () => {

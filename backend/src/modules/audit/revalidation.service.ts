@@ -13,10 +13,21 @@ import { Injectable, Logger } from '@nestjs/common';
 export class RevalidationService {
   private readonly logger = new Logger(RevalidationService.name);
 
-  /** Actions that change nothing a visitor can see. */
-  private static readonly IGNORED = ['admin.login', 'admin.logout', 'admin.password.changed'];
+  /**
+   * Actions that change nothing a visitor can see.
+   *
+   * Every `admin.*` action is about accounts, never content. Listing them one
+   * by one left `admin.login.failed` out, and that one is written for a wrong
+   * password against any real admin address — so anyone who knew an address
+   * could empty the whole site's cache with a failed sign-in, as often as the
+   * lockout let them, and every visitor after it was served straight from the
+   * database. A preview link is minted without changing the year it opens.
+   */
+  private static readonly IGNORED_PREFIX = 'admin.';
+  private static readonly IGNORED = ['edition.preview.minted'];
 
   trigger(action: string) {
+    if (action.startsWith(RevalidationService.IGNORED_PREFIX)) return;
     if (RevalidationService.IGNORED.includes(action)) return;
 
     const url = process.env.REVALIDATE_URL;
