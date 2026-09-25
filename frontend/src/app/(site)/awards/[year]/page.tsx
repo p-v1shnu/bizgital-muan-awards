@@ -579,6 +579,8 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                     imageKey={judge.avatarKey}
                     alt={judge.nameLo}
                     sizes="(max-width: 640px) 64px, 96px"
+                    fallbackInitial={judge.nameLo.trim().charAt(0)}
+                    fallbackClassName="text-2xl sm:text-3xl"
                   />
                 </div>
                 <div className="min-w-0">
