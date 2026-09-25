@@ -11,6 +11,14 @@ import { LoginDto } from './dto/login.dto';
 import { SetupDto } from './dto/setup.dto';
 
 export const REFRESH_COOKIE = 'muan_refresh';
+export const VIEWER_COOKIE = 'muan_viewer';
+
+// Scoped to the refresh endpoint only, so the token is never sent along with
+// ordinary API calls.
+const REFRESH_PATH = '/api/v1/auth';
+// Scoped to the pages that can show an unpublished year, which are rendered on
+// the server and so cannot see the access token the back office holds in memory.
+const VIEWER_PATH = '/awards';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -29,7 +37,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Create the first super admin (one time only)' })
   async setup(@Body() dto: SetupDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const result = await this.auth.setup(dto, clientIp(req));
-    this.setRefreshCookie(res, result.tokens.refreshToken);
+    this.setSessionCookies(res, result.tokens);
     return { user: result.user, accessToken: result.tokens.accessToken };
   }
 
@@ -42,7 +50,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign in with email and password' })
   async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const result = await this.auth.login(dto, clientIp(req));
-    this.setRefreshCookie(res, result.tokens.refreshToken);
+    this.setSessionCookies(res, result.tokens);
     return { user: result.user, accessToken: result.tokens.accessToken };
   }
 
@@ -52,20 +60,21 @@ export class AuthController {
   @ApiOperation({ summary: 'Exchange the refresh cookie for a new access token' })
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const result = await this.auth.refresh(req.cookies?.[REFRESH_COOKIE]);
-    this.setRefreshCookie(res, result.tokens.refreshToken);
+    this.setSessionCookies(res, result.tokens);
     return { user: result.user, accessToken: result.tokens.accessToken };
   }
 
   @Post('logout')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Clear the refresh cookie' })
+  @ApiOperation({ summary: 'Clear the session cookies' })
   async logout(
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
     await this.auth.logout(user.id, user.sessionId, clientIp(req));
-    res.clearCookie(REFRESH_COOKIE, cookieOptions(0));
+    res.clearCookie(REFRESH_COOKIE, cookieOptions(REFRESH_PATH, 0));
+    res.clearCookie(VIEWER_COOKIE, cookieOptions(VIEWER_PATH, 0));
   }
 
   @Get('me')
@@ -74,19 +83,19 @@ export class AuthController {
     return user;
   }
 
-  private setRefreshCookie(res: Response, token: string) {
-    res.cookie(REFRESH_COOKIE, token, cookieOptions(REFRESH_TOKEN_TTL_SECONDS * 1000));
+  private setSessionCookies(res: Response, tokens: { refreshToken: string; viewerToken: string }) {
+    const maxAge = REFRESH_TOKEN_TTL_SECONDS * 1000;
+    res.cookie(REFRESH_COOKIE, tokens.refreshToken, cookieOptions(REFRESH_PATH, maxAge));
+    res.cookie(VIEWER_COOKIE, tokens.viewerToken, cookieOptions(VIEWER_PATH, maxAge));
   }
 }
 
-function cookieOptions(maxAge: number): CookieOptions {
+function cookieOptions(path: string, maxAge: number): CookieOptions {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    // Scoped to the refresh endpoint only, so the token is never sent along
-    // with ordinary API calls.
-    path: '/api/v1/auth',
+    path,
     maxAge,
   };
 }

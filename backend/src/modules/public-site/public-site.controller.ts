@@ -5,8 +5,13 @@ import type { Request } from 'express';
 
 import { EditionsService } from '../editions/editions.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { loadActiveSession, type SessionClaims } from '../identity-access/active-session';
-import { REFRESH_COOKIE } from '../identity-access/auth.controller';
+import {
+  loadActiveSession,
+  viewerSecret,
+  type SessionClaims,
+  type ViewerClaims,
+} from '../identity-access/active-session';
+import { VIEWER_COOKIE } from '../identity-access/auth.controller';
 import { Public } from '../../common/decorators/public.decorator';
 import { PublicSiteService, type ViewerContext } from './public-site.service';
 
@@ -159,12 +164,12 @@ export class PublicSiteController {
    * such visit was anonymous and answered 404. Only the emailable preview link
    * worked, which was the path built for people who cannot sign in at all.
    *
-   * The refresh cookie is the one credential a server render can see. It is
-   * checked as strictly as the access token — right secret, and the session
-   * behind it still alive — and it buys exactly one thing here: being allowed
-   * to read a year that is not published yet. Anyone holding it can already
-   * mint an access token from it, so this grants nothing new; it only stops
-   * requiring the browser to do that first.
+   * The viewer cookie is the one credential a server render can see. It used
+   * to be the refresh cookie, but that is scoped to the auth routes, so the
+   * browser never sent it to /awards and the promise above never held. The
+   * viewer cookie is scoped to /awards instead and can do nothing else: it
+   * cannot mint an access token, and it is checked as strictly as one — right
+   * key, and the session behind it still alive.
    */
   private async signedInAdmin(req: Request) {
     const header = req.headers.authorization;
@@ -179,12 +184,11 @@ export class PublicSiteController {
       }
     }
 
-    const cookie = (req.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE];
+    const cookie = (req.cookies as Record<string, string> | undefined)?.[VIEWER_COOKIE];
     if (!cookie) return null;
     try {
-      const claims = this.jwt.verify<SessionClaims>(cookie, {
-        secret: process.env.REFRESH_TOKEN_SECRET,
-      });
+      const claims = this.jwt.verify<ViewerClaims>(cookie, { secret: viewerSecret() });
+      if (claims.kind !== 'viewer') return null;
       return await loadActiveSession(this.prisma, claims);
     } catch {
       return null;

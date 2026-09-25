@@ -15,7 +15,7 @@ import { randomUUID } from 'node:crypto';
 import { clientNetwork } from '../../common/utils/client-network';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { loadActiveSession } from './active-session';
+import { loadActiveSession, viewerSecret, type ViewerClaims } from './active-session';
 import type { JwtPayload } from './jwt.strategy';
 import { LoginDto } from './dto/login.dto';
 import { SetupDto } from './dto/setup.dto';
@@ -241,7 +241,7 @@ export class AuthService {
       tv: user.tokenVersion,
       sid: sessionId,
     };
-    const [accessToken, refreshToken] = await Promise.all([
+    const [accessToken, refreshToken, viewerToken] = await Promise.all([
       this.jwt.signAsync(payload, {
         secret: process.env.JWT_SECRET,
         expiresIn: ACCESS_TOKEN_TTL,
@@ -250,8 +250,12 @@ export class AuthService {
         secret: process.env.REFRESH_TOKEN_SECRET,
         expiresIn: REFRESH_TOKEN_TTL_SECONDS,
       }),
+      this.jwt.signAsync(
+        { sub: user.id, tv: user.tokenVersion, sid: sessionId, kind: 'viewer' } satisfies ViewerClaims,
+        { secret: viewerSecret(), expiresIn: REFRESH_TOKEN_TTL_SECONDS },
+      ),
     ]);
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken, viewerToken };
   }
 
   private assertNotLockedOut(key: string, max: number) {

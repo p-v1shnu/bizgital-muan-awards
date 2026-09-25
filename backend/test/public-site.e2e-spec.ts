@@ -69,16 +69,26 @@ describe('public site', () => {
     /**
      * PRD §4.3.2 promises a signed-in admin can simply open the year. The page
      * is rendered on the server, which cannot reach the access token the back
-     * office keeps in memory — the refresh cookie is the only credential a
-     * server render can see, so it has to be enough on its own.
+     * office keeps in memory — it only has the cookies the browser sent to
+     * /awards. The refresh cookie is not one of them (it is scoped to the auth
+     * routes), which is why this used to pass here and fail in a browser: the
+     * test client sends every cookie whatever its path.
      */
-    it('opens for the cookie alone, which is all a server-rendered page has', async () => {
+    it('opens for the viewer cookie alone, which is all a server-rendered page has', async () => {
       const login = await api(h)
         .post(path('/auth/login'))
         .set('X-Forwarded-For', '198.51.100.60')
         .send({ email: h.admin.email, password: h.admin.password })
         .expect(200);
-      const cookie = login.headers['set-cookie'];
+      const setCookies = login.headers['set-cookie'] as unknown as string[];
+      const viewer = setCookies.find((c) => c.startsWith('muan_viewer='));
+      const refresh = setCookies.find((c) => c.startsWith('muan_refresh='));
+      expect(viewer).toContain('Path=/awards');
+      expect(viewer).toContain('HttpOnly');
+      const cookie = viewer!.split(';')[0];
+
+      // The refresh cookie on its own no longer opens anything here.
+      await api(h).get(path('/editions/2027')).set('Cookie', refresh!.split(';')[0]).expect(404);
 
       const response = await api(h).get(path('/editions/2027')).set('Cookie', cookie).expect(200);
       expect(response.body.data.preview).toEqual({ phase: 'DRAFT', aheadOfPublic: true });

@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { CreatorCard, EmptyNote, Section } from '@/components/site/primitives';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { SiteImage } from '@/components/site/site-image';
-import { apiPath, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
+import { apiPath, getPublicOrDraft } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, categoryJsonLd } from '@/lib/structured-data';
 import { imageUrl } from '@/lib/images';
 import type { PublicCategoryPage } from '@/types/public';
@@ -23,9 +23,14 @@ interface PageProps {
  */
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { year, category } = await params;
-  // A preview link shows what the public cannot see yet; it must never be indexed.
-  const robots = (await searchParams).preview ? { index: false, follow: false } : undefined;
-  const page = await tryGetPublic<PublicCategoryPage>(apiPath`/editions/${year}/categories/${category}`);
+  const { preview } = await searchParams;
+  // The same read as the page — see the year page.
+  const page = await getPublicOrDraft<PublicCategoryPage>(
+    apiPath`/editions/${year}/categories/${category}`,
+    { preview },
+  ).catch(() => null);
+  // What the public cannot see yet must never be indexed.
+  const robots = preview || page?.preview ? { index: false, follow: false } : undefined;
   // The 404 page's title, not a wording of its own — see the year page.
   if (!page) return { title: NOT_FOUND_TITLE, robots };
 

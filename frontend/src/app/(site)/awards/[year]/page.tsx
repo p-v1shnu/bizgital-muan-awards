@@ -8,7 +8,7 @@ import { Gallery } from '@/components/site/gallery';
 import { NOT_FOUND_TITLE } from '@/components/site/not-found-body';
 import { cn, safeHttpUrl } from '@/lib/utils';
 import { INK_FALLBACK, SiteImage, SiteImageFixed } from '@/components/site/site-image';
-import { apiPath, getPublic, getPublicOrDraft, tryGetPublic } from '@/lib/api/server';
+import { apiPath, getPublic, getPublicOrDraft } from '@/lib/api/server';
 import { JsonLd, breadcrumbJsonLd, editionJsonLd, judgePanelJsonLd, siteUrl } from '@/lib/structured-data';
 import { imageKeyList, imageUrl } from '@/lib/images';
 import type { Edition, SponsorLogoSize } from '@/types/api';
@@ -22,9 +22,14 @@ interface PageProps {
 
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { year } = await params;
-  // A preview link shows what the public cannot see yet; it must never be indexed.
-  const robots = (await searchParams).preview ? { index: false, follow: false } : undefined;
-  const edition = await tryGetPublic<PublicEdition>(apiPath`/editions/${year}`);
+  const { preview } = await searchParams;
+  // The same read as the page, so a draft an admin or a preview link can see
+  // gets its real title rather than the 404 one. Metadata never fails a page.
+  const edition = await getPublicOrDraft<PublicEdition>(apiPath`/editions/${year}`, { preview }).catch(
+    () => null,
+  );
+  // What the public cannot see yet must never be indexed.
+  const robots = preview || edition?.preview ? { index: false, follow: false } : undefined;
   // The same title the 404 page carries, not a wording of its own. The page
   // below calls notFound() on this same miss, so the reader gets the boundary's
   // title first and this one after hydration — two different sentences meant a

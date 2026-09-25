@@ -13,6 +13,19 @@ export interface SessionClaims {
   sid?: string;
 }
 
+/**
+ * The viewer token: the same session, but good for one thing only — letting a
+ * server-rendered page show a signed-in admin a year the public cannot see.
+ * Its own key and kind, so it can never pass for an access or refresh token.
+ */
+export interface ViewerClaims extends SessionClaims {
+  kind: 'viewer';
+}
+
+export function viewerSecret() {
+  return `${process.env.REFRESH_TOKEN_SECRET ?? ''}:viewer`;
+}
+
 export interface ActiveSession {
   id: string;
   email: string;

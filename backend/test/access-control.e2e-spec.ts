@@ -123,6 +123,25 @@ describe('access control', () => {
   });
 
   /**
+   * The viewer cookie travels with every /awards page, so it must be good for
+   * nothing but reading a draft year — never for minting or using a session.
+   */
+  it('does not accept the viewer token as a refresh or access token', async () => {
+    const login = await api(h)
+      .post(path('/auth/login'))
+      .set('X-Forwarded-For', '198.51.100.61')
+      .send({ email: 'editor@test.local', password: 'another-long-password' })
+      .expect(200);
+    const viewer = (login.headers['set-cookie'] as unknown as string[])
+      .find((c) => c.startsWith('muan_viewer='))!
+      .split(';')[0]
+      .slice('muan_viewer='.length);
+
+    await api(h).post(path('/auth/refresh')).set('Cookie', `muan_refresh=${viewer}`).expect(401);
+    await api(h).get(path('/auth/me')).set('Authorization', `Bearer ${viewer}`).expect(401);
+  });
+
+  /**
    * The password endpoint is the one place where guessing right gets
    * everything, and the global limit of a hundred requests a minute left room
    * for six thousand guesses an hour from a single address.
