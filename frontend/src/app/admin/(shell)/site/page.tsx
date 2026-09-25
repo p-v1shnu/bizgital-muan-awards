@@ -10,6 +10,7 @@ import { EntryListEditor } from '@/components/admin/entry-list-editor';
 import { GalleryEditor } from '@/components/admin/gallery-editor';
 import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
+import { RichTextarea } from '@/components/admin/rich-textarea';
 import { StepsEditor } from '@/components/admin/steps-editor';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
@@ -239,11 +240,11 @@ function SettingsForm({
                   />
                 </Field>
                 <Field label="ຫຍໍ້ໜ້າແນະນຳງານ" help="ຫຍໍ້ໜ້າສັ້ນໆ ຂຶ້ນໜ້າຫຼັກ ແລະ ຫົວໜ້າ “ກ່ຽວກັບ”">
-                  <Textarea
+                  <RichTextarea
                     required
                     className="min-h-32"
                     value={form.aboutSummaryLo}
-                    onChange={(event) => setForm({ ...form, aboutSummaryLo: event.target.value })}
+                    onChange={(next) => setForm({ ...form, aboutSummaryLo: next })}
                   />
                 </Field>
               </CardBody>
@@ -261,12 +262,10 @@ function SettingsForm({
                   />
                 </Field>
                 <Field label="ຄຳອະທິບາຍ" hint="— ບໍ່ບັງຄັບ" help="ນິຍາມວ່າ “ຄຣີເອເຕີ” ຂອງມ່ວນອາວອດສ໌ແມ່ນໃຜ">
-                  <Textarea
+                  <RichTextarea
                     className="min-h-32"
                     value={form.creatorDefinitionBodyLo}
-                    onChange={(event) =>
-                      setForm({ ...form, creatorDefinitionBodyLo: event.target.value })
-                    }
+                    onChange={(next) => setForm({ ...form, creatorDefinitionBodyLo: next })}
                   />
                 </Field>
               </CardBody>
@@ -498,10 +497,10 @@ function SettingsForm({
                   hint="— ບໍ່ບັງຄັບ"
                   help="ແຍກແຕ່ລະຫຍໍ້ໜ້າດ້ວຍການຂຶ້ນແຖວໃໝ່ — ຖ້າຍັງບໍ່ໃສ່ ໜ້າ /about ຈະໂຊວ໌ຂໍ້ຄວາມລໍຖ້າແທນ"
                 >
-                  <Textarea
+                  <RichTextarea
                     className="min-h-40"
                     value={form.aboutHistoryLo}
-                    onChange={(event) => setForm({ ...form, aboutHistoryLo: event.target.value })}
+                    onChange={(next) => setForm({ ...form, aboutHistoryLo: next })}
                   />
                 </Field>
               </CardBody>

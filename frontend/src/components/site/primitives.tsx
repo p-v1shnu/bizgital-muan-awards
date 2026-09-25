@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, ExternalLink } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn, safeHttpUrl } from '@/lib/utils';
 import { SectionReveal } from './section-reveal';
 import { SiteImage } from './site-image';
 import { Watermark } from './watermark';
@@ -56,6 +56,59 @@ export function LaoText({ text }: { text: string }) {
       )}
     </>
   );
+}
+
+/**
+ * The lightweight markup the admin's RichTextarea (components/admin/rich-textarea.tsx)
+ * writes into body text fields — **bold**, *italic*, [text](url) — parsed
+ * into real elements here rather than ever going through
+ * dangerouslySetInnerHTML. There is no way for stored text to become HTML:
+ * anything that isn't one of these three exact patterns is a plain text
+ * node, same as it always rendered before this component existed, and a
+ * link whose URL is not http/https (a stray `javascript:`, say) prints as
+ * plain text instead of becoming an anchor.
+ *
+ * The regex tries the link, then bold, then italic — in that order so
+ * `**bold**` is never read as `*` `*bold*` `*`, and a `[link](url)` a
+ * bold run happens to sit next to still resolves as a link first.
+ */
+const RICH_TEXT_TOKEN = /\[([^\]]+)\]\(([^)\s]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
+
+export function RichText({ text }: { text: string }) {
+  const nodes: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+  RICH_TEXT_TOKEN.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = RICH_TEXT_TOKEN.exec(text))) {
+    if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
+    const [, linkText, linkUrl, bold, italic] = match;
+    if (linkText !== undefined) {
+      const href = safeHttpUrl(linkUrl);
+      nodes.push(
+        href ? (
+          <a
+            key={key++}
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="underline decoration-1 underline-offset-2 hover:text-brand-deep"
+          >
+            {linkText}
+          </a>
+        ) : (
+          linkText
+        ),
+      );
+    } else if (bold !== undefined) {
+      nodes.push(<strong key={key++}>{bold}</strong>);
+    } else {
+      nodes.push(<em key={key++}>{italic}</em>);
+    }
+    lastIndex = RICH_TEXT_TOKEN.lastIndex;
+  }
+  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
+  return <>{nodes}</>;
 }
 
 export function Section({

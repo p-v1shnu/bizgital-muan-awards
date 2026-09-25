@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { ChevronDown, Mail, Phone } from 'lucide-react';
 
-import { ActionLink, Placeholder, Section } from '@/components/site/primitives';
+import { ActionLink, Placeholder, RichText, Section } from '@/components/site/primitives';
 import { cn } from '@/lib/utils';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
@@ -102,14 +102,18 @@ export default async function AboutPage() {
     <>
       <Section eyebrow="ກ່ຽວກັບງານ" title="ມ່ວນອາວອດສ໌" titleAs="h1">
         <p className="max-w-2xl font-sans-looped text-[15.5px] leading-[1.9] text-ink-2">
-          {site?.aboutSummaryLo || (
+          {site?.aboutSummaryLo ? (
+            <RichText text={site.aboutSummaryLo} />
+          ) : (
             <Placeholder>ຫຍໍ້ໜ້າແນະນຳງານ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           )}
         </p>
         {history.length > 0 ? (
           <div className="mt-4 max-w-2xl space-y-3 font-sans-looped text-[15px] leading-[1.9] text-ink-3">
             {history.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
+              <p key={index}>
+                <RichText text={paragraph} />
+              </p>
             ))}
           </div>
         ) : (
@@ -133,7 +137,9 @@ export default async function AboutPage() {
                   <span className="mr-2 text-ink-3">{index + 1}.</span>
                   {step.titleLo}
                 </p>
-                <p className="mt-1.5 font-sans-looped text-[14px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+                <p className="mt-1.5 font-sans-looped text-[14px] leading-relaxed text-ink-2">
+                  <RichText text={step.bodyLo} />
+                </p>
               </li>
             ))}
           </ol>
@@ -161,7 +167,9 @@ export default async function AboutPage() {
                   <div className="overflow-hidden">
                     <div className="space-y-2 px-5 pb-4 font-sans-looped text-[14px] leading-relaxed text-ink-2">
                       {paragraphs(item.answerLo).map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
+                        <p key={index}>
+                          <RichText text={paragraph} />
+                        </p>
                       ))}
                     </div>
                   </div>

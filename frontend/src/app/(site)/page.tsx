@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, Play, Star } from 'lucide-react';
 
-import { ActionLink, LaoText, PatternDivider, Placeholder, Section } from '@/components/site/primitives';
+import { ActionLink, LaoText, PatternDivider, Placeholder, RichText, Section } from '@/components/site/primitives';
 import { CountUp } from '@/components/site/count-up';
 import { Gallery } from '@/components/site/gallery';
 import { HighlightVideo } from '@/components/site/highlight-video';
@@ -332,7 +332,9 @@ export default async function HomePage() {
         </h2>
         <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
         <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">
-          {site?.creatorDefinitionBodyLo || (
+          {site?.creatorDefinitionBodyLo ? (
+            <RichText text={site.creatorDefinitionBodyLo} />
+          ) : (
             <Placeholder>ນິຍາມຄຣີເອເຕີ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
           )}
         </p>
@@ -444,7 +446,9 @@ export default async function HomePage() {
                     <span className="mr-1.5 text-ink-3">{index + 1}.</span>
                     {step.titleLo}
                   </p>
-                  <p className="mt-1 font-sans-looped text-[13px] leading-relaxed text-ink-2">{step.bodyLo}</p>
+                  <p className="mt-1 font-sans-looped text-[13px] leading-relaxed text-ink-2">
+                    <RichText text={step.bodyLo} />
+                  </p>
                 </li>
               );
             })}
