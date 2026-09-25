@@ -64,16 +64,23 @@ export function RichTextarea({
 
   return (
     <div>
-      <div className="mb-1.5 flex gap-1">
-        <ToolbarButton label="ໂຕໜາ" onClick={() => wrap('**')}>
+      <div className="mb-1.5 flex items-center gap-1">
+        <ToolbarButton label="ໂຕໜາ" hint="ໂຕໜາ — ພິມ **ຂໍ້ຄວາມ**" onClick={() => wrap('**')}>
           <Bold className="size-3.5" />
         </ToolbarButton>
-        <ToolbarButton label="ໂຕອຽງ" onClick={() => wrap('*')}>
+        <ToolbarButton label="ໂຕອຽງ" hint="ໂຕອຽງ — ພິມ *ຂໍ້ຄວາມ*" onClick={() => wrap('*')}>
           <Italic className="size-3.5" />
         </ToolbarButton>
-        <ToolbarButton label="ລິງກ໌" onClick={link}>
+        <ToolbarButton label="ລິງກ໌" hint="ລິງກ໌ — ພິມ [ຂໍ້ຄວາມ](ລິງກ໌)" onClick={link}>
           <LinkIcon className="size-3.5" />
         </ToolbarButton>
+        {/* Always visible, not only on hover: the toolbar answers "how do I
+            do this by clicking", but someone reading a paragraph already
+            typed with **stars** in it needs the syntax explained without
+            having to find and hover each button first. */}
+        <span className="ml-1 text-[11px] text-ink-3">
+          ຫຼືພິມເອງ: **ໂຕໜາ** · *ໂຕອຽງ* · [ຂໍ້ຄວາມ](ລິງກ໌)
+        </span>
       </div>
       <Textarea ref={ref} value={value} onChange={(event) => onChange(event.target.value)} className={className} {...props} />
     </div>
@@ -82,17 +89,19 @@ export function RichTextarea({
 
 function ToolbarButton({
   label,
+  hint,
   onClick,
   children,
 }: {
   label: string;
+  hint: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      title={label}
+      title={hint}
       aria-label={label}
       // Without this, the mousedown that precedes the click blurs the
       // textarea first — taking its selection with it, so wrap()/link()
