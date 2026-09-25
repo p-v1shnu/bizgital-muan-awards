@@ -28,6 +28,11 @@ export function SiteImage({
   /** Tells the browser how wide this will actually be, so it picks a size. */
   sizes = '100vw',
   priority,
+  /** Forces an eager fetch outside of `priority` — for an image that is not
+   *  on screen yet (the lightbox's next/previous slide) but should already
+   *  be in the browser's cache by the time it is, which `loading="lazy"`
+   *  (the default) would otherwise delay until it scrolls into view. */
+  loading,
   fallbackClassName,
   /** Vertical crop centre, 0 (top) to 100 (bottom) — for a box whose aspect
    *  ratio varies a lot across screen widths (the homepage hero: wide on
@@ -42,6 +47,7 @@ export function SiteImage({
   sizes?: string;
   /** Set on the one image above the fold; it is what LCP measures. */
   priority?: boolean;
+  loading?: 'eager' | 'lazy';
   fallbackClassName?: string;
   focalY?: number | null;
 }) {
@@ -67,6 +73,7 @@ export function SiteImage({
       fill
       sizes={sizes}
       priority={priority}
+      loading={priority ? undefined : loading}
       className={cn('object-cover', className)}
       style={focalY == null ? undefined : { objectPosition: `50% ${focalY}%` }}
     />
