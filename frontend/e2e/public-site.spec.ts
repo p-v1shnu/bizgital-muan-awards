@@ -434,13 +434,10 @@ test('each page names one address, and says what it is to a machine', async ({ p
 });
 
 test('the site says what it does with what people type in', async ({ page }) => {
-  await page.goto('/submit');
-  await expect(page.getByRole('link', { name: 'ອ່ານເລື່ອງຂໍ້ມູນສ່ວນຕົວ' })).toBeVisible();
-
   await page.goto('/about#privacy');
   const privacy = page.locator('#privacy');
   await expect(privacy.getByText('ເກັບໄວ້ດົນປານໃດ')).toBeVisible();
-  await expect(privacy.getByText('12 ເດືອນ')).toBeVisible();
+  await expect(privacy.getByText('ຖືກເກັບໄວ້ຖາວອນ')).toBeVisible();
 
   // The page has to describe the analytics that actually runs: it starts with
   // the page, so it must not claim to wait for permission.

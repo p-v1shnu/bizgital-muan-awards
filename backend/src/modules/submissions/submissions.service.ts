@@ -74,8 +74,6 @@ export class SubmissionsService {
           creatorNameRaw,
           creatorLink: dto.creatorLink,
           reason: dto.reason,
-          submitterName: dto.submitterName,
-          submitterEmail: dto.submitterEmail,
           ipHash,
           dedupeKey: dedupeKey(dto.categoryId, creatorNameRaw, ipHash),
         },

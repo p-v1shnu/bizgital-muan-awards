@@ -240,7 +240,6 @@ function GroupRow({ group }: { group: SubmissionGroup }) {
               </p>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-3 text-[11px] text-ink-3">
                 <span>{formatDateTime(entry.createdAt)}</span>
-                {entry.submitterName && <span>ໂດຍ {entry.submitterName}</span>}
                 {/* What the sender actually typed, when the team folded this
                     entry into another spelling — kept rather than overwritten,
                     because §7.2 says nothing sent in is thrown away. */}

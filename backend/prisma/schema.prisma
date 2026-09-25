@@ -389,9 +389,6 @@ model PublicSubmission {
   creatorLink    String?
   reason         String? @db.Text
 
-  submitterName  String?
-  submitterEmail String?
-
   /// Hashed, never the raw address (PRD §10 privacy).
   ipHash String
 

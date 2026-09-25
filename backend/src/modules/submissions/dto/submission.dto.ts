@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubmissionStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
-  IsEmail,
   IsEnum,
   IsNotEmpty,
   IsOptional,
@@ -50,17 +49,6 @@ export class CreateSubmissionDto {
   @IsString()
   @MaxLength(1000)
   reason?: string;
-
-  @ApiPropertyOptional({ description: 'Optional — the form never demands personal details (PRD §10)' })
-  @IsOptional()
-  @IsString()
-  @MaxLength(160)
-  submitterName?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsEmail()
-  submitterEmail?: string;
 
   /**
    * Honeypot. Real people never see this field, so anything in it is a bot.

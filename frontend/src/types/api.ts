@@ -143,7 +143,6 @@ export interface SubmissionEntry {
   originalNameRaw: string | null;
   creatorLink: string | null;
   reason: string | null;
-  submitterName: string | null;
   status: SubmissionStatus;
   createdAt: string;
 }
