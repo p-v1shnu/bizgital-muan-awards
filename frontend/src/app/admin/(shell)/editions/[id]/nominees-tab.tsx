@@ -225,14 +225,32 @@ function NomineeList({
             <Avatar name={nomination.creator.nameLo} avatarKey={nomination.creator.avatarKey} />
 
             <div className="min-w-0">
-              <p className="truncate font-serif text-[15.5px] leading-tight text-ink">
+              <p className="flex items-center gap-1.5 truncate font-serif text-[15.5px] leading-tight text-ink">
                 {nomination.creator.nameLo}
+                {nomination.creator.revokedAt && (
+                  <span title={nomination.creator.revokedReason ?? undefined}>
+                    <Badge tone="stop" dot>
+                      ຖືກຖອດຖອນ
+                    </Badge>
+                  </span>
+                )}
               </p>
               <p className="truncate text-[11.5px] text-ink-3">
                 @{nomination.creator.slug}
                 {nomination.creator.socialLinks &&
                   ` · ${Object.keys(nomination.creator.socialLinks).join(', ')}`}
               </p>
+              {/* The DB row can still say isWinner: true here — revoking never
+                  changes it, it only hides the effect from the public site
+                  (see Creator.revokedAt in schema.prisma) — so this is the
+                  one place an admin could otherwise be misled into thinking
+                  a revoked creator quietly stopped being marked as the
+                  winner. */}
+              {nomination.creator.revokedAt && nomination.isWinner && (
+                <p className="mt-0.5 text-[11px] font-semibold text-stop">
+                  ຍັງຕິດເປັນຜູ້ຊະນະຢູ່ໃນລະບົບ — ແຕ່ຖືກເຊື່ອງອອກຈາກໜ້າເວັບເພາະຖືກຖອດຖອນ
+                </p>
+              )}
             </div>
 
             <div className="ml-auto flex items-center gap-3">

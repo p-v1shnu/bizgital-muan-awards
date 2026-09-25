@@ -70,6 +70,9 @@ export interface Creator {
   bioLo: string | null;
   avatarKey: string | null;
   socialLinks: Record<string, string> | null;
+  /** Set once an admin has struck this creator's public history — see revoke()/unrevoke() in the admin creators API. */
+  revokedAt: string | null;
+  revokedReason: string | null;
   _count?: { nominations: number };
 }
 

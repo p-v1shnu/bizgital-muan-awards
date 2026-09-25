@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { ErrorNote, Spinner } from '@/components/ui/feedback';
@@ -80,6 +81,13 @@ export function CreatorPicker({
                 >
                   <span className="font-serif text-[15px] text-ink">{creator.nameLo}</span>
                   <span className="text-[11.5px] text-ink-3">@{creator.slug}</span>
+                  {creator.revokedAt && (
+                    <span title={creator.revokedReason ?? undefined}>
+                      <Badge tone="stop" dot>
+                        ຖືກຖອດຖອນ
+                      </Badge>
+                    </span>
+                  )}
                   {already && <span className="ml-auto text-[11px] text-ink-3">ຢູ່ໃນສາຂານີ້ແລ້ວ</span>}
                 </button>
               </li>

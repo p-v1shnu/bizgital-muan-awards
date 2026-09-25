@@ -47,6 +47,16 @@ function reveals(phase: EditionPhase) {
 /** The longest a creator's name may be (`CreateSubmissionDto.creatorNameRaw`). */
 const MAX_SUGGESTION_TERM = 160;
 
+/**
+ * Every public query that touches a Creator, directly or through a
+ * Nomination, filters both of these the same way — a deleted creator never
+ * had public history to begin with, and a revoked one has had theirs struck
+ * after the fact (schema.prisma's own doc comment on Creator.revokedAt has
+ * the full reasoning). One constant so the two conditions can never drift
+ * apart between the seven places they're needed.
+ */
+const CREATOR_VISIBLE = { deletedAt: null, revokedAt: null } as const;
+
 export interface ViewerContext {
   /** A signed-in admin sees drafts; anyone else needs a preview token. */
   isAdmin: boolean;
@@ -109,7 +119,13 @@ export class PublicSiteService {
       this.prisma.category.findMany({
         where: { editionId: edition.id },
         orderBy: { sortOrder: 'asc' },
-        include: { nominations: { orderBy: { sortOrder: 'asc' }, include: { creator: true } } },
+        include: {
+          nominations: {
+            where: { creator: CREATOR_VISIBLE },
+            orderBy: { sortOrder: 'asc' },
+            include: { creator: true },
+          },
+        },
       }),
       this.prisma.editionJudge.findMany({
         where: { editionId: edition.id },
@@ -178,7 +194,13 @@ export class PublicSiteService {
 
     const category = await this.prisma.category.findUnique({
       where: { editionId_slug: { editionId: edition.id, slug: categorySlug } },
-      include: { nominations: { orderBy: { sortOrder: 'asc' }, include: { creator: true } } },
+      include: {
+        nominations: {
+          where: { creator: CREATOR_VISIBLE },
+          orderBy: { sortOrder: 'asc' },
+          include: { creator: true },
+        },
+      },
     });
     if (!category) throw new NotFoundException('Category not found');
 
@@ -216,7 +238,10 @@ export class PublicSiteService {
         categories: {
           orderBy: [{ isFeatured: 'desc' }, { sortOrder: 'asc' }],
           include: {
-            nominations: { where: { isWinner: true }, include: { creator: true } },
+            nominations: {
+              where: { isWinner: true, creator: CREATOR_VISIBLE },
+              include: { creator: true },
+            },
           },
         },
       },
@@ -324,7 +349,7 @@ export class PublicSiteService {
 
     return this.prisma.creator.findMany({
       where: {
-        deletedAt: null,
+        ...CREATOR_VISIBLE,
         nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } },
         OR: [{ nameLo: { contains: query } }, { nameEn: { contains: query } }],
       },
@@ -338,7 +363,7 @@ export class PublicSiteService {
 
   async creator(slug: string) {
     const creator = await this.prisma.creator.findFirst({
-      where: { slug, deletedAt: null },
+      where: { slug, ...CREATOR_VISIBLE },
       include: {
         nominations: {
           where: { category: { edition: { phase: { in: ANNOUNCED } } } },
@@ -419,7 +444,7 @@ export class PublicSiteService {
       // Distinct people who have appeared, not every row in the library.
       this.prisma.creator.count({
         where: {
-          deletedAt: null,
+          ...CREATOR_VISIBLE,
           nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } },
         },
       }),
@@ -435,7 +460,7 @@ export class PublicSiteService {
       include: { categories: { orderBy: { sortOrder: 'asc' }, select: { slug: true } } },
     });
     const creators = await this.prisma.creator.findMany({
-      where: { deletedAt: null, nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } } },
+      where: { ...CREATOR_VISIBLE, nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } } },
       select: { slug: true, updatedAt: true },
     });
     const judges = await this.prisma.judge.findMany({

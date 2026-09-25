@@ -231,10 +231,23 @@ model Creator {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  /// Separate from deletedAt on purpose: deletedAt only ever applies to a
+  /// creator with zero nominations (CreatorsService.remove enforces that),
+  /// while a revoked creator is exactly the opposite case — someone with
+  /// nomination/winner history the team needs to strike from the public site
+  /// after the fact, without losing the historical record. Nothing about
+  /// their nominations or isWinner rows changes; every public query that
+  /// joins a creator filters both fields the same way, so revoking has the
+  /// same effect the public site over as if they had never been entered —
+  /// a category they won shows no winner, same as one not yet decided.
+  revokedAt     DateTime?
+  revokedReason String?   @db.Text
+
   nominations       Nomination[]
   matchedSubmission PublicSubmission[]
 
   @@index([deletedAt])
+  @@index([revokedAt])
   @@map("creators")
 }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Search, Trash2 } from 'lucide-react';
+import { Ban, Plus, Search, Trash2, Undo2 } from 'lucide-react';
 
 import { Avatar } from '../editions/[id]/nominees-tab';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
+import { useIsSuperAdmin } from '@/lib/auth-context';
 import type { Creator } from '@/types/api';
 import { emptyToNull, randomSlug, slugify } from '@/lib/utils';
 
@@ -33,11 +34,20 @@ export default function CreatorsPage() {
   const [editing, setEditing] = useState<Creator | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Creator | null>(null);
+  const [revoking, setRevoking] = useState<Creator | null>(null);
+  const [unrevoking, setUnrevoking] = useState<Creator | null>(null);
+  const isSuperAdmin = useIsSuperAdmin();
 
   const remove = useApiMutation<{ id: string }>(
     (body) => `/admin/creators/${body.id}`,
     'DELETE',
     ['/admin/creators'],
+  );
+  const unrevoke = useApiMutation<{ id: string }>(
+    (body) => `/admin/creators/${body.id}/unrevoke`,
+    'POST',
+    ['/admin/creators'],
+    () => ({}),
   );
 
   return (
@@ -95,8 +105,15 @@ export default function CreatorsPage() {
               >
                 <Avatar name={creator.nameLo} avatarKey={creator.avatarKey} />
                 <div className="min-w-0">
-                  <p className="truncate font-serif text-[15.5px] leading-tight text-ink">
+                  <p className="flex items-center gap-1.5 truncate font-serif text-[15.5px] leading-tight text-ink">
                     {creator.nameLo}
+                    {creator.revokedAt && (
+                      <span title={creator.revokedReason ?? undefined}>
+                        <Badge tone="stop" dot>
+                          ຖືກຖອດຖອນ
+                        </Badge>
+                      </span>
+                    )}
                   </p>
                   <p className="truncate text-[11.5px] text-ink-3">
                     @{creator.slug}
@@ -110,6 +127,27 @@ export default function CreatorsPage() {
                   <Button size="sm" onClick={() => setEditing(creator)}>
                     ແກ້ໄຂ
                   </Button>
+                  {isSuperAdmin && (
+                    creator.revokedAt ? (
+                      <Button
+                        size="sm"
+                        aria-label={`ຍົກເລີກການຖອດຖອນ ${creator.nameLo}`}
+                        title="ຍົກເລີກການຖອດຖອນ"
+                        onClick={() => setUnrevoking(creator)}
+                      >
+                        <Undo2 className="size-3.5" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        aria-label={`ຖອດຖອນ ${creator.nameLo}`}
+                        title="ຖອດຖອນ"
+                        onClick={() => setRevoking(creator)}
+                      >
+                        <Ban className="size-3.5" />
+                      </Button>
+                    )
+                  )}
                   <Button
                     size="sm"
                     variant="danger"
@@ -149,7 +187,82 @@ export default function CreatorsPage() {
         description="ລຶບໄດ້ສະເພາະຄົນທີ່ຍັງບໍ່ເປັນຜູ້ເຂົ້າຊີງໃນປີໃດ"
         confirmLabel="ລຶບ"
       />
+
+      <RevokeDialog key={revoking?.id} creator={revoking} onClose={() => setRevoking(null)} />
+
+      <ConfirmDialog
+        open={unrevoking !== null}
+        onClose={() => setUnrevoking(null)}
+        onConfirm={() =>
+          unrevoking && unrevoke.mutate({ id: unrevoking.id }, { onSuccess: () => setUnrevoking(null) })
+        }
+        pending={unrevoke.isPending}
+        title={`ຍົກເລີກການຖອດຖອນ “${unrevoking?.nameLo}”?`}
+        description="ປະຫວັດການເຂົ້າຊີງ ແລະ ຜົນລາງວັນທຸກປີຂອງຄົນນີ້ຈະກັບມາສະແດງຢູ່ໜ້າເວັບສາທາລະນະເໝືອນເດີມ"
+        confirmLabel="ຍົກເລີກການຖອດຖອນ"
+      />
     </>
+  );
+}
+
+/**
+ * A reason is required (mirroring the edition phase rollback panel), so this
+ * is its own dialog with a Textarea rather than a plain ConfirmDialog.
+ */
+function RevokeDialog({ creator, onClose }: { creator: Creator | null; onClose: () => void }) {
+  const [reason, setReason] = useState('');
+  const revoke = useApiMutation<{ reason: string }>(
+    `/admin/creators/${creator?.id}/revoke`,
+    'POST',
+    ['/admin/creators'],
+  );
+  const reasonReady = reason.trim().length >= 5;
+
+  return (
+    <Dialog
+      open={creator !== null}
+      onClose={onClose}
+      title={`ຖອດຖອນ “${creator?.nameLo}”?`}
+      description="ປະຫວັດການເຂົ້າຊີງ ແລະ ຜົນລາງວັນທຸກປີຂອງຄົນນີ້ຈະຖືກເຊື່ອງອອກຈາກໜ້າເວັບສາທາລະນະທັນທີ (ສາຂາທີ່ລາວເຄີຍຊະນະຈະກາຍເປັນບໍ່ມີຜູ້ຊະນະ) — ຂໍ້ມູນຍັງເກັບໄວ້ໃນລະບົບ ແລະ ຍົກເລີກການຖອດຖອນພາຍຫຼັງໄດ້"
+      footer={
+        <>
+          <Button type="button" onClick={onClose} disabled={revoke.isPending}>
+            ຍົກເລີກ
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={!reasonReady || revoke.isPending}
+            onClick={() =>
+              revoke.mutate(
+                { reason: reason.trim() },
+                {
+                  onSuccess: () => {
+                    onClose();
+                    setReason('');
+                  },
+                },
+              )
+            }
+          >
+            {revoke.isPending ? 'ກຳລັງຖອດຖອນ…' : 'ຖອດຖອນ'}
+          </Button>
+        </>
+      }
+    >
+      <Field label="ເຫດຜົນ" help="ບັນທຶກໄວ້ໃນປະຫວັດ — ຈຳເປັນຕ້ອງໃສ່">
+        <Textarea
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          placeholder="ອະທິບາຍວ່າຄົນນີ້ເຮັດຜິດເງື່ອນໄຂຫຍັງ…"
+        />
+      </Field>
+      {revoke.error && (
+        <div className="mt-2">
+          <ErrorNote error={revoke.error} />
+        </div>
+      )}
+    </Dialog>
   );
 }
 
