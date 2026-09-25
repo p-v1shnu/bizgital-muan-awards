@@ -361,21 +361,27 @@ export default async function HomePage() {
             title="ໄຮໄລທ໌ຜູ້ຊະນະຫຼ້າສຸດ"
             className="bg-panel-2/50"
           >
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {/* Below sm: a peeking scroll-snap strip, light — no card border or
+                panel fill, just the photo and its caption — rather than the
+                bordered box desktop keeps; sm: and up hands the layout back
+                to the same 2-up/4-up grid this section always rendered, byte
+                for byte. Same scroll-snap mechanics as the "ປີທີ່ຜ່ານມາ" strip
+                further down this page. */}
+            <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-pl-5 px-5 py-1 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:scroll-pl-0 sm:px-0 sm:py-0 lg:grid-cols-4 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {featuredWinners.map((category) => (
                 <Link
                   key={category.id}
                   href={`/creators/${category.winner.slug}`}
-                  className="group stagger-item block overflow-hidden rounded-[var(--radius-box)] border border-rule bg-panel transition-[border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-ink"
+                  className="group stagger-item block w-[46%] shrink-0 snap-start sm:w-auto sm:shrink sm:snap-none sm:overflow-hidden sm:rounded-[var(--radius-box)] sm:border sm:border-rule sm:bg-panel sm:transition-[border-color,transform] sm:duration-200 sm:hover:-translate-y-0.5 sm:hover:border-ink"
                 >
-                  <div className="relative aspect-[3/4] overflow-hidden bg-panel-2">
+                  <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--radius-box)] bg-panel-2 sm:rounded-none">
                     <SiteImage
                       imageKey={category.winner.avatarKey}
-                      sizes="(max-width: 1024px) 50vw, 280px"
+                      sizes="(max-width: 640px) 46vw, (max-width: 1024px) 50vw, 280px"
                       className="transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
-                  <div className="px-3.5 pb-4 pt-3.5">
+                  <div className="pb-1 pt-2.5 sm:px-3.5 sm:pb-4 sm:pt-3.5">
                     <p className="text-[10.5px] font-bold uppercase text-ink-3">
                       {category.nameLo}
                     </p>
