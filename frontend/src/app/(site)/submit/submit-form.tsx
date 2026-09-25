@@ -182,7 +182,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         onChange={(creatorNameRaw) => setValues({ ...values, creatorNameRaw })}
       />
 
-      <Field label="ລິງກ໌ຊ່ອງທາງ" help="Facebook, TikTok, YouTube ຫຼື Instagram — ຊ່ວຍໃຫ້ທີມງານຫາເຈົ້າຕົວໄດ້">
+      <Field label="ລິງກ໌ຊ່ອງທາງ" help="Facebook, TikTok, YouTube ຫຼື Instagram — ເພື່ອຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໄປເບິ່ງຜົນງານໄດ້">
         <Input
           type="url"
           placeholder="https://…"
@@ -336,7 +336,7 @@ function CreatorNameField({
         />
       </label>
       <span className="mt-1.5 block text-[12px] text-ink-3">
-        ຂຽນຕາມທີ່ຄົນຮູ້ຈັກ — ຊື່ເພຈ ຫຼື ຊື່ຈິງກໍໄດ້
+        ຊື່ຊ່ອງ ຫຼື ຊື່ເພຈ ຂອງຄຣີເອເຕີ
       </span>
 
       {visible && (
