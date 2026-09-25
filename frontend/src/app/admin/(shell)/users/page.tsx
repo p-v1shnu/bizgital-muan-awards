@@ -67,7 +67,7 @@ export default function UsersPage() {
                     <Th>ຊື່</Th>
                     <Th>ອີເມວ</Th>
                     <Th className="w-40">ສິດ</Th>
-                    <Th className="w-44">ເຂົ້າລ່າສຸດ</Th>
+                    <Th className="w-44">ເຂົ້າຫຼ້າສຸດ</Th>
                     <Th />
                   </Tr>
                 </thead>

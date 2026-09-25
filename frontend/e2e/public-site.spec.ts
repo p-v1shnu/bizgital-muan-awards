@@ -56,7 +56,7 @@ test.describe('homepage', () => {
     const main = page.getByRole('main');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌');
     await expect(main.getByText('ລາງວັນປະຈຳປີສຳລັບຄຣີເອເຕີ')).toBeVisible();
-    await expect(main.getByText('ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ')).toBeVisible();
+    await expect(main.getByText('ໄຮໄລທ໌ຜູ້ຊະນະຫຼ້າສຸດ')).toBeVisible();
     await expect(main.getByText('ປີທີ່ຜ່ານມາ')).toBeVisible();
   });
 

@@ -227,7 +227,7 @@ export async function SiteFooter() {
             <FooterColumn
               title="ລາງວັນ"
               links={[
-                ...(latest ? [{ href: '/awards/latest', label: 'ງານປີລ່າສຸດ' }] : []),
+                ...(latest ? [{ href: '/awards/latest', label: 'ງານປີຫຼ້າສຸດ' }] : []),
                 { href: '/winners', label: 'ທຳນຽບຜູ້ຊະນະ' },
                 // Shown on the same condition as the CTA in the nav. It used to
                 // sit here always, so the footer invited people to a form the

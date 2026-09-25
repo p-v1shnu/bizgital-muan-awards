@@ -356,7 +356,7 @@ export default async function HomePage() {
           <PatternDivider imageKey={site?.dividerPatternKey} />
           <Section
             eyebrow={`ຜູ້ຊະນະປີ ${latestWinners.year}`}
-            title="ໄຮໄລທ໌ຜູ້ຊະນະລ່າສຸດ"
+            title="ໄຮໄລທ໌ຜູ້ຊະນະຫຼ້າສຸດ"
             className="bg-panel-2/50"
           >
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
