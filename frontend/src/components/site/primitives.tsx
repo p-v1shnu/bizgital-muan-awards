@@ -37,8 +37,8 @@ export function PatternDivider({
 /**
  * A Lao name can carry a trailing digit run (a disambiguating suffix, or
  * test data like "ຄຣີເອເຕີທົດສອບ 22"). Left as one string inside a
- * font-serif element, the digits render in Bodoni Moda — the only face in
- * that stack with glyphs for them — while the Lao letters beside them fall
+ * font-serif element, the digits render in DM Sans — the only face in that
+ * stack with glyphs for them — while the Lao letters beside them fall
  * through to Noto Sans Lao, so the two visibly clash. This keeps digits in
  * the same face as the Lao text around them.
  */

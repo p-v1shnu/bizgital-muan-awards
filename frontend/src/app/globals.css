@@ -62,7 +62,7 @@
    * Every stack still ends in a Lao family so a Lao glyph never falls back
    * to a mismatched face.
    */
-  --font-serif: var(--font-bodoni), 'Bodoni Moda', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
+  --font-serif: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
   --font-sans: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao), 'Noto Sans Lao', sans-serif;
   --font-sans-looped: var(--font-dm-sans), 'DM Sans', var(--font-noto-sans-lao-looped), 'Noto Sans Lao Looped', sans-serif;
 }
@@ -269,15 +269,15 @@
    * in a face that does not match the rest of the page.
    */
   /**
-   * 600, not 700: a Noto Lao cut reads heavier than Bodoni Moda's at the
-   * same nominal weight, and nearly every heading on this site is Lao text
-   * falling back to one.
+   * 700 — the team's own name for it is "DM Sans Bold" — now that font-serif
+   * is DM Sans rather than Bodoni Moda: a serif's contrast used to be what
+   * set a heading apart from body text, and weight is what does that job now.
    */
   h1,
   h2,
   h3 {
     font-family: var(--font-serif);
-    font-weight: 600;
+    font-weight: 700;
   }
 
   ::selection {
