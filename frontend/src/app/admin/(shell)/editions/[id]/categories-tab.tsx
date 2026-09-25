@@ -10,6 +10,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState, ErrorNote, LoadingBlock, Note } from '@/components/ui/feedback';
 import { Field, Input, Select, Switch, Textarea } from '@/components/ui/field';
+import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
 import type { Category, CategoryTemplate, Edition } from '@/types/api';
 import { emptyToNull, slugify } from '@/lib/utils';
@@ -212,6 +213,7 @@ function CategoryDialog({
     descriptionLo: category?.descriptionLo ?? '',
     isFeatured: category?.isFeatured ?? false,
   });
+  const [imageKey, setImageKey] = useState<string | null>(category?.imageKey ?? null);
 
   // Reset synchronously during render rather than in an effect — the dialog
   // element (see ui/dialog.tsx) never unmounts on close, only `.close()`s, so
@@ -229,6 +231,7 @@ function CategoryDialog({
         descriptionLo: category?.descriptionLo ?? '',
         isFeatured: category?.isFeatured ?? false,
       });
+      setImageKey(category?.imageKey ?? null);
     }
   }
 
@@ -252,6 +255,7 @@ function CategoryDialog({
   // still owns these fields directly and can edit them here.
   const locked = category ? category.templateId != null : Boolean(template);
   const descriptionPreview = category ? (category.descriptionLo ?? '') : (template?.descriptionLo ?? '');
+  const imageKeyPreview = category ? category.imageKey : (template?.imageKey ?? null);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -262,7 +266,12 @@ function CategoryDialog({
           isFeatured: form.isFeatured,
           ...(category.templateId
             ? {}
-            : { slug: form.slug, nameLo: form.nameLo, descriptionLo: emptyToNull(form.descriptionLo) }),
+            : {
+                slug: form.slug,
+                nameLo: form.nameLo,
+                descriptionLo: emptyToNull(form.descriptionLo),
+                imageKey,
+              }),
         },
         { onSuccess: onClose },
       );
@@ -363,6 +372,28 @@ function CategoryDialog({
               onChange={(event) => setForm({ ...form, descriptionLo: event.target.value })}
             />
           </Field>
+        )}
+
+        {locked ? (
+          imageKeyPreview && (
+            <Field label="ຮູບປະກອບ (1:1)" help="ມາຈາກຄັງສາຂາ — ໄປແກ້ທີ່ນັ້ນແທນ">
+              <div className="size-20 overflow-hidden rounded-[var(--radius-ui-sm)] border border-rule bg-panel-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={imagePublicUrl(imageKeyPreview)} alt="" className="size-full object-cover" />
+              </div>
+            </Field>
+          )
+        ) : (
+          <div className="mb-4">
+            <ImageUpload
+              label="ຮູບປະກອບ (1:1)"
+              hint="ວາງຄຽງຄຳອະທິບາຍ — ຊ້າຍໃນຄອມພິວເຕີ, ລຸ່ມໃນມືຖື"
+              folder="categories"
+              aspect="square"
+              value={imageKey}
+              onChange={setImageKey}
+            />
+          </div>
         )}
 
         <div className="mb-4 flex items-center gap-3">

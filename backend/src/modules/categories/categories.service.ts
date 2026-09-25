@@ -60,6 +60,7 @@ export class CategoriesService {
         nameLo: template.nameLo,
         nameEn: template.nameEn,
         descriptionLo: template.descriptionLo,
+        imageKey: template.imageKey,
         groupLo: dto.groupLo,
         isFeatured: dto.isFeatured,
         sortOrder: (last?.sortOrder ?? -1) + 1,
@@ -90,9 +91,9 @@ export class CategoriesService {
     const before = await this.findById(id);
 
     if (before.templateId) {
-      const blocked = (['nameLo', 'nameEn', 'slug', 'descriptionLo', 'descriptionEn'] as const).filter(
-        (field) => dto[field] !== undefined,
-      );
+      const blocked = (
+        ['nameLo', 'nameEn', 'slug', 'descriptionLo', 'descriptionEn', 'imageKey'] as const
+      ).filter((field) => dto[field] !== undefined);
       if (blocked.length > 0) {
         throw new BadRequestException(
           `This category comes from the library — edit ${blocked.join(', ')} there instead, not per edition`,
@@ -213,6 +214,7 @@ export class CategoriesService {
           // half a translation is worse than none, because the year page shows
           // one language falling back to the other mid-list.
           descriptionEn: c.descriptionEn,
+          imageKey: c.imageKey,
           groupLo: c.groupLo,
           isFeatured: c.isFeatured,
           sortOrder: highest + 1 + index,

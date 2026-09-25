@@ -44,6 +44,8 @@ export interface Category {
   nameLo: string;
   nameEn: string | null;
   descriptionLo: string | null;
+  /** Object storage key for a 1:1 photo shown beside the description, never a full URL. */
+  imageKey: string | null;
   groupLo: string | null;
   sortOrder: number;
   isFeatured: boolean;
@@ -59,6 +61,7 @@ export interface CategoryTemplate {
   nameLo: string;
   nameEn: string | null;
   descriptionLo: string | null;
+  imageKey: string | null;
   _count?: { categories: number };
 }
 

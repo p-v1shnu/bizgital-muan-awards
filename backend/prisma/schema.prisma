@@ -158,6 +158,13 @@ model Category {
   descriptionLo String? @db.Text
   descriptionEn String? @db.Text
 
+  /// A 1:1 photo shown beside descriptionLo — object storage key, never a
+  /// full URL. Copied from the template at creation and kept in sync the
+  /// same way descriptionLo is (CategoriesService blocks editing it directly
+  /// on a templated category; CategoryTemplatesService.update() cascades a
+  /// change here onto every edition using that template).
+  imageKey String?
+
   /// Optional grouping heading, used when a year runs long (PRD §7.6).
   /// Blank on every category means a flat list.
   groupLo String?
@@ -203,6 +210,10 @@ model CategoryTemplate {
   /// a live link, so a year can still reword it and a later edit here never
   /// reaches back into an edition that already picked this template.
   descriptionLo String? @db.Text
+
+  /// The template's own copy of Category.imageKey — see that field's doc
+  /// comment for how it moves between the two.
+  imageKey String?
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt

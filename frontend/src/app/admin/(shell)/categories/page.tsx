@@ -9,6 +9,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { ConfirmDialog, Dialog } from '@/components/ui/dialog';
 import { EmptyState, ErrorNote, LoadingBlock } from '@/components/ui/feedback';
 import { Field, Input, Textarea } from '@/components/ui/field';
+import { ImageUpload } from '@/components/admin/image-upload';
 import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { Pager } from '@/components/admin/pager';
 import { useApiMutation, useApiPage } from '@/lib/api/hooks';
@@ -171,6 +172,7 @@ function CategoryTemplateDialog({
     slug: template ? template.slug : randomSlug('category'),
     descriptionLo: template?.descriptionLo ?? '',
   }));
+  const [imageKey, setImageKey] = useState<string | null>(template?.imageKey ?? null);
   // Once the slug field itself has been typed into, the name fields no
   // longer overwrite it — a deliberate edit should stick.
   const [slugTouched, setSlugTouched] = useState(template !== null);
@@ -189,6 +191,7 @@ function CategoryTemplateDialog({
         slug: template ? template.slug : randomSlug('category'),
         descriptionLo: template?.descriptionLo ?? '',
       });
+      setImageKey(template?.imageKey ?? null);
       setSlugTouched(template !== null);
     }
   }
@@ -242,6 +245,7 @@ function CategoryTemplateDialog({
               nameEn: emptyToNull(form.nameEn),
               slug: form.slug,
               descriptionLo: emptyToNull(form.descriptionLo),
+              imageKey,
             },
             { onSuccess: onClose },
           );
@@ -277,6 +281,17 @@ function CategoryTemplateDialog({
             onChange={(event) => setForm({ ...form, descriptionLo: event.target.value })}
           />
         </Field>
+
+        <div className="mb-4">
+          <ImageUpload
+            label="ຮູບປະກອບ (1:1)"
+            hint="ວາງຄຽງຄຳອະທິບາຍ — ຊ້າຍໃນຄອມພິວເຕີ, ລຸ່ມໃນມືຖື · ຄັດລອກເຂົ້າສາຂາໃໝ່ໆຄືກັນກັບຄຳອະທິບາຍ"
+            folder="categories"
+            aspect="square"
+            value={imageKey}
+            onChange={setImageKey}
+          />
+        </div>
 
         {action.error && <ErrorNote error={action.error} />}
       </form>

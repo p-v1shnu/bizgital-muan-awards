@@ -156,6 +156,7 @@ export class PublicSiteService {
         nameLo: category.nameLo,
         nameEn: category.nameEn,
         descriptionLo: category.descriptionLo,
+        imageKey: category.imageKey,
         groupLo: category.groupLo,
         isFeatured: category.isFeatured,
         nominees: show.nominees
@@ -218,6 +219,7 @@ export class PublicSiteService {
       nameLo: category.nameLo,
       nameEn: category.nameEn,
       descriptionLo: category.descriptionLo,
+      imageKey: category.imageKey,
       groupLo: category.groupLo,
       isFeatured: category.isFeatured,
       nominees: show.nominees ? category.nominations.map((n) => this.nomineeShape(n, show.winners)) : [],

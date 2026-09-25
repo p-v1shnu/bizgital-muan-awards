@@ -74,6 +74,12 @@ export class UpdateCategoryDto {
   @IsString()
   descriptionEn?: string | null;
 
+  @ApiPropertyOptional({ description: 'Object storage key for a 1:1 photo, never a full URL' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  imageKey?: string | null;
+
   @ApiPropertyOptional({ description: 'Grouping heading, used when a year runs long (PRD §7.6)' })
   @IsOptional()
   @IsString()

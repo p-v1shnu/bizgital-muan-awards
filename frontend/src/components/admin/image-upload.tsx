@@ -8,7 +8,7 @@ import { ErrorNote, Spinner } from '@/components/ui/feedback';
 import { getAccessToken, refreshAccessToken } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
 
-export type Folder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site';
+export type Folder = 'creators' | 'judges' | 'sponsors' | 'editions' | 'site' | 'categories';
 
 interface UploadResult {
   key: string;
