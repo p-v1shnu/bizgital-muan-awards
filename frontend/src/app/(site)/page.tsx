@@ -379,6 +379,8 @@ export default async function HomePage() {
                       imageKey={category.winner.avatarKey}
                       sizes="(max-width: 640px) 46vw, (max-width: 1024px) 50vw, 280px"
                       className="transition-transform duration-500 group-hover:scale-105"
+                      fallbackInitial={category.winner.nameLo.trim().charAt(0)}
+                      fallbackClassName="text-5xl"
                     />
                   </div>
                   <div className="pb-1 pt-2.5 sm:px-3.5 sm:pb-4 sm:pt-3.5">

@@ -304,6 +304,8 @@ export function CreatorCard({
           imageKey={creator.avatarKey}
           alt={creator.nameLo}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
+          fallbackInitial={creator.nameLo.trim().charAt(0)}
+          fallbackClassName="text-5xl"
         />
         {isWinner && (
           <span className="absolute bottom-2.5 left-2.5 rounded-full bg-brand-deep px-2.5 py-1 text-[10px] font-bold text-white shadow-[0_1px_4px_rgba(0,0,0,.25)]">

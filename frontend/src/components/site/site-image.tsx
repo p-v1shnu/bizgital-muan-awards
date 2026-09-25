@@ -40,6 +40,12 @@ export function SiteImage({
    *  photo's important part at one width and not the other. Undefined keeps
    *  the default centre. */
   focalY,
+  /** A person's own first letter, centred in the fallback panel instead of
+   *  leaving it blank — so a creator or judge with no photo yet still reads
+   *  as themselves rather than as an empty tile identical to everyone
+   *  else's. Ignored once imageKey resolves to a real image. Size it with
+   *  `fallbackClassName` (e.g. `text-5xl`) to match the box. */
+  fallbackInitial,
 }: {
   imageKey: string | null | undefined;
   alt?: string;
@@ -50,6 +56,7 @@ export function SiteImage({
   loading?: 'eager' | 'lazy';
   fallbackClassName?: string;
   focalY?: number | null;
+  fallbackInitial?: string;
 }) {
   const src = imageUrl(imageKey);
 
@@ -58,11 +65,13 @@ export function SiteImage({
       <div
         aria-hidden
         className={cn(
-          'size-full bg-[linear-gradient(140deg,#f4efe5,#e4d8c4)]',
+          'grid size-full place-items-center bg-[linear-gradient(140deg,#f4efe5,#e4d8c4)] font-serif font-bold text-ink-3',
           className,
           fallbackClassName,
         )}
-      />
+      >
+        {fallbackInitial}
+      </div>
     );
   }
 
