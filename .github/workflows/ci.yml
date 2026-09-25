@@ -170,18 +170,18 @@ jobs:
       # exercises. `--network host` is what lets 127.0.0.1:9000 (the endpoint
       # above) reach the container from both the runner and the API process.
       #
-      # quay.io, not docker.io: MinIO stopped publishing minio/minio and
-      # minio/mc to Docker Hub, which now answers "repository does not
-      # exist" for both — quay.io/minio/... is where they still publish.
+      # Silo (pgsty), the community fork of MinIO — see docker-compose.local.yml
+      # for why: MinIO's own images are gone from Docker Hub and no longer
+      # pullable anonymously from quay.io. Same API and `mc`. Pinned.
       - name: Start object storage (MinIO)
         run: |
           docker run -d --name minio --network host \
             -e MINIO_ROOT_USER="$S3_ACCESS_KEY" -e MINIO_ROOT_PASSWORD="$S3_SECRET_KEY" \
-            quay.io/minio/minio server /data
+            pgsty/minio:RELEASE.2026-08-04T00-00-00Z server /data
           timeout 60 sh -c 'until curl -sf http://127.0.0.1:9000/minio/health/live; do sleep 1; done'
           docker run --rm --network host \
             -v "${{ github.workspace }}/docs/storage-policy.json:/policy.json:ro" \
-            --entrypoint sh quay.io/minio/mc -c "
+            --entrypoint sh pgsty/mc:RELEASE.2026-09-16T00-00-00Z -c "
               mc alias set local http://127.0.0.1:9000 $S3_ACCESS_KEY $S3_SECRET_KEY &&
               mc mb --ignore-existing local/$S3_BUCKET &&
               mc anonymous set-json /policy.json local/$S3_BUCKET
