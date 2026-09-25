@@ -20,17 +20,20 @@ interface PageProps {
   searchParams: Promise<{ preview?: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { year } = await params;
+  // A preview link shows what the public cannot see yet; it must never be indexed.
+  const robots = (await searchParams).preview ? { index: false, follow: false } : undefined;
   const edition = await tryGetPublic<PublicEdition>(apiPath`/editions/${year}`);
   // The same title the 404 page carries, not a wording of its own. The page
   // below calls notFound() on this same miss, so the reader gets the boundary's
   // title first and this one after hydration — two different sentences meant a
   // tab that read "Page not found" and then changed its mind to "Year not
   // found" a moment later.
-  if (!edition) return { title: NOT_FOUND_TITLE };
+  if (!edition) return { title: NOT_FOUND_TITLE, robots };
 
   return {
+    robots,
     title: edition.titleLo,
     description: edition.descriptionLo ?? undefined,
     // The slug, not the requested path: /awards/latest points here too.

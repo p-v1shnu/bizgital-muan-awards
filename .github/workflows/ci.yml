@@ -143,6 +143,9 @@ jobs:
       # prerendered from an empty database. This lets the seed purge them;
       # without it the browser pass reads a snapshot of nothing.
       REVALIDATE_SECRET: ci-revalidate-secret
+      # Exercises the path production takes: the site's server identifying
+      # itself to the rate limiter rather than being counted as one visitor.
+      INTERNAL_API_SECRET: ci-internal-api-secret-that-is-long-enough-0123
       # And this is what lets the API do the purging by itself, the way it does
       # in production. A test that opens or closes entries and then reads the
       # page needs the change to have reached the cache.

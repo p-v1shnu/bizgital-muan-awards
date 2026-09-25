@@ -1,7 +1,30 @@
+import { timingSafeEqual } from 'node:crypto';
+import { isIP } from 'node:net';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { verify } from 'jsonwebtoken';
 import type { Request } from 'express';
+
+import { clientNetwork } from '../utils/client-network';
+
+export const INTERNAL_SECRET_HEADER = 'x-internal-secret';
+export const VISITOR_IP_HEADER = 'x-visitor-ip';
+
+/** True when the request comes from the site's own server, proven by the shared secret. */
+function fromSite(request: Request) {
+  const expected = process.env.INTERNAL_API_SECRET;
+  const given = request.headers[INTERNAL_SECRET_HEADER];
+  if (!expected || typeof given !== 'string') return false;
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** The visitor the site's server is asking for. Only meaningful when fromSite() holds. */
+function visitorOf(request: Request) {
+  const value = request.headers[VISITOR_IP_HEADER];
+  return typeof value === 'string' && isIP(value) ? value : undefined;
+}
 
 /**
  * The rate limit exists to keep strangers from hammering the public side. It
@@ -25,6 +48,13 @@ import type { Request } from 'express';
 export class PublicThrottlerGuard extends ThrottlerGuard {
   protected async shouldSkip(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
+
+    // The site's own server renders every visitor's page from one address, so
+    // counting it as one client let anyone fill that bucket and take every
+    // page down. Its cached reads are skipped; reads it makes on a visitor's
+    // behalf are counted against that visitor (see getTracker).
+    if (fromSite(request) && !visitorOf(request)) return true;
+
     if (!request.path.startsWith('/api/v1/admin/')) return false;
 
     const header = request.headers.authorization;
@@ -36,6 +66,12 @@ export class PublicThrottlerGuard extends ThrottlerGuard {
     } catch {
       return false;
     }
+  }
+
+  protected async getTracker(request: Record<string, unknown>): Promise<string> {
+    const req = request as unknown as Request;
+    const address = (fromSite(req) && visitorOf(req)) || req.ip;
+    return clientNetwork(address) ?? 'unknown';
   }
 
   /**

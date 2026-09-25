@@ -21,11 +21,13 @@ interface PageProps {
  * with the right title and picture, rather than dropping the reader at the
  * top of a long year page (PRD §6.1).
  */
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { year, category } = await params;
+  // A preview link shows what the public cannot see yet; it must never be indexed.
+  const robots = (await searchParams).preview ? { index: false, follow: false } : undefined;
   const page = await tryGetPublic<PublicCategoryPage>(apiPath`/editions/${year}/categories/${category}`);
   // The 404 page's title, not a wording of its own — see the year page.
-  if (!page) return { title: NOT_FOUND_TITLE };
+  if (!page) return { title: NOT_FOUND_TITLE, robots };
 
   const title = `${page.nameLo} · ${page.edition.titleLo}`;
   // Once there is a winner, say so in the description. It is the answer the
@@ -38,6 +40,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     : (page.descriptionLo ?? undefined);
 
   return {
+    robots,
     alternates: { canonical: `/awards/${page.edition.slug}/${page.slug}` },
     title,
     description,

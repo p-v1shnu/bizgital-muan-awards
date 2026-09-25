@@ -12,7 +12,7 @@ import { ImageUpload, imagePublicUrl } from '@/components/admin/image-upload';
 import { useApi, useApiMutation, useApiPage } from '@/lib/api/hooks';
 import { useDebounced } from '@/lib/use-debounced';
 import type { Edition, Sponsor, SponsorTier, SponsorTierTemplate } from '@/types/api';
-import { emptyToNull } from '@/lib/utils';
+import { emptyToNull, safeHttpUrl } from '@/lib/utils';
 
 /**
  * Sponsors of one year, grouped by a tier picked from the library
@@ -220,7 +220,7 @@ export function SponsorsTab({ edition }: { edition: Edition }) {
                           <p className="truncate text-[14px] text-ink">{sponsor.name}</p>
                           {sponsor.websiteUrl && (
                             <a
-                              href={sponsor.websiteUrl}
+                              href={safeHttpUrl(sponsor.websiteUrl) ?? undefined}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1 truncate text-[11.5px] text-ink-3 hover:text-brand-deep hover:underline"

@@ -2,7 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SubmissionStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
+  ArrayMaxSize,
   ArrayMinSize,
+  ArrayUnique,
   IsArray,
   IsEnum,
   IsIn,
@@ -10,6 +12,7 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -69,6 +72,8 @@ export class CreateSubmissionDto {
   })
   @IsArray()
   @ArrayMinSize(1)
+  @ArrayMaxSize(SUBMISSION_REASON_TAGS.length)
+  @ArrayUnique()
   @IsIn(SUBMISSION_REASON_TAGS, { each: true })
   reasonTags!: string[];
 
@@ -94,6 +99,7 @@ export class ReviewSubmissionDto {
   @IsOptional()
   @IsString()
   @MaxLength(80)
+  @Matches(/^[a-z0-9-]+$/, { message: 'slug may contain lowercase letters, numbers and dashes only' })
   newCreatorSlug?: string;
 }
 

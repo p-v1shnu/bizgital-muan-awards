@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight, Facebook, Instagram, Youtube } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn, safeHttpUrl } from '@/lib/utils';
 import { MobileNav } from '@/components/site/mobile-nav';
 import type { NavItem } from '@/components/site/mobile-nav';
 import { PatternDivider } from '@/components/site/primitives';
@@ -157,9 +157,9 @@ export async function SiteFooter() {
     tryGetPublic<Edition | null>('/editions/accepting-submissions'),
   ]);
 
-  const socials = Object.entries(site?.socialLinks ?? {}).filter(
-    (entry): entry is [string, string] => Boolean(entry[1]) && entry[0] in SOCIAL_ICONS,
-  );
+  const socials = Object.entries(site?.socialLinks ?? {})
+    .map(([platform, href]) => [platform, safeHttpUrl(href)] as const)
+    .filter((entry): entry is [string, string] => Boolean(entry[1]) && entry[0] in SOCIAL_ICONS);
 
   return (
     <>

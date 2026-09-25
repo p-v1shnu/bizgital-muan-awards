@@ -59,6 +59,10 @@ describe('public submissions and the screening queue', () => {
     await send({ categoryId, creatorNameRaw: 'ບຸນມີ' }).expect(201);
   });
 
+  it('refuses the same reason ticked more than once', async () => {
+    await send({ categoryId, creatorNameRaw: 'ຊ້ຳ', reasonTags: ['creativity', 'creativity'] }).expect(400);
+  });
+
   it('answers a honeypot filler as if it worked, and stores nothing', async () => {
     await send({ categoryId, creatorNameRaw: 'ບອດ', website: 'http://spam' }).expect(201);
     const stored = await h.prisma.publicSubmission.count({ where: { creatorNameRaw: 'ບອດ' } });
@@ -80,6 +84,16 @@ describe('public submissions and the screening queue', () => {
     const queue = await api(h).get(path('/admin/submissions')).set(h.auth).expect(200);
     const entryId = queue.body.data[0].entries[0].id;
     await api(h).post(path(`/admin/submissions/${entryId}/accept`)).set(h.auth).send({}).expect(400);
+  });
+
+  it('refuses a new creator slug the creator form would refuse', async () => {
+    const queue = await api(h).get(path('/admin/submissions')).set(h.auth).expect(200);
+    const entryId = queue.body.data[0].entries[0].id;
+    await api(h)
+      .post(path(`/admin/submissions/${entryId}/accept`))
+      .set(h.auth)
+      .send({ newCreatorSlug: '../Not A Slug' })
+      .expect(400);
   });
 
   it('accepting one entry nominates the creator and folds in the duplicates', async () => {

@@ -12,6 +12,7 @@ import { AdminRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'node:crypto';
 
+import { clientNetwork } from '../../common/utils/client-network';
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { loadActiveSession } from './active-session';
@@ -33,6 +34,14 @@ const BCRYPT_ROUNDS = 12;
 const MAX_FAILURES = 8;
 const FAILURE_WINDOW_MS = 15 * 60_000;
 
+/**
+ * The same account from every address together. The per-address count alone
+ * let anyone with many addresses (one IPv6 line is enough) guess without end.
+ * High enough that the team mistyping never meets it; the cost is that someone
+ * who knows an admin's email can keep that account locked for the window.
+ */
+const MAX_ACCOUNT_FAILURES = 30;
+
 /** Kept in one place so the cookie maxAge and the token expiry cannot drift apart. */
 export const ACCESS_TOKEN_TTL = '15m';
 export const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
@@ -41,6 +50,9 @@ export const REFRESH_TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7;
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly failures = new Map<string, { count: number; firstAt: number }>();
+  // Same cost as a real hash: a cheaper one answered an unknown email ~250x
+  // faster, which told anyone timing the endpoint which emails are admins.
+  private dummyHash?: Promise<string>;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -105,15 +117,20 @@ export class AuthService {
       where: { email: dto.email, deletedAt: null },
     });
 
-    const attemptKey = `${dto.email.toLowerCase()}|${ipAddress ?? 'unknown'}`;
-    this.assertNotLockedOut(attemptKey);
+    const email = dto.email.toLowerCase();
+    const attemptKey = `${email}|${clientNetwork(ipAddress) ?? 'unknown'}`;
+    const accountKey = `${email}|*`;
+    this.assertNotLockedOut(attemptKey, MAX_FAILURES);
+    this.assertNotLockedOut(accountKey, MAX_ACCOUNT_FAILURES);
 
     // Compare against a dummy hash when the account is missing so that a wrong
     // email and a wrong password take the same amount of time to answer.
-    const hash = user?.passwordHash ?? (await bcrypt.hash('no-such-user', 1));
+    this.dummyHash ??= bcrypt.hash('no-such-user', BCRYPT_ROUNDS);
+    const hash = user?.passwordHash ?? (await this.dummyHash);
     const ok = await bcrypt.compare(dto.password, hash);
     if (!user || !ok) {
       const failures = this.recordFailure(attemptKey);
+      this.recordFailure(accountKey);
       // A run of these is what an attack looks like from the inside, and the
       // trail held only successes — so nothing anyone could read afterwards
       // said it had happened (OWASP A09:2025). Written against the account
@@ -134,6 +151,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
     this.failures.delete(attemptKey);
+    this.failures.delete(accountKey);
 
     await this.prisma.adminUser.update({
       where: { id: user.id },
@@ -236,14 +254,14 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  private assertNotLockedOut(key: string) {
+  private assertNotLockedOut(key: string, max: number) {
     const entry = this.failures.get(key);
     if (!entry) return;
     if (Date.now() - entry.firstAt > FAILURE_WINDOW_MS) {
       this.failures.delete(key);
       return;
     }
-    if (entry.count >= MAX_FAILURES) {
+    if (entry.count >= max) {
       this.logger.warn(`Locked out after ${entry.count} failed attempts: ${key}`);
       throw new HttpException(
         'Too many failed sign-in attempts. Try again in a few minutes.',

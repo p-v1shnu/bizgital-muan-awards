@@ -1,5 +1,6 @@
-import { GoogleAnalytics } from '@next/third-parties/google';
+import { Suspense } from 'react';
 
+import { Analytics } from '@/components/site/analytics';
 import { SiteFooter, SiteHeader } from '@/components/site/chrome';
 
 /**
@@ -40,7 +41,12 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
         {children}
       </main>
       <SiteFooter />
-      {GA_ID && <GoogleAnalytics gaId={GA_ID} />}
+      {/* Reads the query string, which a prerendered page only has in the browser. */}
+      {GA_ID && (
+        <Suspense fallback={null}>
+          <Analytics gaId={GA_ID} />
+        </Suspense>
+      )}
     </div>
   );
 }

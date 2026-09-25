@@ -1,12 +1,32 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 /**
  * Reads for Server Components. Separate from the browser client because none
  * of that applies here: there is no token to attach, no refresh to retry, and
  * a missing record should render the not-found page rather than throw.
+ *
+ * In production this goes straight to the API container rather than out
+ * through the public domain and back in.
  */
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+const BASE_URL =
+  process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+
+/**
+ * Proves to the API's rate limiter that this is the site's own server. Every
+ * page is rendered from here, so without it all visitors shared one bucket and
+ * anyone could fill it and take the site down.
+ */
+const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
+
+/** A preview token is a JWT; anything else is a URL someone typed and must not skip the cache. */
+const TOKEN_SHAPE = /^[\w-]+\.[\w-]+\.[\w-]+$/;
+
+/** Who the page is being rendered for, as Caddy reported it. */
+async function visitorAddress() {
+  const forwarded = (await headers()).get('x-forwarded-for');
+  return forwarded?.split(',')[0].trim() || undefined;
+}
 
 /**
  * How long a public page may be stale. The API also clears these pages the
@@ -106,14 +126,24 @@ export async function getPublic<T>(path: string, options: Options = {}): Promise
 
   // A read that carries someone's cookie is about them, and caching it would
   // serve one person's draft to the next visitor.
-  const headers = options.asViewer ? { cookie: (await cookies()).toString() } : undefined;
   const caching = options.asViewer
     ? ({ cache: 'no-store' } as const)
     : ({ next: { revalidate: options.revalidate ?? DEFAULT_REVALIDATE } } as const);
 
+  const outgoing: Record<string, string> = {};
+  if (options.asViewer) outgoing.cookie = (await cookies()).toString();
+  if (INTERNAL_SECRET) {
+    outgoing['x-internal-secret'] = INTERNAL_SECRET;
+    // A read that reaches the API on every request is one a visitor can
+    // repeat at will, so it is counted against them rather than let through.
+    const uncached = options.asViewer || options.revalidate === 0;
+    const visitor = uncached ? await visitorAddress() : undefined;
+    if (visitor) outgoing['x-visitor-ip'] = visitor;
+  }
+
   let response: Response;
   try {
-    response = await fetch(url, { ...caching, headers });
+    response = await fetch(url, { ...caching, headers: outgoing });
   } catch (caught) {
     if (BUILDING) return null;
     throw new ApiUnavailableError(`${path} could not be reached: ${String(caught)}`);
@@ -172,6 +202,9 @@ export async function getPublicOrDraft<T>(path: string, options: Options = {}): 
   // never be sent and the page would come back exactly as the public sees it.
   // Reading as the viewer also keeps the answer out of the shared cache, which
   // is what must happen to a page that depends on who asked.
+  if (options.preview && !TOKEN_SHAPE.test(options.preview)) {
+    options = { ...options, preview: undefined };
+  }
   if (options.preview) return getPublic<T>(path, { ...options, asViewer: true });
 
   const published = await getPublic<T>(path, options);

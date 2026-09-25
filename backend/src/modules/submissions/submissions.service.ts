@@ -13,6 +13,7 @@ import {
 import { EditionsService } from '../editions/editions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { paginate } from '../../common/dto/pagination.dto';
+import { clientNetwork } from '../../common/utils/client-network';
 
 /** How many of a group's entries travel with the queue page. */
 const ENTRIES_PER_GROUP = 20;
@@ -457,6 +458,6 @@ function dedupeKey(categoryId: string, creatorNameRaw: string, ipHash: string) {
 
 function hashIp(ip: string | undefined) {
   return createHash('sha256')
-    .update(`${process.env.IP_HASH_SALT ?? ''}:${ip ?? 'unknown'}`)
+    .update(`${process.env.IP_HASH_SALT ?? ''}:${clientNetwork(ip) ?? 'unknown'}`)
     .digest('hex');
 }
