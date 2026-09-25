@@ -425,18 +425,18 @@ export default async function HomePage() {
                   className="stagger-item rounded-[var(--radius-box)] border border-rule bg-panel p-5"
                 >
                   {step.iconImageKey ? (
-                    <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft">
+                    <span className="grid size-[61px] place-items-center rounded-[var(--radius-sm)] bg-brand-soft">
                       <SiteImageFixed
                         imageKey={step.iconImageKey}
-                        width={18}
-                        height={18}
-                        className="size-4.5 object-contain"
+                        width={31}
+                        height={31}
+                        className="size-[31px] object-contain"
                       />
                     </span>
                   ) : (
                     Icon && (
-                      <span className="grid size-9 place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
-                        <Icon className="size-4.5" />
+                      <span className="grid size-[61px] place-items-center rounded-[var(--radius-sm)] bg-brand-soft text-brand-deep">
+                        <Icon className="size-[31px]" />
                       </span>
                     )
                   )}
