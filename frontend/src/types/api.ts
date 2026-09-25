@@ -166,6 +166,11 @@ export interface FaqItem {
   answerLo: string;
 }
 
+/** One step of "what happens after a name is sent in", shown on /submit as a journey ending in a fixed "results announced" flag. */
+export interface SubmitAfterStep {
+  bodyLo: string;
+}
+
 /** One step of "how this is judged", shown on the homepage and on /about. */
 export interface JudgingStep {
   titleLo: string;
@@ -233,7 +238,7 @@ export interface SiteSettings {
   faq: FaqItem[] | null;
   judgingSteps: JudgingStep[] | null;
   homeCards: HomeCards | null;
-  submitAfterLo: string | null;
+  submitAfterSteps: SubmitAfterStep[] | null;
   submitIntroLo: string | null;
   pageSeo: Partial<Record<'home' | 'about' | 'submit' | 'winners', PageSeo>> | null;
   footerLocationLo: string | null;

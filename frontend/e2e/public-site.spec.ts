@@ -565,9 +565,12 @@ test('the card copy and the submit list come from the back office', async ({ pag
 
   await page.goto('/submit');
   const after = page.getByRole('list').filter({ hasText: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື' });
+  // Each <li> also carries its own numbered circle (drawn beside the text,
+  // not part of the team's copy), so this checks the step text is present
+  // rather than an exact match against the whole item.
   await expect(after.getByRole('listitem')).toHaveText([
-    'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
-    'ຜົນຕັດສິນມາຈາກຄະນະກຳມະການ',
+    /ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື/,
+    /ຜົນຕັດສິນມາຈາກຄະນະກຳມະການ/,
   ]);
 });
 

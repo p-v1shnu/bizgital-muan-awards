@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
+import { Flag } from 'lucide-react';
 
-import { ActionLink, Section } from '@/components/site/primitives';
+import { ActionLink, RichText, Section } from '@/components/site/primitives';
 import { SubmitForm } from './submit-form';
 import { getPublic } from '@/lib/api/server';
 import { pageSeo } from '@/lib/page-seo';
@@ -26,14 +27,12 @@ export default async function SubmitPage() {
     getPublic<SiteSettings>('/site'),
   ]);
 
-  // What the team says happens next, one item per line. Falls back to the words
-  // the page used to hold, so an emptied field never leaves the box headed but
-  // empty.
-  const afterSending = (site?.submitAfterLo ?? '')
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-  const steps = afterSending.length > 0 ? afterSending : [
+  // What the team says happens next. Falls back to the words the page used to
+  // hold, so an emptied list never leaves the journey with nothing on it. The
+  // "ປະກາດຜົນ" flag at the end is not one of these — it is the fixed
+  // destination every journey ends at, drawn by the page itself below.
+  const afterSending = site?.submitAfterSteps ?? [];
+  const steps = afterSending.length > 0 ? afterSending.map((step) => step.bodyLo) : [
     'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື',
     'ຊື່ທີ່ຖືກສົ່ງຫຼາຍຄັ້ງຈະຖືກລວມເປັນລາຍການດຽວ ບໍ່ນັບເປັນຄະແນນ',
     'ຄະນະກຳມະການເປັນຜູ້ຕັດສິນ ບໍ່ແມ່ນຈຳນວນຄັ້ງທີ່ຖືກສະເໜີ',
@@ -142,11 +141,36 @@ export default async function SubmitPage() {
           <p className="text-[10.5px] font-bold uppercase text-ink-3">
             ຫຼັງຈາກສົ່ງແລ້ວ
           </p>
-          <ol className="mt-3 space-y-2.5 font-sans-looped">
+          <ol className="mt-4 flex flex-col">
             {steps.map((step, index) => (
-              <li key={index}>{step}</li>
+              <li key={index} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-brand-deep font-sans text-[12px] font-extrabold text-white">
+                    {index + 1}
+                  </div>
+                  <div
+                    className="w-[2px] flex-1 min-h-[26px]"
+                    style={{
+                      backgroundImage:
+                        'repeating-linear-gradient(var(--color-rule) 0 4px, transparent 4px 8px)',
+                    }}
+                  />
+                </div>
+                <p className="mb-5 font-sans-looped">
+                  <RichText text={step} />
+                </p>
+              </li>
             ))}
           </ol>
+          {/* The fixed destination every journey ends at — not one of the
+              team's steps (so it lives outside their <ol>, never counted
+              among them), and it always shows without needing typing in. */}
+          <div className="flex gap-3">
+            <div className="flex size-[26px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-brand bg-brand-soft text-brand-deep">
+              <Flag className="size-3.5" />
+            </div>
+            <p className="font-sans font-bold text-ink">ປະກາດຜົນ</p>
+          </div>
           {form.closesAt && (
             <p className="mt-4 border-t border-rule pt-4">
               ປິດຮັບ{' '}

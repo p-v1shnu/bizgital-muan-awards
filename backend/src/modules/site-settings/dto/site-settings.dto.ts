@@ -63,6 +63,22 @@ export class FaqItemDto {
 }
 
 /**
+ * One step in "what happens after a name is sent in", listed on /submit.
+ * A list rather than the newline-separated string this used to be — the
+ * page now draws it as a numbered journey ending in a fixed "results
+ * announced" flag, and a real array is what an add/reorder/delete editor
+ * (the same EntryListEditor the FAQ above uses) needs to work with, rather
+ * than trusting where a person happened to press Enter.
+ */
+export class SubmitAfterStepDto {
+  @ApiProperty({ example: 'ທີມງານກວດທຸກລາຍຊື່ດ້ວຍມື' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(300)
+  bodyLo!: string;
+}
+
+/**
  * One step in "how this is judged". The homepage and /about both render the
  * same list, so a step edited here changes on both — which is the point: they
  * used to hold separate copies and had already drifted apart.
@@ -414,11 +430,16 @@ export class UpdateSiteSettingsDto {
   @Type(() => HomeCardsDto)
   homeCards?: HomeCardsDto;
 
-  @ApiPropertyOptional({ description: 'What happens after a name is sent in, listed on /submit — one item per line' })
+  @ApiPropertyOptional({
+    type: [SubmitAfterStepDto],
+    description: 'What happens after a name is sent in, listed on /submit, in display order',
+  })
   @IsOptional()
-  @IsString()
-  @MaxLength(1200)
-  submitAfterLo?: string | null;
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => SubmitAfterStepDto)
+  submitAfterSteps?: SubmitAfterStepDto[];
 
   @ApiPropertyOptional({ description: 'The line under the "ສະເໜີຊື່ຄຣີເອເຕີ" heading on /submit' })
   @IsOptional()

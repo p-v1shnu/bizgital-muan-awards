@@ -567,9 +567,12 @@ model SiteSetting {
   /// of the page it leads to, and the nav and footer say it too. Editable there
   /// and fixed in the chrome is an inconsistency the team could not then fix.
   homeCards Json?
-  /// What happens after someone sends a name in, listed on /submit. One item per
-  /// line, same convention as Edition.activitiesLo.
-  submitAfterLo String? @db.Text
+  /// What happens after someone sends a name in, listed on /submit, drawn as a
+  /// numbered journey ending in a fixed "results announced" flag that is not
+  /// itself one of these entries. `[{ bodyLo }]`, same array-of-records shape
+  /// as faq and judgingSteps above (and edited the same way, with
+  /// EntryListEditor) — replaces what used to be one newline-separated string.
+  submitAfterSteps Json?
   /// The line under the "ສະເໜີຊື່ຄຣີເອເຕີ" heading on /submit — was hardcoded on
   /// the page; the team asked to type it themselves like everything else here.
   /// Blank falls back to the page's own words, same convention as the rest of

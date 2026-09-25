@@ -13,7 +13,7 @@ import { PageBody, PageHeader } from '@/components/admin/page-header';
 import { RichTextarea } from '@/components/admin/rich-textarea';
 import { StepsEditor } from '@/components/admin/steps-editor';
 import { useApi, useApiMutation } from '@/lib/api/hooks';
-import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings } from '@/types/api';
+import type { FaqItem, HomeCards, JudgingStep, PageSeo, SiteSettings, SubmitAfterStep } from '@/types/api';
 import { emptyToNull } from '@/lib/utils';
 
 const SOCIALS = ['facebook', 'tiktok', 'youtube', 'instagram'] as const;
@@ -98,7 +98,6 @@ function SettingsForm({
     heroKickerLo: initial?.heroKickerLo ?? '',
     contactEmail: initial?.contactEmail ?? '',
     contactPhone: initial?.contactPhone ?? '',
-    submitAfterLo: initial?.submitAfterLo ?? '',
     submitIntroLo: initial?.submitIntroLo ?? '',
     footerLocationLo: initial?.footerLocationLo ?? '',
     homeHighlightVideoUrl: initial?.homeHighlightVideoUrl ?? '',
@@ -117,6 +116,7 @@ function SettingsForm({
   const [socials, setSocials] = useState<Record<string, string>>(initial?.socialLinks ?? {});
   const [faq, setFaq] = useState<FaqItem[]>(initial?.faq ?? []);
   const [steps, setSteps] = useState<JudgingStep[]>(initial?.judgingSteps ?? []);
+  const [afterSteps, setAfterSteps] = useState<SubmitAfterStep[]>(initial?.submitAfterSteps ?? []);
   const [cards, setCards] = useState<HomeCards>(initial?.homeCards ?? {});
   const [seo, setSeo] = useState<Record<string, PageSeo>>(initial?.pageSeo ?? {});
   const [saved, setSaved] = useState(false);
@@ -187,7 +187,7 @@ function SettingsForm({
                 faq: faq.filter((item) => item.questionLo.trim() && item.answerLo.trim()),
                 judgingSteps: steps.filter((step) => step.titleLo.trim() && step.bodyLo.trim()),
                 homeCards: cards,
-                submitAfterLo: emptyToNull(form.submitAfterLo),
+                submitAfterSteps: afterSteps.filter((step) => step.bodyLo.trim()),
                 submitIntroLo: emptyToNull(form.submitIntroLo),
                 pageSeo: seo,
                 footerLocationLo: emptyToNull(form.footerLocationLo),
@@ -644,18 +644,24 @@ function SettingsForm({
               </CardBody>
             </Card>
             <Card className="xl:col-span-2">
-              <CardHeader title="“ຫຼັງຈາກສົ່ງແລ້ວ” (ໜ້າ /submit)" />
+              <CardHeader title="“ຫຼັງຈາກສົ່ງແລ້ວ” (ໜ້າ /submit)" aside={`${afterSteps.length} ຂັ້ນ`} />
               <CardBody>
-                <Field
-                  label="ລາຍການ"
-                  help="ໜຶ່ງແຖວ = ໜຶ່ງຂໍ້ · ຖ້າເວັ້ນວ່າງທັງໝົດ ຈະໃຊ້ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ"
-                >
-                  <Textarea
-                    className="min-h-28"
-                    value={form.submitAfterLo}
-                    onChange={(event) => setForm({ ...form, submitAfterLo: event.target.value })}
+                <Note>
+                  ສະແດງເປັນເສັ້ນທາງທີ່ມີລຳດັບ 1, 2, 3… ຕໍ່ທ້າຍດ້ວຍທຸງ “ປະກາດຜົນ” ສະເໝີ —
+                  ທຸງນັ້ນຕິດມາໃນໜ້າເວັບເອງ ບໍ່ຕ້ອງພິມເພີ່ມເປັນຂໍ້ · ຖ້າຍັງບໍ່ໃສ່ຂໍ້ໃດເລີຍ ຈະໃຊ້
+                  ຂໍ້ຄວາມມາດຕະຖານຂອງເວັບແທນ
+                </Note>
+                <div className="mt-4">
+                  <EntryListEditor
+                    items={afterSteps}
+                    onChange={setAfterSteps}
+                    blank={{ bodyLo: '' }}
+                    entryLabel={(position) => `ຂັ້ນ ${position}`}
+                    addLabel="ເພີ່ມຂັ້ນ"
+                    removeLabel="ລຶບຂັ້ນນີ້"
+                    fields={[{ key: 'bodyLo', label: 'ຂໍ້ຄວາມ', multiline: true }]}
                   />
-                </Field>
+                </div>
               </CardBody>
             </Card>
           </FormSection>
