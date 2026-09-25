@@ -181,6 +181,15 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
       <CreatorNameField
         value={values.creatorNameRaw}
         onChange={(creatorNameRaw) => setValues({ ...values, creatorNameRaw })}
+        onPick={(suggestion) =>
+          setValues((current) => ({
+            ...current,
+            creatorNameRaw: suggestion.nameLo,
+            // Only fills a blank box — picking a suggestion is not proof it is
+            // the same person, so it never overwrites a link already typed.
+            creatorLink: current.creatorLink || suggestion.link || '',
+          }))
+        }
       />
 
       <Field label="ລິງກ໌ຊ່ອງທາງ" help="Facebook, TikTok, YouTube ຫຼື Instagram — ເພື່ອຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໄປເບິ່ງຜົນງານໄດ້">
@@ -263,6 +272,9 @@ interface Suggestion {
   slug: string;
   nameLo: string;
   nameEn: string | null;
+  /** The link already on file for them, in the same platform order the admin
+   *  form stores it — null once none of those platforms are set. */
+  link: string | null;
 }
 
 /**
@@ -277,9 +289,13 @@ interface Suggestion {
 function CreatorNameField({
   value,
   onChange,
+  onPick,
 }: {
   value: string;
   onChange: (next: string) => void;
+  /** Fired instead of `onChange` when a row is picked, so the caller can also
+   *  pre-fill the link field from what is already on file for them. */
+  onPick: (suggestion: Suggestion) => void;
 }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
@@ -316,7 +332,7 @@ function CreatorNameField({
   const visible = open && rows.length > 0;
 
   function choose(suggestion: Suggestion) {
-    onChange(suggestion.nameLo);
+    onPick(suggestion);
     setTyped('');
     setSuggestions([]);
     setOpen(false);

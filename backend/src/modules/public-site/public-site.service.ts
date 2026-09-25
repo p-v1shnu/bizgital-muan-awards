@@ -4,6 +4,7 @@ import { EditionPhase } from '@prisma/client';
 import { EditionsService } from '../editions/editions.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PreviewService } from './preview.service';
+import { ALLOWED_SOCIALS } from '../../common/utils/social-links';
 
 /** Years a visitor may reach at all. DRAFT is only ever reachable via preview. */
 const VISIBLE: EditionPhase[] = [
@@ -349,15 +350,27 @@ export class PublicSiteService {
     // `contains` scan. Longer than a name can be is not a name.
     if (query.length > MAX_SUGGESTION_TERM) return [];
 
-    return this.prisma.creator.findMany({
+    const creators = await this.prisma.creator.findMany({
       where: {
         ...CREATOR_VISIBLE,
         nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } },
         OR: [{ nameLo: { contains: query } }, { nameEn: { contains: query } }],
       },
-      select: { slug: true, nameLo: true, nameEn: true },
+      select: { slug: true, nameLo: true, nameEn: true, socialLinks: true },
       orderBy: { nameLo: 'asc' },
       take: 8,
+    });
+
+    // The sender's own link is what the team actually uses to go verify a
+    // match — picking a name from this list is not proof it is the same
+    // person (two creators can share a name), so this only ever pre-fills
+    // the box the sender can still edit, never skips or answers for them.
+    // Same platform order cleanSocialLinks stores in, so this is always the
+    // first one actually on file rather than whichever key happened first.
+    return creators.map(({ slug, nameLo, nameEn, socialLinks }) => {
+      const links = (socialLinks as Record<string, string> | null) ?? {};
+      const link = ALLOWED_SOCIALS.map((key) => links[key]).find(Boolean) ?? null;
+      return { slug, nameLo, nameEn, link };
     });
   }
 
