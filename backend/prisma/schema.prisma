@@ -205,10 +205,12 @@ model CategoryTemplate {
   nameLo String
   nameEn String?
 
-  /// Typed once here, then copied by the admin UI into a Category's own
-  /// descriptionLo the moment a template is picked — a starting value, not
-  /// a live link, so a year can still reword it and a later edit here never
-  /// reaches back into an edition that already picked this template.
+  /// Copied by the admin UI into a Category's own descriptionLo the moment a
+  /// template is picked, then kept live: CategoryTemplatesService.update()
+  /// pushes a later edit here onto every Category already using this
+  /// template too (see the model doc comment above), old editions included —
+  /// which is why CategoriesService.update() refuses this field once
+  /// templateId is set, rather than letting a year reword its own copy.
   descriptionLo String? @db.Text
 
   /// The template's own copy of Category.imageKey — see that field's doc

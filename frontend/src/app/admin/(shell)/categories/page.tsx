@@ -219,9 +219,7 @@ function CategoryTemplateDialog({
       onClose={onClose}
       title={template ? 'ແກ້ໄຂສາຂາ' : 'ເພີ່ມສາຂາເຂົ້າຄັງ'}
       description={
-        template
-          ? 'ບໍ່ກະທົບສາຂາທີ່ຖືກໃສ່ເຂົ້າປີໃດໆໄປແລ້ວ — ປີເຫຼົ່ານັ້ນຍັງໃຊ້ຊື່/ຄຳອະທິບາຍເກົ່າຂອງຕົນເອງ'
-          : undefined
+        template ? 'ແກ້ບ່ອນນີ້ ຈະປ່ຽນທຸກປີທີ່ໃຊ້ສາຂານີ້ຢູ່ທັນທີ ທັງປີເກົ່າ ແລະ ປີໃໝ່' : undefined
       }
       footer={
         <>
@@ -274,7 +272,7 @@ function CategoryTemplateDialog({
         <Field
           label="ຄຳອະທິບາຍ"
           hint="— ບໍ່ບັງຄັບ"
-          help="ຄັດລອກເຂົ້າສາຂາໃໝ່ໆທີ່ໃສ່ຈາກຄັງນີ້ — ແກ້ຕໍ່ໄດ້ຄືນຢູ່ແຕ່ລະປີ"
+          help="ໃຊ້ຮ່ວມກັນທຸກປີທີ່ໃຊ້ສາຂານີ້ — ແກ້ຕໍ່ລາຍປີບໍ່ໄດ້ອີກ"
         >
           <Textarea
             value={form.descriptionLo}
