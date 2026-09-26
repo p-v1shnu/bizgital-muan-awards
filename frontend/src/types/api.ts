@@ -224,6 +224,8 @@ export interface SiteSettings {
   creatorDefinitionTitleLo: string;
   /** Body of the section above. Null until the team writes it. */
   creatorDefinitionBodyLo: string | null;
+  /** Object storage key for a photo beside the section above, never a full URL. */
+  creatorDefinitionImageKey: string | null;
   ctaTitleLo: string;
   ctaBodyLo: string;
   galleryImageKeys: string[] | null;

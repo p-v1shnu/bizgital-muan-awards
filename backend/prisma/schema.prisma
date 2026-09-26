@@ -498,6 +498,10 @@ model SiteSetting {
   /// title, there is no existing copy to preserve, so the page shows an
   /// explicit placeholder until the team writes this.
   creatorDefinitionBodyLo  String? @db.Text
+  /// A photo shown beside the section above — object storage key, never a
+  /// full URL. Left of the text on desktop, below it on mobile; absent
+  /// entirely with nothing uploaded, same as the body text.
+  creatorDefinitionImageKey String?
   /// Heading + body of the homepage's closing call-to-action, just above the
   /// "ສົ່ງລາຍຊື່" button. Same story again.
   ctaTitleLo       String  @default("ຢາກສະເໜີຊື່ຄຣີເອເຕີທີ່ທ່ານມັກບໍ່?")

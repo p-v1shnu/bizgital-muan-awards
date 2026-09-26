@@ -105,6 +105,9 @@ function SettingsForm({
   });
   const [heroImageKey, setHeroImageKey] = useState<string | null>(initial?.heroImageKey ?? null);
   const [heroFocalY, setHeroFocalY] = useState(initial?.heroImageFocalY ?? 50);
+  const [creatorDefinitionImageKey, setCreatorDefinitionImageKey] = useState<string | null>(
+    initial?.creatorDefinitionImageKey ?? null,
+  );
   const [highlightThumbnailKey, setHighlightThumbnailKey] = useState<string | null>(
     initial?.homeHighlightThumbnailKey ?? null,
   );
@@ -193,6 +196,7 @@ function SettingsForm({
                 footerLocationLo: emptyToNull(form.footerLocationLo),
                 heroImageKey: heroImageKey ?? null,
                 heroImageFocalY: heroFocalY,
+                creatorDefinitionImageKey: creatorDefinitionImageKey ?? null,
                 galleryImageKeys: gallery,
                 socialLinks: socials,
                 homeHighlightVideoUrl: emptyToNull(form.homeHighlightVideoUrl),
@@ -272,6 +276,14 @@ function SettingsForm({
                     onChange={(next) => setForm({ ...form, creatorDefinitionBodyLo: next })}
                   />
                 </Field>
+                <ImageUpload
+                  label="ຮູບປະກອບ"
+                  hint="— ບໍ່ບັງຄັບ · ວາງຄຽງຄຳອະທິບາຍ — ຊ້າຍໃນຄອມພິວເຕີ, ລຸ່ມໃນມືຖື"
+                  folder="site"
+                  aspect="square"
+                  value={creatorDefinitionImageKey}
+                  onChange={setCreatorDefinitionImageKey}
+                />
               </CardBody>
             </Card>
             <Card>
