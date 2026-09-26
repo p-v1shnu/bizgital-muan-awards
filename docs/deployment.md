@@ -318,6 +318,12 @@ sudo caddy reload --config /etc/caddy/Caddyfile
 
 Caddy ขอใบรับรอง TLS เองอัตโนมัติ
 
+> **`www.` ต้องเป็น redirect ไม่ใช่เว็บอีกชุด** — `Caddyfile.example` มี block
+> `www.muanawards.com { redir https://muanawards.com{uri} permanent }` แยกไว้ ให้เติมทั้งสอง block
+> อย่ารวบเป็น `muanawards.com, www.muanawards.com {` · API ตั้ง cookie ล็อกอินโดยไม่ระบุ Domain
+> cookie จึงอยู่กับ `muanawards.com` ที่เดียว ถ้า `www.` เสิร์ฟเว็บเอง แอดมินที่เข้าทาง `www.`
+> จะดูปีที่ยังเป็นร่างไม่ได้ (404) · ตรวจ: `curl -sI https://www.muanawards.com/` ต้องได้ `301`
+
 > **ใช้ `caddy reload` ไม่ใช่ `systemctl reload caddy`** — ตัวหลังกลืน error ไปเงียบๆ แล้วคืน
 > exit 0 ทั้งที่ config ใหม่ถูกปฏิเสธ · ของจริงที่เกิดขึ้น: โฟลเดอร์ `/var/log/caddy` เขียนไม่ได้
 > Caddy จึงทิ้ง config ทั้งก้อน (block ใหม่ไม่ถูกโหลด ไม่มีใบรับรอง เบราว์เซอร์ขึ้น
@@ -636,6 +642,7 @@ schema ใหม่ไม่ได้ ให้กู้จาก backup ขอ�
 | `docker compose` ทุกคำสั่ง (รวม `backup.sh`) ขึ้น `required variable NEXT_PUBLIC_… is missing a value` | เติมค่านั้นใน `.env` แล้วสั่งใหม่ |
 | `/api/v1/health/errors` ตอบ 503 ทั้งที่ `serverErrors` เป็น 0 | `ERROR_SPIKE_THRESHOLD=0` ค้างจากการทดสอบ — แก้กลับเป็น 10 แล้ว recreate backend |
 | เข้าเว็บได้แต่หลังบ้านล็อกอินแล้วเด้งออก | `CORS_ORIGINS` ไม่มีโดเมนจริง หรือเข้าผ่าน `www.` ที่ไม่ได้ใส่ไว้ |
+| ล็อกอินหลังบ้านได้ แต่เปิดปีที่ยังเป็นร่างแล้วขึ้น 404 (เฉพาะตอนเข้าทาง `www.`) | Caddy เสิร์ฟ `www.` เป็นเว็บเองแทนที่จะ redirect — แยก block redirect ตาม `Caddyfile.example` ดูข้อ 3 |
 | รูปขึ้น 400 ทั้งเว็บ | `NEXT_PUBLIC_IMAGE_BASE_URL` ไม่ตรงกับโฮสต์รูป → ต้อง build ใหม่ |
 | อัปโหลดผ่านแต่รูปเปิดไม่ขึ้น (403) | ไฟล์ค้างจากก่อนแก้เป็น server-upload — ดูข้อ 2.1.1 |
 | อัปโหลดผ่าน รูปเปิดไม่ขึ้น แต่ error เป็น `DNS_PROBE_POSSIBLE`/เชื่อมต่อไม่ได้เลย (ไม่ใช่ 403) | คนละเรื่องกับแถวบน — `NEXT_PUBLIC_IMAGE_BASE_URL`/`S3_PUBLIC_URL` ชี้ไปโดเมน `.cdn.` ที่ยังไม่ได้เปิด CDN ดูข้อ 1 |

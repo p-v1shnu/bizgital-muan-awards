@@ -19,8 +19,16 @@
 | `muanawards.com` ตอนนี้ | **เว็บเก่า ไม่ใช่ repo นี้** — มี Caddy block ของตัวเองอยู่แล้ว |
 | Caddy | `/etc/caddy/Caddyfile` เป็นไฟล์**เขียนมือ มีหลายเว็บอยู่ในนั้น** ไม่ใช่ `Caddyfile.example` |
 
-`Caddyfile.example` ใน repo เขียนโดเมนเป็น `muanawards.com, www.muanawards.com` อยู่แล้ว —
-เขียนไว้สำหรับปลายทาง ไม่ใช่สภาพวันนี้ จึงไม่ต้องแก้ก่อนย้าย
+`Caddyfile.example` ใน repo เขียนไว้สำหรับปลายทางแล้ว ไม่ใช่สภาพวันนี้ จึงไม่ต้องแก้ก่อนย้าย —
+มีสอง block: `www.muanawards.com` ที่ **redirect** ไป `muanawards.com` และ `muanawards.com`
+ที่เป็นตัวเว็บจริง
+
+> ⚠️ **ตอนย้าย ห้ามใส่ `www.muanawards.com` ไว้ใน block เดียวกับ `muanawards.com`** (แบบ
+> `muanawards.com, www.muanawards.com {` ที่ block เก่ามักเขียนไว้) — ต้องแยกเป็น block redirect
+> ตาม `Caddyfile.example` · cookie ล็อกอินของหลังบ้านผูกกับ host เดียว (`muanawards.com`)
+> ถ้าเสิร์ฟ `www.` เป็นเว็บอีกชุด แอดมินที่เข้าผ่าน `www.` จะล็อกอินได้แต่**ดูปีที่ยังเป็นร่างไม่ได้**
+> (ขึ้น 404) โดยไม่มี error อะไรบอก · ตรวจหลังย้าย: `curl -sI https://www.muanawards.com/awards`
+> ต้องได้ `301` และ `location: https://muanawards.com/awards`
 
 > ⛔ **ห้าม `cp Caddyfile.example /etc/caddy/Caddyfile`** — ลบ config เว็บอื่นบนเครื่องทันที
 > (`deployment.md` §3)
