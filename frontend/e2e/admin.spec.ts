@@ -641,3 +641,117 @@ test('a preview link keeps working from a draft category back to its year', asyn
     await request.delete(`${api}/admin/category-templates/${templateId}`, { headers: auth });
   }
 });
+
+/**
+ * A back-office session of its own, from its own address — the `signed in`
+ * block has already spent this file's sign-in budget (see the upload test).
+ */
+async function signInFresh(
+  browser: import('@playwright/test').Browser,
+  baseURL: string | undefined,
+  address: string,
+) {
+  const context = await browser.newContext({ baseURL, extraHTTPHeaders: { 'X-Forwarded-For': address } });
+  const page = await context.newPage();
+  await page.goto('/admin/login');
+  await page.fill('input[type=email]', ADMIN.email);
+  await page.fill('input[type=password]', ADMIN.password);
+  await page.click('button[type=submit]');
+  await page.waitForURL('**/admin');
+  return { context, page };
+}
+
+/**
+ * The site-content form used to open blank when its load failed, with Save
+ * still live — one press wrote those blanks over every page's copy. Without
+ * the saved values there is now nothing to save from: only the error and a
+ * way to try again.
+ */
+test('a site-content form that failed to load cannot be saved', async ({ browser, baseURL }) => {
+  const { context, page } = await signInFresh(browser, baseURL, '203.0.113.18');
+  await page.route('**/api/v1/admin/site', (route) =>
+    route.request().method() === 'GET'
+      ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"statusCode":500,"message":"down"}' })
+      : route.continue(),
+  );
+
+  await page.goto('/admin/site');
+  await expect(page.getByRole('button', { name: 'ລອງໃໝ່' })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole('button', { name: 'ບັນທຶກ' })).toHaveCount(0);
+
+  await context.close();
+});
+
+/**
+ * The merge dialog read one level too deep into the response and so never
+ * offered a single group to fold into — merging two spellings of one person
+ * (PRD §7.2) could not be done from the back office at all.
+ */
+test('the merge dialog offers the other pending groups in the category', async ({ browser, baseURL, request }) => {
+  const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
+  const form = (await (await request.get(`${api}/submission-form`)).json()).data;
+  const categoryId: string = form.categories[0].id;
+  // Unique per run: the same name from the same address on the same day is
+  // taken as a repeat and not queued again, so a re-run would find nothing.
+  const run = Date.now().toString(36);
+  const names = [`ທົດສອບລວມ ກ ${run}`, `ທົດສອບລວມ ຂ ${run}`];
+  for (const [index, creatorNameRaw] of names.entries()) {
+    const sent = await request.post(`${api}/submissions`, {
+      headers: { 'X-Forwarded-For': `198.51.100.${60 + index}` },
+      data: { categoryId, creatorNameRaw, reasonTags: ['creativity'] },
+    });
+    expect(sent.ok(), `setup: send ${creatorNameRaw}`).toBe(true);
+  }
+
+  const { context, page } = await signInFresh(browser, baseURL, '203.0.113.19');
+  try {
+    await page.goto('/admin/submissions');
+    const row = page.locator('div.border-b', { has: page.getByText(names[0], { exact: true }) });
+    await row.getByRole('button', { name: /ລວມກັບກຸ່ມອື່ນ/ }).click();
+
+    // Only the opened dialog loads its candidates — the closed ones on every
+    // other row load nothing — so the option can only have come from it.
+    await expect(page.getByRole('option', { name: new RegExp(names[1]) })).toBeAttached();
+  } finally {
+    // Leave the queue as it was found: both groups rejected.
+    const login = await request.post(`${api}/auth/login`, {
+      headers: { 'X-Forwarded-For': '203.0.113.19' },
+      data: ADMIN,
+    });
+    const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+    const queue = await request.get(`${api}/admin/submissions?status=PENDING&categoryId=${categoryId}&perPage=100`, {
+      headers: auth,
+    });
+    for (const group of (await queue.json()).data as { creatorNameRaw: string; entries: { id: string }[] }[]) {
+      if (names.includes(group.creatorNameRaw)) {
+        await request.post(`${api}/admin/submissions/${group.entries[0].id}/reject`, { headers: auth });
+      }
+    }
+    await context.close();
+  }
+});
+
+/**
+ * A session that dies mid-use — the refresh cookie expired, or another admin
+ * revoked it — used to leave the back office on screen with every read and
+ * save failing, until someone thought to reload. Now it goes to sign-in.
+ */
+test('a session the server stops honouring goes back to sign-in', async ({ browser, baseURL }) => {
+  const { context, page } = await signInFresh(browser, baseURL, '203.0.113.20');
+
+  // From here the server refuses this browser outright: every admin read, and
+  // the refresh that would normally win a new token.
+  const refuse = { status: 401, contentType: 'application/json', body: '{"statusCode":401,"message":"Unauthorized"}' };
+  await page.route('**/api/v1/auth/refresh', (route) => route.fulfill(refuse));
+  await page.route('**/api/v1/admin/**', (route) => route.fulfill(refuse));
+
+  // Any read will do; the sidebar's own counts may already have made one and
+  // taken the page to sign-in before this click lands, which is also a pass.
+  await page
+    .locator('aside a[href="/admin/site"]')
+    .click({ timeout: 5_000 })
+    .catch(() => undefined);
+  await page.waitForURL('**/admin/login', { timeout: 30_000 });
+
+  await context.close();
+});
