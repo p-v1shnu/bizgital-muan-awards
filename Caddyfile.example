@@ -7,7 +7,17 @@
 # nothing else — on a shared one they will already be taken, and moving them in
 # .env without changing them here gives a 502 on every request.
 
-muanawards.com, www.muanawards.com {
+# One host only. The API sets its sign-in cookies without a Domain, so they
+# belong to whichever host the admin signed in on — and the site's pages are
+# always told to call the API on muanawards.com. Served as a second copy of the
+# site, www. never received those cookies: an admin signed in there could not
+# see a draft year at all. Sending www. to the bare domain keeps every visitor
+# on the host the cookies live on.
+www.muanawards.com {
+	redir https://muanawards.com{uri} permanent
+}
+
+muanawards.com {
 	encode zstd gzip
 
 	# API and Swagger go to NestJS; everything else to Next.js.

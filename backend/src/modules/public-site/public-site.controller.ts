@@ -101,8 +101,11 @@ export class PublicSiteController {
   @Get('creator-suggestions')
   @ApiQuery({ name: 'q', required: true, description: 'At least two characters' })
   @ApiOperation({ summary: 'Name suggestions for the public form, to curb spelling variants' })
-  creatorSuggestions(@Query('q') q = '') {
-    return this.site.creatorSuggestions(q);
+  creatorSuggestions(@Query('q') q: unknown = '') {
+    // `?q=a&q=b` arrives as an array and `?q[x]=a` as an object; either one
+    // used to reach `.trim()` and answer 500 to an anonymous visitor, and each
+    // of those counts toward the error alarm. Not a string is not a name.
+    return this.site.creatorSuggestions(typeof q === 'string' ? q : '');
   }
 
   @Public()

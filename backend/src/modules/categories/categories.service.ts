@@ -118,7 +118,13 @@ export class CategoriesService {
     return after;
   }
 
-  /** Refuses to drop a category that still holds nominees, so nothing is lost by a stray click. */
+  /**
+   * Refuses to drop a category that still holds nominees or public entries,
+   * so nothing is lost by a stray click. The entries matter as much as the
+   * nominees: the foreign key cascades, so deleting the category used to wipe
+   * every one of them without a word, and PRD §7.2 says nothing sent in is
+   * ever thrown away.
+   */
   async remove(id: string, actorId: string, ipAddress?: string) {
     const category = await this.prisma.category.findUnique({
       where: { id },
@@ -129,6 +135,11 @@ export class CategoriesService {
     if (category._count.nominations > 0) {
       throw new BadRequestException(
         `Remove the ${category._count.nominations} nominee(s) from this category first`,
+      );
+    }
+    if (category._count.submissions > 0) {
+      throw new BadRequestException(
+        `This category holds ${category._count.submissions} public submission(s); it cannot be deleted without losing them`,
       );
     }
 

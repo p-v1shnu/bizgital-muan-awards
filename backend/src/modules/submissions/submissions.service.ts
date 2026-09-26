@@ -237,18 +237,24 @@ export class SubmissionsService {
       throw new BadRequestException('Those entries are already one group');
     }
 
-    const moved = await this.prisma.publicSubmission.updateMany({
-      where: {
-        categoryId: source.categoryId,
-        creatorNameRaw: source.creatorNameRaw,
-        status: SubmissionStatus.PENDING,
-      },
-      data: {
-        creatorNameRaw: target.creatorNameRaw,
-        // Only the first merge records it; folding a group twice must not
-        // overwrite what the sender originally wrote.
-        originalNameRaw: source.originalNameRaw ?? source.creatorNameRaw,
-      },
+    const group = {
+      categoryId: source.categoryId,
+      creatorNameRaw: source.creatorNameRaw,
+      status: SubmissionStatus.PENDING,
+    };
+    const moved = await this.prisma.$transaction(async (tx) => {
+      // Only rows that have never been folded record a name, and each records
+      // its own. A group folded in earlier already holds rows whose sender
+      // typed something else; writing one value across the whole group put
+      // the previous group's name over what those senders wrote.
+      await tx.publicSubmission.updateMany({
+        where: { ...group, originalNameRaw: null },
+        data: { originalNameRaw: source.creatorNameRaw },
+      });
+      return tx.publicSubmission.updateMany({
+        where: group,
+        data: { creatorNameRaw: target.creatorNameRaw },
+      });
     });
 
     await this.audit.log({
@@ -280,7 +286,7 @@ export class SubmissionsService {
       throw new BadRequestException('That entry has already been reviewed');
     }
 
-    const creatorId = await this.resolveCreator(submission.creatorNameRaw, dto);
+    const match = await this.resolveCreator(dto);
 
     const result = await this.prisma.$transaction(async (tx) => {
       // Two clicks half a second apart used to reach this together: both read
@@ -293,6 +299,14 @@ export class SubmissionsService {
       if (locked?.status !== SubmissionStatus.PENDING) {
         throw new BadRequestException('That entry has already been reviewed');
       }
+
+      // A new creator is made only past the lock. Made before it, the click
+      // that lost the race still left its creator behind: no nominations, and
+      // holding its slug for good.
+      const creatorId =
+        match.creatorId !== undefined
+          ? match.creatorId
+          : (await tx.creator.create({ data: { slug: match.newCreatorSlug, nameLo: submission.creatorNameRaw } })).id;
 
       const existingNomination = await tx.nomination.findUnique({
         where: { categoryId_creatorId: { categoryId: submission.categoryId, creatorId } },
@@ -328,8 +342,9 @@ export class SubmissionsService {
         data: { status: SubmissionStatus.MERGED, matchedCreatorId: creatorId },
       });
 
-      return { merged: merged.count, alreadyNominated: Boolean(existingNomination) };
+      return { creatorId, merged: merged.count, alreadyNominated: Boolean(existingNomination) };
     });
+    const { creatorId } = result;
 
     await this.audit.log({
       userId: actorId,
@@ -344,7 +359,7 @@ export class SubmissionsService {
       },
       ipAddress,
     });
-    return { creatorId, ...result };
+    return result;
   }
 
   /** Rejecting one entry rejects the whole cluster — the team judged the name, not the row. */
@@ -376,13 +391,19 @@ export class SubmissionsService {
     return { rejected: count };
   }
 
-  private async resolveCreator(rawName: string, dto: ReviewSubmissionDto) {
+  /**
+   * Checks what the reviewer asked for, without creating anything yet: a new
+   * creator is made inside `accept`'s transaction, once the entry is locked.
+   */
+  private async resolveCreator(
+    dto: ReviewSubmissionDto,
+  ): Promise<{ creatorId: string; newCreatorSlug?: undefined } | { creatorId?: undefined; newCreatorSlug: string }> {
     if (dto.creatorId) {
       const creator = await this.prisma.creator.findFirst({
         where: { id: dto.creatorId, deletedAt: null },
       });
       if (!creator) throw new NotFoundException('Creator not found');
-      return creator.id;
+      return { creatorId: creator.id };
     }
 
     if (!dto.newCreatorSlug) {
@@ -391,10 +412,7 @@ export class SubmissionsService {
     const clash = await this.prisma.creator.findUnique({ where: { slug: dto.newCreatorSlug } });
     if (clash) throw new BadRequestException('That slug is already taken');
 
-    const created = await this.prisma.creator.create({
-      data: { slug: dto.newCreatorSlug, nameLo: rawName },
-    });
-    return created.id;
+    return { newCreatorSlug: dto.newCreatorSlug };
   }
 }
 
