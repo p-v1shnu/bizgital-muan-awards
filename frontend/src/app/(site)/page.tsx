@@ -322,33 +322,38 @@ export default async function HomePage() {
           alone left visitors unclear on who the awards are actually for.
           Header built by hand rather than via Section's eyebrow/title props,
           to carry the same foil underline as the band right above it —
-          Section's own header never draws one. An optional photo sits beside
-          the text (left on desktop, below on mobile) the same way a
-          category's own description pairs with its photo. */}
+          Section's own header never draws one.
+
+          The optional photo is a float, not a flex column: the eyebrow and
+          heading stay full-width at the top on their own, then the photo
+          sits flush left below them with the body text wrapping around its
+          right edge — at every width, not just on desktop. `flow-root` on
+          the wrapper keeps the section's own height honest (a float is
+          otherwise invisible to its parent's height, which would let a tall
+          photo spill past the section's bottom padding into whatever comes
+          next). */}
       <Section>
-        <div className="flex flex-col gap-6 md:flex-row-reverse md:items-start">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10.5px] font-bold uppercase text-ink-3">ຄຣີເອເຕີ</p>
-            <h2 className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
-              {site?.creatorDefinitionTitleLo || 'ຄຣີເອເຕີຂອງມ່ວນອາວອດສ໌ແມ່ນຫຍັງ?'}
-            </h2>
-            <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
-            <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">
-              {site?.creatorDefinitionBodyLo ? (
-                <RichText text={site.creatorDefinitionBodyLo} />
-              ) : (
-                <Placeholder>ນິຍາມຄຣີເອເຕີ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
-              )}
-            </p>
-          </div>
+        <p className="text-[10.5px] font-bold uppercase text-ink-3">ຄຣີເອເຕີ</p>
+        <h2 className="mt-2 font-serif text-3xl leading-tight text-ink md:text-4xl">
+          {site?.creatorDefinitionTitleLo || 'ຄຣີເອເຕີຂອງມ່ວນອາວອດສ໌ແມ່ນຫຍັງ?'}
+        </h2>
+        <hr className="foil mb-[18px] mt-4 h-[3px] w-[170px] rounded-sm border-0" />
+        <div className="flow-root">
           {site?.creatorDefinitionImageKey && (
-            <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-[var(--radius-box)] bg-panel-2 md:w-64">
+            <div className="relative float-left mb-3 mr-6 aspect-square w-32 shrink-0 overflow-hidden rounded-[var(--radius-box)] bg-panel-2 sm:w-48 md:w-64">
               <SiteImage
                 imageKey={site.creatorDefinitionImageKey}
-                sizes="(max-width: 768px) 100vw, 256px"
+                sizes="(max-width: 640px) 128px, (max-width: 768px) 192px, 256px"
               />
             </div>
           )}
+          <p className="max-w-2xl font-sans-looped text-[15px] leading-[1.85] text-ink-2">
+            {site?.creatorDefinitionBodyLo ? (
+              <RichText text={site.creatorDefinitionBodyLo} />
+            ) : (
+              <Placeholder>ນິຍາມຄຣີເອເຕີ — ຕັ້ງໄດ້ໃນ /admin/site</Placeholder>
+            )}
+          </p>
         </div>
       </Section>
 
