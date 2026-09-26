@@ -47,6 +47,10 @@ git remote -v                     # ต้องเป็น URL เปล่า
 
 **Deploy รอบถัดไป:**
 
+> **อย่าสั่งบรรทัดข้างล่างทันที** — ทำตามหัวข้อ **"Deploy รอบถัดไป — ทำตามลำดับทุกครั้ง"**
+> (ต่อจากข้อ 6) ก่อน · บรรทัดนี้คือขั้น ง. ของหัวข้อนั้น แต่ถ้าสั่งโดยไม่เช็ก `.env` ก่อน
+> ตัวแปรที่ PR ใหม่บังคับจะหลุดไปรู้ตอน backend ไม่ยอมสตาร์ท — ซึ่งคือตอนเว็บล่มแล้ว
+
 ```bash
 cd /srv/muan && git pull origin main && docker compose up -d --build --force-recreate
 ```
@@ -492,11 +496,145 @@ MYSQL_ROOT_PASSWORD=xxx ./scripts/restore.sh /srv/backups/muan/muan-<วัน�
 
 ---
 
+## Deploy รอบถัดไป — ทำตามลำดับทุกครั้ง
+
+ข้อ 0–6 คือการติดตั้งครั้งแรก ทำครั้งเดียว · หัวข้อนี้คือทุกรอบหลังจากนั้น
+
+**ทำไมต้องเช็กก่อนสั่ง:** deploy วันที่ 26 ก.ย. 2026 (ขึ้น PR #81 + #82 พร้อมกัน) เครื่องจริง**ไม่มี
+`INTERNAL_API_SECRET`** เพราะตัวแปรนี้เพิ่งถูกบังคับใน PR #81 หลังจาก production deploy ครั้งก่อน ·
+จับได้ที่ขั้น ข. ก่อนแตะ container — ถ้าสั่ง `up --build` ไปเลยตามบรรทัดเดียวในข้อ 0
+backend จะไม่ยอมสตาร์ทและเว็บล่มทั้งเว็บ
+
+ตัวอย่างใช้ `/srv/muan` และ `<โดเมน>` — แทนด้วยของจริง (ตอนนี้คือที่อยู่ในกล่องสถานะบนสุดของไฟล์นี้)
+
+### ก. จดเวอร์ชันปัจจุบัน แล้วดูว่ารอบนี้มีอะไรขึ้นไป
+
+```bash
+cd /srv/muan
+git rev-parse HEAD | tee ~/muan-before-deploy.txt     # ใช้ตอนย้อนกลับ (ขั้น ฉ.)
+git fetch origin main
+git log --oneline HEAD..origin/main                   # PR ที่จะขึ้นไปรอบนี้ — อาจมากกว่าหนึ่ง
+git diff --name-status HEAD origin/main -- backend/prisma/migrations
+git diff HEAD origin/main -- .env.example | grep -E '^\+[A-Z_]+='    # ตัวแปรใหม่ที่ต้องเติมใน .env
+```
+
+| ผลของ migration | แปลว่า |
+|---|---|
+| ว่าง | ไม่แตะฐานข้อมูล · ย้อนกลับได้ด้วยการย้อนโค้ดอย่างเดียว |
+| `A` (เพิ่ม) | ฐานข้อมูลจะถูกแก้ตอน backend สตาร์ท · **ขั้น ค. (backup) ห้ามข้าม** · ย้อนโค้ดแล้วฐานข้อมูลไม่ย้อนตาม |
+| `M` (แก้ไฟล์ที่มีอยู่แล้ว) | **ไฟล์ที่ production รันไปแล้วจะไม่ถูกรันซ้ำ และ `migrate deploy` ไม่เตือนอะไรเลย** — สิ่งที่แก้จะไม่ถึงฐานข้อมูลจริง อ่าน commit ที่แก้ว่าย้ายของไปไว้ใน migration ใหม่ (`A`) หรือเปล่า · 26 ก.ย. 2026 เจอแบบนี้กับ `zz_category_image` — ย้ายไป `zz_category_templates_image` ที่เช็กก่อนว่ามีคอลัมน์หรือยัง จำลองประวัติเดียวกับ production แล้ว deploy ผ่านและข้ามได้ถูก |
+
+### ข. ดึงโค้ด แล้วเช็ก `.env` — ก่อนแตะ container
+
+`git pull` ยังไม่เปลี่ยนอะไรที่รันอยู่ · เว็บใช้โค้ดเก่าต่อจนถึงขั้น ง.
+
+```bash
+git pull origin main
+
+# 1) ตัวแปรที่ compose อ้างถึงแต่ .env ไม่มี
+docker compose config 2>&1 >/dev/null | grep -i "variable is not set" || echo "✓ ไม่มีตัวแปรที่ขาด"
+
+# 2) ตัวแปรที่บังคับว่าต้องมี — ขาดตัวไหน compose หยุดพร้อมบอกชื่อ
+docker compose config > /dev/null && echo "✓ compose ผ่าน"
+
+# 3) ค่าที่ backend ต้องมีบน production (ไม่พิมพ์ค่า secret ออกมา)
+docker compose config \
+  | grep -E '^\s+(S3_ENDPOINT|S3_BUCKET|S3_ACCESS_KEY|S3_SECRET_KEY|S3_PUBLIC_URL|INTERNAL_API_SECRET|ERROR_SPIKE_THRESHOLD|SWAGGER_ENABLED):' \
+  | sed -E '/: ""$/{s/: ""$/: ❌ ว่าง/;b};/(ERROR_SPIKE_THRESHOLD|SWAGGER_ENABLED)/b;s/: .+$/: ✓ มีค่า/'
+
+# 4) URL ที่จะถูกอบลงไฟล์ JS
+grep -E '^NEXT_PUBLIC_(API|SITE|IMAGE_BASE)_URL=' .env
+```
+
+| ต้องเห็น | ถ้าไม่ใช่ |
+|---|---|
+| `✓ ไม่มีตัวแปรที่ขาด` | เติมตัวที่ขึ้นชื่อใน `.env` |
+| `✓ compose ผ่าน` | เติม `NEXT_PUBLIC_*` ตัวที่ error บอก |
+| `S3_*` ครบ 5 ตัว และ `INTERNAL_API_SECRET` เป็น `✓ มีค่า` | backend จะไม่สตาร์ท (`env.validation.ts` บังคับเมื่อ `NODE_ENV=production`) |
+| `ERROR_SPIKE_THRESHOLD` เป็นจำนวนเต็ม และ**ไม่ใช่ `"0"`** | 0 = เตือนตลอดเวลา (มีไว้ทดสอบ — `monitoring.md` ข้อ 12) · ตัวอักษร = backend ไม่สตาร์ท |
+| `SWAGGER_ENABLED: "false"` | `"true"` เปิด API docs ให้ทุกคนดู — ใช้เฉพาะตอน debug |
+| `NEXT_PUBLIC_*` เป็น `https://<โดเมน>…` | ค่าผิดตรงนี้หน้าเว็บจะดูปกติ แต่ล็อกอิน/อัปโหลด/ฟอร์มพัง — ดูข้อ 4.0 |
+
+**เติม secret ที่ขาด** (ตัวอย่าง `INTERNAL_API_SECRET`):
+
+```bash
+grep -c '^INTERNAL_API_SECRET' .env      # ต้องได้ 0 — ถ้ามีบรรทัดว่างอยู่แล้วให้แก้บรรทัดนั้นแทน
+printf '\nINTERNAL_API_SECRET=%s\n' "$(openssl rand -hex 32)" >> .env
+```
+
+hex ไม่มีตัวอักษรพิเศษที่ `.env` อาจอ่านเพี้ยน · `\n` ข้างหน้ากันกรณีบรรทัดสุดท้ายของ `.env`
+ไม่มีขึ้นบรรทัดใหม่ แล้วค่าไปต่อท้ายบรรทัดก่อน · เติมแล้ว**รันข้อ 1–3 ซ้ำ**
+
+> **เพิ่มตัวแปรที่บังคับตัวใหม่ในโค้ดเมื่อไหร่ ให้เพิ่มชื่อในรายการของข้อ 3 ด้วย** — รายการนี้ครบ
+> ณ 26 ก.ย. 2026 เท่านั้น
+
+### ค. สำรองฐานข้อมูล
+
+```bash
+read -rsp 'MySQL root password: ' MYSQL_ROOT_PASSWORD; echo; export MYSQL_ROOT_PASSWORD
+./scripts/backup.sh
+```
+
+- บรรทัดสุดท้ายต้องเป็น `… ok <ขนาด> /srv/backups/muan/muan-<วันที่>.sql.gz` · `FAILED` = **หยุด ยังไม่ deploy**
+- `[Warning] Using a password on the command line interface` เป็นปกติ ไม่ใช่ error
+- `read -s` ทำให้รหัสผ่านไม่ค้างใน shell history
+- ไม่ได้ล็อกอินเป็น root และเขียน `/srv/backups` ไม่ได้ → `BACKUP_DIR="$HOME/backups/muan" ./scripts/backup.sh`
+
+### ง. Deploy
+
+```bash
+BUILDKIT_PROGRESS=plain docker compose up -d --build --force-recreate
+```
+
+`--force-recreate` และ `BUILDKIT_PROGRESS=plain` — เหตุผลอยู่ในข้อ 0 และ "เมื่อมีอะไรผิดพลาด" ·
+image ใหม่ build เสร็จก่อนแล้วค่อยสลับ container แต่ช่วงสลับ + backend รัน migration
+เว็บจะตอบไม่ได้ชั่วครู่ — เลือกเวลาที่คนเข้าน้อย
+
+### จ. ตรวจหลัง deploy
+
+```bash
+docker compose ps
+docker compose logs backend | grep "migrations found" | tail -1
+ls -d backend/prisma/migrations/*/ | wc -l
+curl -s https://<โดเมน>/api/v1/health; echo
+curl -s https://<โดเมน>/api/v1/health/errors; echo
+curl -s -o /dev/null -w '%{http_code}\n' https://<โดเมน>/api/docs
+```
+
+| ตรวจ | ที่ถูกต้อง |
+|---|---|
+| `docker compose ps` | สามตัว `Up (healthy)` · CREATED เป็น "minutes ago" (`health: starting` = รอแล้วดูใหม่) |
+| `migrations found` เทียบ `wc -l` | เท่ากัน |
+| `/api/v1/health` | `"status":"ok"` |
+| `/api/v1/health/errors` | `"threshold"` ตรงกับ `.env` (หรือ 10 ถ้าไม่ได้ตั้ง) — ยืนยันว่าค่าจาก `.env` ถึง backend จริง |
+| `/api/docs` | `404` |
+| URL ที่อบในไฟล์ JS | ตามข้อ 4.0 — ได้ `https://<โดเมน>/api/v1` ค่าเดียว |
+| ในเบราว์เซอร์ (incognito) | ล็อกอินหลังบ้าน **อัปโหลดรูปหนึ่งรูปแล้วเปิดดู** (ยืนยันค่า S3) · หน้าแรกและหน้าปีแสดงผลปกติ |
+| ที่เหลือ | เช็กลิสต์ข้อ 4 · และ monitor ใน Better Stack ต้องเขียว (`monitoring.md`) |
+
+### ฉ. ย้อนกลับ
+
+```bash
+git checkout "$(cat ~/muan-before-deploy.txt)"
+BUILDKIT_PROGRESS=plain docker compose up -d --build --force-recreate
+# แก้เสร็จแล้วกลับมาที่ main:  git checkout main && git pull origin main
+```
+
+**ย้อนได้แค่โค้ด** — ถ้าขั้น ก. มี migration `A` ฐานข้อมูลยังอยู่ในสภาพใหม่ · ถ้าโค้ดเก่าใช้กับ
+schema ใหม่ไม่ได้ ให้กู้จาก backup ของขั้น ค. ด้วย `scripts/restore.sh` (ข้อ 6 — ต้อง `I_MEAN_IT=yes`
+เพราะเขียนทับฐานข้อมูลจริง)
+
+---
+
 ## เมื่อมีอะไรผิดพลาด
 
 | อาการ | ตรวจตรงไหน |
 |---|---|
 | API ไม่ขึ้นเลย | `docker compose logs backend` — มักเป็น `JWT_SECRET` สั้นกว่า 32 ตัว หรือ `DATABASE_URL` ผิด |
+| log ของ backend ขึ้น `Missing required environment variables: …` | เติมตัวที่ขึ้นชื่อใน `.env` แล้ว `docker compose up -d --force-recreate backend` — ไม่ต้อง build ใหม่ · รอบหน้าขั้น ข. ของ "Deploy รอบถัดไป" จับได้ก่อน |
+| log ของ backend ขึ้น `ERROR_SPIKE_THRESHOLD must be a whole number` | แก้เป็นจำนวนเต็มใน `.env` แล้ว recreate backend แบบแถวบน |
+| `docker compose` ทุกคำสั่ง (รวม `backup.sh`) ขึ้น `required variable NEXT_PUBLIC_… is missing a value` | เติมค่านั้นใน `.env` แล้วสั่งใหม่ |
+| `/api/v1/health/errors` ตอบ 503 ทั้งที่ `serverErrors` เป็น 0 | `ERROR_SPIKE_THRESHOLD=0` ค้างจากการทดสอบ — แก้กลับเป็น 10 แล้ว recreate backend |
 | เข้าเว็บได้แต่หลังบ้านล็อกอินแล้วเด้งออก | `CORS_ORIGINS` ไม่มีโดเมนจริง หรือเข้าผ่าน `www.` ที่ไม่ได้ใส่ไว้ |
 | รูปขึ้น 400 ทั้งเว็บ | `NEXT_PUBLIC_IMAGE_BASE_URL` ไม่ตรงกับโฮสต์รูป → ต้อง build ใหม่ |
 | อัปโหลดผ่านแต่รูปเปิดไม่ขึ้น (403) | ไฟล์ค้างจากก่อนแก้เป็น server-upload — ดูข้อ 2.1.1 |
