@@ -306,6 +306,14 @@ export class UpdateSiteSettingsDto {
   @MaxLength(2000)
   creatorDefinitionBodyLo?: string | null;
 
+  @ApiPropertyOptional({
+    description: 'Object storage key for a photo beside the "what is a creator" section, never a full URL',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  creatorDefinitionImageKey?: string | null;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
