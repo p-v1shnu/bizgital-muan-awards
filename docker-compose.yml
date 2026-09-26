@@ -66,6 +66,13 @@ services:
       REVALIDATE_SECRET: ${REVALIDATE_SECRET}
       # How the rate limiter tells the site's own server from a visitor.
       INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      # Nothing in .env reaches this container unless it is named here. These
+      # two were documented in .env.example without being named, so the alarm
+      # threshold stayed at 10 whatever .env said and Swagger could not be
+      # switched on. The default matters for the threshold — `${VAR}` alone
+      # passes an empty string when .env leaves it out.
+      ERROR_SPIKE_THRESHOLD: ${ERROR_SPIKE_THRESHOLD:-10}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-false}
     # Loopback only: Caddy is the one thing that faces the internet. The host
     # side is a variable because this is unlikely to be the only stack on the
     # server — 3001 in particular is a popular choice, and a second application
@@ -100,8 +107,13 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        # Required, like the image host below. Left empty, the site's code
+        # falls back to its development values: the browser calls localhost for
+        # sign-in and the entry form, and every canonical URL, share card and
+        # sitemap entry names muanawards.com — on a uat build, the real domain.
+        # The pages still render, so nothing else would say so.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?set NEXT_PUBLIC_API_URL in .env}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:?set NEXT_PUBLIC_SITE_URL in .env}
         # Empty outside production, so a staging build cannot report into the
         # real property.
         NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
