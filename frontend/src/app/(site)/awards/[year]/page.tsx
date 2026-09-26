@@ -137,6 +137,10 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
   ]);
   if (!edition) notFound();
 
+  // A draft year is only reachable with its preview token, so a link onward
+  // into one of its categories has to carry it or it lands on a 404.
+  const previewQuery = preview ? `?preview=${encodeURIComponent(preview)}` : '';
+
   const gallery = imageKeyList(edition.galleryImageKeys);
   // One activity per line, typed free-hand in the back office — blank lines and
   // stray whitespace come with that, so they are dropped rather than rendered.
@@ -526,7 +530,7 @@ export default async function EditionPage({ params, searchParams }: PageProps) {
                             ))}
                         </div>
                         <Link
-                          href={`/awards/${edition.slug}/${category.slug}`}
+                          href={`/awards/${edition.slug}/${category.slug}${previewQuery}`}
                           className="mt-4 inline-block text-[13px] text-brand-deep hover:underline"
                         >
                           ເບິ່ງທັງສາຂາ →

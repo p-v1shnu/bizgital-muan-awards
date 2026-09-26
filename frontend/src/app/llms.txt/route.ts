@@ -21,7 +21,9 @@ export const revalidate = 3600;
 
 export async function GET() {
   const editions = await tryGetPublic<Edition[]>('/editions', { revalidate });
-  const years = (editions ?? []).map((edition) => edition.year).sort((a, b) => b - a);
+  // Labelled by year but linked by slug: a year's address is its editable
+  // slug, which need not be the year itself.
+  const years = [...(editions ?? [])].sort((a, b) => b.year - a.year);
 
   const body = `# Muan Awards (ມ່ວນອາວອດສ໌)
 
@@ -49,7 +51,7 @@ collected on their own page.
 - One judge, across all years they served on the panel: \`${SITE}/judges/<judge-slug>\`
 - \`${SITE}/awards/latest\` always redirects to the most recent published year.
 
-${years.length ? `## Years published\n\n${years.map((year) => `- [${year}](${SITE}/awards/${year})`).join('\n')}\n` : ''}
+${years.length ? `## Years published\n\n${years.map((edition) => `- [${edition.year}](${SITE}/awards/${encodeURIComponent(edition.slug)})`).join('\n')}\n` : ''}
 ## Notes
 
 - Nominees and winners are only published once that year has announced them; a

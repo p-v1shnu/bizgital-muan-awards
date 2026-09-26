@@ -205,7 +205,9 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
           <StateButton
             active={current === 'never'}
             disabled={pending || current === 'never'}
-            onClick={() => resetSubmissions.mutate(undefined)}
+            // The reset clears the deadline on the server too; the box has to
+            // follow, or the next blur or open would quietly send it back.
+            onClick={() => resetSubmissions.mutate(undefined, { onSuccess: () => setCloseAt('') })}
           >
             ຍັງບໍ່ເປີດຮັບ
           </StateButton>
@@ -243,7 +245,13 @@ function SubmissionsPanel({ edition }: { edition: Edition }) {
             // before opening is the ordinary way round — decide when it shuts,
             // then open it — and typing it while closed used to lose the value
             // without a word.
-            onBlur={() => save(edition.submissionsOpen, fromVientianeInput(closeAt))}
+            //
+            // Only when it actually changed, though: tabbing through the field
+            // is not a decision, and it used to save whatever the box held.
+            onBlur={() => {
+              if (closeAt === toVientianeInput(edition.submissionsCloseAt)) return;
+              save(edition.submissionsOpen, fromVientianeInput(closeAt));
+            }}
           />
         </Field>
 

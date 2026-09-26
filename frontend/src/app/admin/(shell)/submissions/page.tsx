@@ -332,7 +332,9 @@ function MergeDialog({
 }) {
   const [target, setTarget] = useState('');
 
-  const { data } = useApi<{ data: SubmissionGroup[] }>(
+  // The paged read, like the list behind it: plain `useApi` unwraps the
+  // envelope, so the `.data` below found nothing and no group was ever offered.
+  const { data } = useApiPage<SubmissionGroup>(
     open ? `/admin/submissions?status=PENDING&categoryId=${group.category.id}&perPage=100` : null,
   );
   const others = (data?.data ?? []).filter(

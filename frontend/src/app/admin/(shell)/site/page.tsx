@@ -57,9 +57,28 @@ const SECTIONS = [
  * year — anything year-specific belongs on the edition instead.
  */
 export default function SitePage() {
-  const { data, isLoading, error } = useApi<SiteSettings>('/admin/site');
+  const { data, isLoading, error, refetch, isFetching } = useApi<SiteSettings>('/admin/site');
 
   if (isLoading) return <LoadingBlock />;
+
+  // Without the saved settings the form would open blank, and one press of
+  // Save would write those blanks over every page's copy. So no form until the
+  // real values are here — just the error and a way to try again.
+  if (!data) {
+    return (
+      <>
+        <PageHeader crumbs={[{ label: 'ເນື້ອຫາເວັບສ່ວນກາງ' }]} />
+        <PageBody>
+          <ErrorNote error={error ?? 'ໂຫລດຂໍ້ມູນບໍ່ສຳເລັດ'} />
+          <div>
+            <Button type="button" onClick={() => void refetch()} disabled={isFetching}>
+              {isFetching ? 'ກຳລັງໂຫລດ…' : 'ລອງໃໝ່'}
+            </Button>
+          </div>
+        </PageBody>
+      </>
+    );
+  }
 
   /**
    * The form is re-created when the settings arrive rather than patched into

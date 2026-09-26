@@ -543,3 +543,97 @@ test('an upload that is not really an image is refused, whatever it calls itself
     expect(refused.status(), `${what} must not be stored`).toBe(400);
   }
 });
+
+/**
+ * The edition page's "preview before announcing" button opens
+ * `/awards/<slug>?preview=1`. That `1` is not a token, and it used to be
+ * dropped altogether — so on a published year the page came from the cached
+ * public read and showed the admin exactly what everyone else sees, which is
+ * no preview at all. It means "read this as me" now.
+ *
+ * Signs in through the form in a context of its own and from its own address,
+ * outside the `signed in` block: that block's budget on this file's address is
+ * already spent (see the upload test above).
+ */
+test('the preview-before-announcing button shows the admin what announcing reveals', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({
+    baseURL,
+    extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.16' },
+  });
+  const page = await context.newPage();
+  await page.goto('/admin/login');
+  await page.fill('input[type=email]', ADMIN.email);
+  await page.fill('input[type=password]', ADMIN.password);
+  await page.click('button[type=submit]');
+  await page.waitForURL('**/admin');
+
+  // The seed keeps 2026 at PUBLISHED: its nominees exist, the public cannot see them.
+  await page.goto('/awards/2026?preview=1');
+  await expect(page.getByText('ພຣີວິວຂອງແອດມິນ')).toBeVisible();
+
+  // Without the flag the same admin gets the page everyone gets.
+  await page.goto('/awards/2026');
+  await expect(page.getByText('ພຣີວິວຂອງແອດມິນ')).toHaveCount(0);
+
+  await context.close();
+});
+
+/**
+ * A draft year only answers with its preview token, so every link from one of
+ * its pages to another has to carry it. The category page's breadcrumb and
+ * "back to the year" link did not, and a sponsor following them from an
+ * emailed preview link landed on a 404.
+ */
+test('a preview link keeps working from a draft category back to its year', async ({
+  browser,
+  request,
+  baseURL,
+}) => {
+  const api = process.env.E2E_API_URL ?? 'http://127.0.0.1:3001/api/v1';
+  const login = await request.post(`${api}/auth/login`, {
+    // Its own address, like the upload test above.
+    headers: { 'X-Forwarded-For': '203.0.113.17' },
+    data: { email: 'admin@muanawards.com', password: 'a-very-long-password' },
+  });
+  const auth = { Authorization: `Bearer ${(await login.json()).data.accessToken}` };
+
+  const draft = await request.post(`${api}/admin/editions`, {
+    headers: auth,
+    data: { year: 2032, slug: '2032', titleLo: 'ມ່ວນອາວອດສ໌ 2032' },
+  });
+  const draftId = (await draft.json()).data.id;
+  const template = await request.post(`${api}/admin/category-templates`, {
+    headers: auth,
+    data: { slug: 'preview-link-test', nameLo: 'ສາຂາທົດສອບ ພ' },
+  });
+  const templateId = (await template.json()).data.id;
+  const category = await request.post(`${api}/admin/editions/${draftId}/categories`, {
+    headers: auth,
+    data: { templateId },
+  });
+  expect(category.ok(), 'setup: a category in the draft year').toBe(true);
+
+  const minted = await request.post(`${api}/admin/editions/${draftId}/preview-token`, {
+    headers: auth,
+  });
+  const { token: previewToken } = (await minted.json()).data;
+
+  // Signed out, in a clean context — the token is all this visitor has.
+  const anon = await browser.newContext({ baseURL });
+  const guest = await anon.newPage();
+
+  await guest.goto(`/awards/2032/preview-link-test?preview=${previewToken}`);
+  await expect(guest.getByRole('heading', { level: 1 })).toHaveText('ສາຂາທົດສອບ ພ');
+
+  await guest.getByRole('link', { name: /ກັບໄປໜ້າງານປີ 2032/ }).click();
+  await expect(guest).toHaveURL(/\/awards\/2032\?preview=/);
+  await expect(guest.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌ 2032');
+  await expect(guest.getByText('ພຣີວິວ')).toBeVisible();
+
+  await anon.close();
+  await request.delete(`${api}/admin/editions/${draftId}`, { headers: auth });
+  await request.delete(`${api}/admin/category-templates/${templateId}`, { headers: auth });
+});

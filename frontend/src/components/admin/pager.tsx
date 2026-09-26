@@ -1,9 +1,19 @@
 'use client';
 
+import { useEffect } from 'react';
+
 import { Button } from '@/components/ui/button';
 import type { PageMeta } from '@/lib/api/client';
 
 export function Pager({ meta, onChange }: { meta: PageMeta; onChange: (page: number) => void }) {
+  // Deleting or merging the last rows of the last page, or narrowing a filter,
+  // leaves the list asking for a page that no longer exists. That page is empty
+  // and — with one page left — has no pager to leave it by, so step back to
+  // the last real one instead.
+  useEffect(() => {
+    if (meta.totalPages >= 1 && meta.page > meta.totalPages) onChange(meta.totalPages);
+  }, [meta.page, meta.totalPages, onChange]);
+
   if (meta.totalPages <= 1) return null;
 
   return (

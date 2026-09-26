@@ -23,6 +23,21 @@ export function getAccessToken() {
   return accessToken;
 }
 
+/**
+ * Told when the refresh cookie stops working. Clearing the token here is not
+ * enough on its own: AuthProvider still holds the user, so the admin shell
+ * kept showing a session that every request now refuses, and never sent the
+ * person back to sign in.
+ */
+const sessionExpiredListeners = new Set<() => void>();
+
+export function onSessionExpired(listener: () => void) {
+  sessionExpiredListeners.add(listener);
+  return () => {
+    sessionExpiredListeners.delete(listener);
+  };
+}
+
 export class ApiError extends Error {
   constructor(
     readonly statusCode: number,
@@ -117,6 +132,12 @@ export function refreshAccessToken(): Promise<string | null> {
       const response = await rawFetch('/auth/refresh', { method: 'POST' });
       if (!response.ok) {
         accessToken = null;
+        // Only a refusal ends the session. A 429 or a moment of 503 is the
+        // server being busy, and signing someone out mid-edit for it would
+        // throw away whatever they were typing.
+        if (response.status === 401 || response.status === 403) {
+          for (const listener of sessionExpiredListeners) listener();
+        }
         return null;
       }
       const payload = await response.json();

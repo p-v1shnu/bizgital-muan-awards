@@ -17,6 +17,32 @@ declare global {
 }
 
 /**
+ * The link as the API will take it: '' when left blank, null when it cannot
+ * be a web address at all.
+ *
+ * The API only accepts a URL with its scheme, and people paste
+ * "facebook.com/page" far more often than a full address — that used to come
+ * back as a bare "Validation failed" in English. A bare domain gets https://
+ * put in front; anything else that is not http(s) is caught here, in Lao,
+ * before it is sent.
+ */
+function normaliseLink(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  // Starts with a dotted host, so it cannot already carry a scheme.
+  const looksLikeDomain = /^[\w-]+(\.[\w-]+)+(?:[/?#:]|$)/.test(trimmed);
+  const candidate = looksLikeDomain ? `https://${trimmed}` : trimmed;
+  if (/\s/.test(candidate)) return null;
+  try {
+    const url = new URL(candidate);
+    const web = url.protocol === 'http:' || url.protocol === 'https:';
+    return web && url.hostname.includes('.') ? candidate : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The public form. It asks nothing about the sender — no name, no email —
  * only what the entry is about: the point is to learn about a creator, not
  * to collect a database of senders.
@@ -32,10 +58,20 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
+
+    const creatorLink = normaliseLink(values.creatorLink);
+    if (creatorLink === null) {
+      setLinkError('ລິງກ໌ບໍ່ຖືກຕ້ອງ — ໃສ່ທີ່ຢູ່ເວັບເຕັມ ເຊັ່ນ https://facebook.com/…');
+      return;
+    }
+    setLinkError(null);
+    // Shown as it will be sent, so the https:// added above is no surprise.
+    if (creatorLink !== values.creatorLink) setValues((current) => ({ ...current, creatorLink }));
     setState('sending');
 
     try {
@@ -45,7 +81,7 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         body: JSON.stringify({
           categoryId: values.categoryId,
           creatorNameRaw: values.creatorNameRaw,
-          creatorLink: values.creatorLink || undefined,
+          creatorLink: creatorLink || undefined,
           reasonTags: values.reasonTags,
           website: values.website || undefined,
         }),
@@ -57,6 +93,11 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
       if (response.status === 429) {
         const payload = await response.json().catch(() => null);
         throw new Error(payload?.message ?? 'ສົ່ງຖີ່ເກີນໄປ ກະລຸນາລໍຖ້າແລ້ວລອງໃໝ່');
+      }
+      // A 400 is the API's validation, whose words are English and written for
+      // developers ("creatorLink must be a URL address") — not for the sender.
+      if (response.status === 400) {
+        throw new Error('ຂໍ້ມູນບາງຢ່າງບໍ່ຖືກຕ້ອງ — ກະລຸນາກວດຊື່ ແລະ ລິງກ໌ ແລ້ວລອງໃໝ່');
       }
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
@@ -192,10 +233,15 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         }
       />
 
-      <Field label="ລິງກ໌ຊ່ອງທາງ" help="Facebook, TikTok, YouTube ຫຼື Instagram — ເພື່ອຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໄປເບິ່ງຜົນງານໄດ້">
+      <Field
+        label="ລິງກ໌ຊ່ອງທາງ"
+        help="Facebook, TikTok, YouTube ຫຼື Instagram — ເພື່ອຊ່ວຍໃຫ້ພວກເຮົາເຂົ້າໄປເບິ່ງຜົນງານໄດ້"
+        error={linkError}
+      >
         <Input
           type="url"
           placeholder="https://…"
+          aria-invalid={linkError ? true : undefined}
           value={values.creatorLink}
           onChange={(event) => setValues({ ...values, creatorLink: event.target.value })}
         />
@@ -421,11 +467,13 @@ function Field({
   label,
   help,
   required,
+  error,
   children,
 }: {
   label: string;
   help?: string;
   required?: boolean;
+  error?: string | null;
   children: React.ReactNode;
 }) {
   return (
@@ -435,6 +483,7 @@ function Field({
         {required && <span className="ml-1 text-brand-deep">*</span>}
       </span>
       {children}
+      {error && <span className="mt-1.5 block text-[12.5px] text-stop">{error}</span>}
       {help && <span className="mt-1.5 block text-[12px] text-ink-3">{help}</span>}
     </label>
   );
