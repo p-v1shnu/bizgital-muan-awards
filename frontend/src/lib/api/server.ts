@@ -22,6 +22,9 @@ const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 /** A preview token is a JWT; anything else is a URL someone typed and must not skip the cache. */
 const TOKEN_SHAPE = /^[\w-]+\.[\w-]+\.[\w-]+$/;
 
+/** Set by the API on sign-in (auth.controller.ts), scoped to the public pages. */
+const VIEWER_COOKIE = 'muan_viewer';
+
 /** Who the page is being rendered for, as Caddy reported it. */
 async function visitorAddress() {
   const forwarded = (await headers()).get('x-forwarded-for');
@@ -202,10 +205,16 @@ export async function getPublicOrDraft<T>(path: string, options: Options = {}): 
   // never be sent and the page would come back exactly as the public sees it.
   // Reading as the viewer also keeps the answer out of the shared cache, which
   // is what must happen to a page that depends on who asked.
-  if (options.preview && !TOKEN_SHAPE.test(options.preview)) {
+  //
+  // A value that is not token-shaped (the admin's own `?preview=1`) still means
+  // "read as me" — but only for someone who has a viewer cookie to be read
+  // as, and it is never forwarded, since the API would try it as a token.
+  // Anyone else typing `?preview=x` gets the cached page, as before.
+  if (options.preview) {
+    if (TOKEN_SHAPE.test(options.preview)) return getPublic<T>(path, { ...options, asViewer: true });
     options = { ...options, preview: undefined };
+    if ((await cookies()).has(VIEWER_COOKIE)) return getPublic<T>(path, { ...options, asViewer: true });
   }
-  if (options.preview) return getPublic<T>(path, { ...options, asViewer: true });
 
   const published = await getPublic<T>(path, options);
   if (published) return published;

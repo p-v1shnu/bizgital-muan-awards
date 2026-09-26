@@ -6,6 +6,7 @@ import {
   IsDateString,
   IsEnum,
   IsInt,
+  IsNotIn,
   IsOptional,
   IsString,
   IsUrl,
@@ -15,6 +16,9 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+
+/** Fixed routes under /editions/ and /awards/ that sit beside a year's slug. */
+export const RESERVED_EDITION_SLUGS = ['latest', 'latest-winners', 'accepting-submissions'];
 
 export class CreateEditionDto {
   @ApiProperty({ example: 2026 })
@@ -26,6 +30,10 @@ export class CreateEditionDto {
   @ApiProperty({ example: '2026', description: 'URL segment under /awards/' })
   @IsString()
   @Matches(/^[a-z0-9-]+$/, { message: 'slug may contain lowercase letters, numbers and dashes only' })
+  // The public API and the site both answer these paths themselves, before
+  // any year: a year given one of them could never be reached, or would be
+  // answered with a different shape and crash its page.
+  @IsNotIn(RESERVED_EDITION_SLUGS, { message: `slug may not be one of: ${RESERVED_EDITION_SLUGS.join(', ')}` })
   @MaxLength(40)
   slug!: string;
 

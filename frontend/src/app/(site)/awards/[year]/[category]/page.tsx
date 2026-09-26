@@ -69,6 +69,10 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
   );
   if (!page) notFound();
 
+  // Back to a draft year only works with the same preview token that opened
+  // this page — without it the year page is a 404.
+  const previewQuery = preview ? `?preview=${encodeURIComponent(preview)}` : '';
+
   const nominees = [...page.nominees].sort((a, b) => Number(b.isWinner) - Number(a.isWinner));
 
   return (
@@ -107,7 +111,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
       )}
 
       <nav className="mb-6 text-[13px] text-ink-3">
-        <Link href={`/awards/${page.edition.slug}`} className="hover:text-ink hover:underline">
+        <Link href={`/awards/${page.edition.slug}${previewQuery}`} className="hover:text-ink hover:underline">
           {page.edition.titleLo}
         </Link>
         <span className="mx-2 text-rule">/</span>
@@ -153,7 +157,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
       <div className="mt-10">
         <Link
-          href={`/awards/${page.edition.slug}`}
+          href={`/awards/${page.edition.slug}${previewQuery}`}
           className="text-[13.5px] text-brand-deep hover:underline"
         >
           ← ກັບໄປໜ້າງານປີ {page.edition.year}

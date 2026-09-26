@@ -472,7 +472,9 @@ export class EditionsService {
     }
 
     const empty = await this.prisma.category.findMany({
-      where: { editionId, nominations: { none: {} } },
+      // Only nominees the public can see count: a revoked or deleted creator
+      // is hidden from every page, so their category would go out empty.
+      where: { editionId, nominations: { none: { creator: { deletedAt: null, revokedAt: null } } } },
       select: { nameLo: true },
       orderBy: { sortOrder: 'asc' },
     });
@@ -485,7 +487,7 @@ export class EditionsService {
 
     if (target === EditionPhase.WINNERS_ANNOUNCED) {
       const withoutWinner = await this.prisma.category.findMany({
-        where: { editionId, nominations: { none: { isWinner: true } } },
+        where: { editionId, nominations: { none: { isWinner: true, creator: { deletedAt: null, revokedAt: null } } } },
         select: { nameLo: true },
         orderBy: { sortOrder: 'asc' },
       });

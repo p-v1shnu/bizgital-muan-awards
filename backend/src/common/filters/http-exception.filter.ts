@@ -21,6 +21,17 @@ import { recordServerError } from '../server-errors';
  * those places at the same time.
  */
 function fromPrisma(exception: unknown) {
+  // The update DTOs mark every field @IsOptional, and class-validator treats
+  // null as absent — so `{ "titleLo": null }` passes validation and reaches
+  // Prisma, which refuses null on a required column. That is the sender's
+  // mistake, not a fault here, and as a 500 it also fed the error alarm.
+  if (exception instanceof Prisma.PrismaClientValidationError) {
+    return {
+      status: HttpStatus.BAD_REQUEST,
+      message: 'A value sent is not allowed there — a required field cannot be left empty',
+      error: 'Bad Request',
+    };
+  }
   if (!(exception instanceof Prisma.PrismaClientKnownRequestError)) return undefined;
 
   const target = exception.meta?.target;
@@ -108,6 +119,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
     } else if (prisma) {
       message = prisma.message;
       error = prisma.error;
+      // Also what code passing Prisma the wrong shape looks like, so it stays
+      // in the log even though the answer is a 400.
+      if (exception instanceof Prisma.PrismaClientValidationError) {
+        this.logger.warn(`Rejected ${request.method} ${request.url}: ${exception.message.split('\n').pop()}`);
+      }
     } else if (middlewareStatus !== undefined) {
       message =
         middlewareStatus === HttpStatus.PAYLOAD_TOO_LARGE

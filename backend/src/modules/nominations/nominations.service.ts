@@ -27,6 +27,9 @@ export class NominationsService {
     ]);
     if (!category) throw new NotFoundException('Category not found');
     if (!creator) throw new NotFoundException('Creator not found');
+    // A revoked creator is hidden from every public page, so nominating one
+    // puts an invisible name on the shortlist.
+    if (creator.revokedAt) throw new BadRequestException('That creator is revoked; restore them before nominating');
 
     const already = await this.prisma.nomination.findUnique({
       where: { categoryId_creatorId: { categoryId, creatorId: dto.creatorId } },
@@ -59,12 +62,23 @@ export class NominationsService {
     return nomination;
   }
 
+  /**
+   * Deleting a winner is un-crowning them by another route, so it takes the
+   * same rule as `setWinner`: once winners are public, the category would
+   * suddenly show no result for a prize people already saw one for.
+   */
   async remove(id: string, actorId: string, ipAddress?: string) {
     const nomination = await this.prisma.nomination.findUnique({
       where: { id },
-      include: { creator: true },
+      include: { creator: true, category: { include: { edition: true } } },
     });
     if (!nomination) throw new NotFoundException('Nomination not found');
+
+    if (nomination.isWinner && nomination.category.edition.phase === EditionPhase.WINNERS_ANNOUNCED) {
+      throw new BadRequestException(
+        'Cannot remove the winner once winners are announced — crown a different nominee instead, or roll the phase back first',
+      );
+    }
 
     await this.prisma.nomination.delete({ where: { id } });
     await this.audit.log({

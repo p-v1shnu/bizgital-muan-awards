@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { apiFetch, refreshAccessToken, setAccessToken } from './api/client';
+import { apiFetch, onSessionExpired, refreshAccessToken, setAccessToken } from './api/client';
 import type { AuthenticatedUser } from '@/types/api';
 
 interface AuthState {
@@ -53,6 +53,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, []);
+
+  // A session that dies mid-use (the refresh cookie expired or was revoked)
+  // has to drop the user too, or the shell's sign-in redirect never fires.
+  // The sign-in page sits outside the shell, so this cannot bounce it.
+  useEffect(() => onSessionExpired(() => setUser(null)), []);
 
   const login = useCallback(async (email: string, password: string) => {
     const session = await apiFetch<Session>('/auth/login', {

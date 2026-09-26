@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -16,6 +17,7 @@ import {
   UserCog,
 } from 'lucide-react';
 
+import { ChangePasswordDialog } from '@/components/admin/change-password-dialog';
 import { cn } from '@/lib/utils';
 import { useApi } from '@/lib/api/hooks';
 import { useAuth } from '@/lib/auth-context';
@@ -68,6 +70,7 @@ export function Sidebar() {
   const { data: counts } = useApi<Record<string, number>>('/admin/submissions/counts');
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const [changingPassword, setChangingPassword] = useState(false);
 
   return (
     <aside className="hidden w-[236px] shrink-0 flex-col gap-0.5 bg-ink p-3.5 text-[#e8e1d7] md:flex">
@@ -134,14 +137,25 @@ export function Sidebar() {
             {isSuperAdmin ? 'Super Admin' : 'Admin'}
           </span>
         </span>
+        {/* Here rather than only on the users page, which is super-admin-only:
+            every role has a password of its own to change. */}
+        <button
+          type="button"
+          onClick={() => setChangingPassword(true)}
+          className="ml-auto text-[11px] text-[#9d9184] underline-offset-2 hover:text-white hover:underline"
+        >
+          ລະຫັດຜ່ານ
+        </button>
         <button
           type="button"
           onClick={() => void logout()}
-          className="ml-auto text-[11px] text-[#9d9184] underline-offset-2 hover:text-white hover:underline"
+          className="text-[11px] text-[#9d9184] underline-offset-2 hover:text-white hover:underline"
         >
           ອອກ
         </button>
       </div>
+
+      <ChangePasswordDialog open={changingPassword} onClose={() => setChangingPassword(false)} />
     </aside>
   );
 }
