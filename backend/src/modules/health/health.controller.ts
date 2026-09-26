@@ -55,8 +55,10 @@ export class HealthController {
   @Get('errors')
   @ApiOperation({ summary: 'Recent 5xx count — watch separately from liveness' })
   errorRate() {
+    // `||`, not `??`: an empty value is unset, not zero. Zero means every
+    // window is a spike, and a blank line in .env would ring the alarm for good.
     const threshold = Number(
-      this.config.get<string>('ERROR_SPIKE_THRESHOLD') ?? DEFAULT_SPIKE_THRESHOLD,
+      this.config.get<string>('ERROR_SPIKE_THRESHOLD') || DEFAULT_SPIKE_THRESHOLD,
     );
     const serverErrors = serverErrorsInWindow();
     const body = {

@@ -142,6 +142,11 @@ openssl rand -base64 48   # → INTERNAL_API_SECRET
 > และ `NEXT_PUBLIC_IMAGE_BASE_URL` ยังเป็นตัวกำหนดว่า `next/image` ยอมดึงรูปจากโฮสต์ไหน
 > ถ้าตั้งผิด รูปจะขึ้น 400 ทั้งเว็บ
 
+> **ระบบจะไม่ยอมเริ่มถ้าค่าเหล่านี้ว่าง:** backend (เมื่อ `NODE_ENV=production`) จะไม่สตาร์ทถ้า `S3_ENDPOINT`,
+> `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` หรือ `S3_PUBLIC_URL` ว่าง · และ `docker compose`
+> **ทุกคำสั่ง** (รวม `exec` ที่ `backup.sh` ใช้) จะหยุดทันทีถ้า `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`
+> หรือ `NEXT_PUBLIC_IMAGE_BASE_URL` ว่าง — ดีกว่าได้เว็บที่ดูปกติแต่ล็อกอินไม่ได้หรือลิงก์ชี้ผิดโดเมน
+
 > **⚠️ อย่าใส่โดเมน `.cdn.` จนกว่าจะกดเปิด CDN ในหน้า Spaces จริงแล้ว** — Space ทุกอันมีโดเมน
 > `<bucket>.<region>.digitaloceanspaces.com` (ต้นทาง) ใช้ได้ทันทีตั้งแต่สร้าง bucket แต่โดเมน
 > `<bucket>.<region>.cdn.digitaloceanspaces.com` **มีอยู่ก็ต่อเมื่อกด Enable CDN ในแท็บ Settings
@@ -554,6 +559,38 @@ SELECT JSON_OBJECT('a', CONCAT('ກ', CHAR(10 USING utf8mb4), 'ຂ'));
 
 > เทสต์จับบั๊กนี้ไม่ได้ เพราะชุดทดสอบสร้างแถว `site_settings` ของตัวเอง ส่วน migration
 > ตัวที่พังทำงานเฉพาะกับแถวที่ **มีอยู่ก่อนแล้ว** — จับได้ทางเดียวคืออ่าน SQL ตอนเขียน
+
+## 6.2 ตั้งชื่อโฟลเดอร์ migration ใหม่เป็น `zzz_<timestamp>_<ชื่อ>`
+
+Prisma รัน migration **เรียงตามชื่อโฟลเดอร์แบบตัวอักษร** ไม่ใช่ตามวันที่สร้าง ชื่อที่มีอยู่ตอนนี้จึงเรียงแบบนี้
+บนฐานข้อมูลใหม่ (CI, เครื่อง dev ที่เพิ่ง clone):
+
+```
+0_init → 10_… → 11_… → … → 19_… → 1_edition_activities → 20_… → 2_… → … → 9_… → zz_*
+```
+
+`10_` รันก่อน `1_` และ `zz_*` เรียงกันเองตามตัวอักษรของชื่อ — ต่างจากลำดับที่ production รันจริง
+(ทีละตัวตามวันที่ deploy) ตอนนี้ยังไม่พังเพราะ migration แต่ละตัวไม่ได้พึ่งกัน และ CI รันจากศูนย์ทุกครั้งเลยพิสูจน์ได้
+
+**ชื่อ default ของ Prisma (`20260926143000_x`) ก็ใช้ไม่ได้** — ขึ้นต้นด้วย `2` จึงไปแทรกอยู่ระหว่าง `1_…` กับ `20_…`
+แล้วรัน**ก่อน** `2_`–`9_` และ `zz_*` ทั้งหมด ถ้า migration ใหม่แตะตารางหรือคอลัมน์ที่ตัวพวกนั้นสร้าง
+ฐานข้อมูลใหม่จะ migrate ไม่ผ่าน
+
+**กติกา: migration ใหม่ทุกตัวขึ้นต้นด้วย `zzz_` ตามด้วย timestamp** — `zzz_` เรียงหลังทุกชื่อที่มีอยู่
+และ timestamp ทำให้ตัวใหม่ ๆ เรียงตามเวลาที่สร้างเสมอ
+
+```bash
+cd backend
+npx prisma migrate dev --create-only --name add_something   # สร้างโฟลเดอร์ แต่ยังไม่ apply
+mv prisma/migrations/20260926143000_add_something prisma/migrations/zzz_20260926143000_add_something
+npx prisma migrate dev                                       # apply ด้วยชื่อใหม่
+```
+
+`--create-only` สำคัญ — ถ้า apply ไปก่อนแล้วค่อยเปลี่ยนชื่อ ฐานข้อมูล dev จะจำชื่อเก่าไว้แล้วมองว่าเป็นคนละ migration
+
+> **ห้ามเปลี่ยนชื่อโฟลเดอร์ที่มีอยู่แล้ว** — production บันทึกชื่อไว้ในตาราง `_prisma_migrations`
+> เปลี่ยนเมื่อไหร่ `migrate deploy` จะมองเป็น migration ใหม่แล้วพยายามรันซ้ำ ตัวที่ `ALTER TABLE ADD COLUMN`
+> จะ error และ backend จะ start ไม่ขึ้น
 
 ---
 

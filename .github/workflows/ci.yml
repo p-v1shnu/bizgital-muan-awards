@@ -107,6 +107,70 @@ jobs:
           done
           exit 1
 
+  # Every other job runs the apps straight from `npm`, so until now the
+  # Dockerfiles and docker-compose.yml were first exercised on the production
+  # server — which is where the missing `.next/cache` permissions and the
+  # container binding to its own hostname were both found. This builds the
+  # images production builds, starts them the way production starts them
+  # (migrations included), and probes them from outside the containers.
+  docker:
+    name: Docker — build and boot the production images
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Throwaway values in the shape .env.example asks for. Storage points at
+      # a host that does not exist: nothing here uploads, and the liveness
+      # probes below do not touch it.
+      - name: Write a CI .env
+        run: |
+          cat > .env <<'EOF'
+          MYSQL_ROOT_PASSWORD=ci-root
+          MYSQL_DATABASE=muan_awards
+          MYSQL_USER=muan
+          MYSQL_PASSWORD=ci-muan
+          DATABASE_URL=mysql://muan:ci-muan@mysql:3306/muan_awards
+          JWT_SECRET=ci-jwt-secret-that-is-long-enough-0123456789
+          REFRESH_TOKEN_SECRET=ci-refresh-secret-that-is-long-enough-0123456789
+          IP_HASH_SALT=ci-ip-hash-salt-that-is-long-enough-0123456789
+          INTERNAL_API_SECRET=ci-internal-api-secret-that-is-long-enough-0123
+          REVALIDATE_SECRET=ci-revalidate-secret
+          SETUP_ENABLED=false
+          CORS_ORIGINS=http://localhost:3000
+          NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+          NEXT_PUBLIC_SITE_URL=http://localhost:3000
+          NEXT_PUBLIC_IMAGE_BASE_URL=http://localhost:9000/muan-awards
+          S3_ENDPOINT=http://storage.invalid:9000
+          S3_REGION=us-east-1
+          S3_BUCKET=muan-awards
+          S3_ACCESS_KEY=ci-access-key
+          S3_SECRET_KEY=ci-secret-key
+          S3_PUBLIC_URL=http://localhost:9000/muan-awards
+          EOF
+
+      - name: Build the images
+        run: docker compose build
+
+      # --wait holds until every container with a healthcheck reports healthy,
+      # so a backend that cannot migrate or refuses its environment fails here.
+      - name: Start the stack
+        run: docker compose up -d --wait --wait-timeout 240
+
+      # The containers' own healthchecks call 127.0.0.1 from inside; this is
+      # the view Caddy has, through the published loopback ports.
+      - name: Probe from outside the containers
+        run: |
+          curl -fsS http://127.0.0.1:3001/api/v1/health
+          curl -fsS http://127.0.0.1:3001/api/v1/health/errors
+          curl -fsS http://127.0.0.1:3000/api/health
+
+      - name: Show what the containers said
+        if: failure()
+        run: |
+          docker compose ps -a
+          docker compose logs --no-color
+
   e2e:
     name: End to end — the browser pass
     runs-on: ubuntu-latest
