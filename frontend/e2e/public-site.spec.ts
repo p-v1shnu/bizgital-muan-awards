@@ -300,6 +300,55 @@ test('the submission form accepts an entry', async ({ page }) => {
   await expect(page.getByText('ຮັບຊື່ແລ້ວ')).toBeVisible();
 });
 
+/**
+ * People paste "facebook.com/page" far more often than a full address, and
+ * the API only takes a URL with its scheme — that came back as a bare
+ * "Validation failed" in English, and the entry was lost. The form now adds
+ * the https:// itself, and explains in Lao when a link cannot be one at all.
+ *
+ * Each from its own address: sending is limited per visitor, and the entry
+ * above already spent one from this file's.
+ */
+test.describe('the submission form and the link box', () => {
+  const fillEntry = async (page: import('@playwright/test').Page, link: string) => {
+    await page.goto('/submit');
+    await page.selectOption('form select', { index: 1 });
+    await page.getByRole('combobox', { name: /ຊື່ຄຣີເອເຕີ/ }).fill(`ລິງກ໌ທົດສອບ ${Date.now().toString(36)}`);
+    await page.getByRole('textbox', { name: /ລິງກ໌ຊ່ອງທາງ/ }).fill(link);
+    await page.getByRole('checkbox', { name: /ຄວາມຄິດສ້າງສັນ/ }).check();
+  };
+
+  test.describe(() => {
+    test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.31' } });
+
+    test('takes a link pasted without https://', async ({ page }) => {
+      await fillEntry(page, '  facebook.com/muan-link-test  ');
+      const sent = page.waitForRequest((request) => request.method() === 'POST' && request.url().endsWith('/submissions'));
+      await page.locator('form button[type=submit]').click();
+
+      expect((await sent).postDataJSON().creatorLink).toBe('https://facebook.com/muan-link-test');
+      await expect(page.getByText('ຮັບຊື່ແລ້ວ')).toBeVisible();
+    });
+  });
+
+  test.describe(() => {
+    test.use({ extraHTTPHeaders: { 'X-Forwarded-For': '203.0.113.32' } });
+
+    test('says in Lao when a link cannot be one, and sends nothing', async ({ page }) => {
+      await fillEntry(page, 'ບໍ່ແມ່ນລິງກ໌');
+      let posted = false;
+      page.on('request', (request) => {
+        if (request.method() === 'POST' && request.url().endsWith('/submissions')) posted = true;
+      });
+      await page.locator('form button[type=submit]').click();
+
+      await expect(page.getByText('ລິງກ໌ບໍ່ຖືກຕ້ອງ', { exact: false })).toBeVisible();
+      await expect(page.getByText('ຮັບຊື່ແລ້ວ')).toHaveCount(0);
+      expect(posted, 'nothing should reach the API').toBe(false);
+    });
+  });
+});
+
 test('the form suggests names already in the library', async ({ page }) => {
   await page.goto('/submit');
 
