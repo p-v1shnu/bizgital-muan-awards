@@ -625,15 +625,19 @@ test('a preview link keeps working from a draft category back to its year', asyn
   const anon = await browser.newContext({ baseURL });
   const guest = await anon.newPage();
 
-  await guest.goto(`/awards/2032/preview-link-test?preview=${previewToken}`);
-  await expect(guest.getByRole('heading', { level: 1 })).toHaveText('ສາຂາທົດສອບ ພ');
+  // Cleaned up whatever happens: a year 2032 left behind by a failed run
+  // would make the next run's setup clash on its unique year.
+  try {
+    await guest.goto(`/awards/2032/preview-link-test?preview=${previewToken}`);
+    await expect(guest.getByRole('heading', { level: 1 })).toHaveText('ສາຂາທົດສອບ ພ');
 
-  await guest.getByRole('link', { name: /ກັບໄປໜ້າງານປີ 2032/ }).click();
-  await expect(guest).toHaveURL(/\/awards\/2032\?preview=/);
-  await expect(guest.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌ 2032');
-  await expect(guest.getByText('ພຣີວິວ')).toBeVisible();
-
-  await anon.close();
-  await request.delete(`${api}/admin/editions/${draftId}`, { headers: auth });
-  await request.delete(`${api}/admin/category-templates/${templateId}`, { headers: auth });
+    await guest.getByRole('link', { name: /ກັບໄປໜ້າງານປີ 2032/ }).click();
+    await expect(guest).toHaveURL(/\/awards\/2032\?preview=/);
+    await expect(guest.getByRole('heading', { level: 1 })).toHaveText('ມ່ວນອາວອດສ໌ 2032');
+    await expect(guest.getByText('ພຣີວິວ')).toBeVisible();
+  } finally {
+    await anon.close();
+    await request.delete(`${api}/admin/editions/${draftId}`, { headers: auth });
+    await request.delete(`${api}/admin/category-templates/${templateId}`, { headers: auth });
+  }
 });

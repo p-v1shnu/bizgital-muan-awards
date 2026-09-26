@@ -403,6 +403,9 @@ export class SubmissionsService {
         where: { id: dto.creatorId, deletedAt: null },
       });
       if (!creator) throw new NotFoundException('Creator not found');
+      // Same rule as nominating by hand (`NominationsService.add`): a revoked
+      // creator is hidden everywhere, so this would shortlist an invisible name.
+      if (creator.revokedAt) throw new BadRequestException('That creator is revoked; restore them before nominating');
       return { creatorId: creator.id };
     }
 

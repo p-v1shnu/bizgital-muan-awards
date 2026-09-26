@@ -56,6 +56,30 @@ describe('admin integrity guards', () => {
     expect(await h.prisma.publicSubmission.count({ where: { categoryId: holding } })).toBe(3);
   });
 
+  it('still deletes a category whose entries were all rejected, keeping them in the audit log', async () => {
+    // A year copied from the last one keeps headings that drew only spam; the
+    // announce check tells the team to delete them, so that has to work.
+    const spam = await newCategory(editionId, 'integrity-spam');
+    await send({ categoryId: spam, creatorNameRaw: 'ສະແປມ' }, '198.51.100.40').expect(201);
+    const entry = await h.prisma.publicSubmission.findFirstOrThrow({ where: { categoryId: spam } });
+    await api(h).post(path(`/admin/submissions/${entry.id}/reject`)).set(h.auth).expect(201);
+
+    await api(h).delete(path(`/admin/categories/${spam}`)).set(h.auth).expect(204);
+
+    const audit = await h.prisma.auditLog.findFirstOrThrow({ where: { action: 'category.deleted', targetId: spam } });
+    expect(JSON.stringify(audit.before)).toContain('ສະແປມ');
+  });
+
+  it('refuses a revoked creator on the accept path too', async () => {
+    const creatorId = await newCreator('integrity-revoked-accept');
+    await api(h).post(path(`/admin/creators/${creatorId}/revoke`)).set(h.auth).send({ reason: 'ລະເມີດເງື່ອນໄຂ' }).expect(201);
+    await send({ categoryId, creatorNameRaw: 'ຖືກຖອດ' }, '198.51.100.41').expect(201);
+    const entry = await h.prisma.publicSubmission.findFirstOrThrow({ where: { creatorNameRaw: 'ຖືກຖອດ' } });
+
+    await api(h).post(path(`/admin/submissions/${entry.id}/accept`)).set(h.auth).send({ creatorId }).expect(400);
+    expect(await h.prisma.nomination.count({ where: { creatorId } })).toBe(0);
+  });
+
   it('refuses to delete an announced winner, the same as it refuses to un-crown one', async () => {
     const edition = (
       await api(h).post(path('/admin/editions')).set(h.auth).send({ year: 2034, slug: '2034', titleLo: 'ງານ 2034' }).expect(201)
@@ -134,6 +158,28 @@ describe('admin integrity guards', () => {
       await api(h).post(path('/admin/editions')).set(h.auth).send({ year: 2040, slug, titleLo: 'x' }).expect(400);
       await api(h).patch(path(`/admin/editions/${editionId}`)).set(h.auth).send({ slug }).expect(400);
     }
+  });
+
+  it('keeps a creator or judge profile hidden until a year that names them is public', async () => {
+    // Shortlisted in a year whose nominees are not announced: the year page
+    // and the sitemap already hide them, and a 200 on a guessed slug told
+    // anyone who was in the running.
+    const creatorId = await newCreator('integrity-unannounced');
+    await nominate(categoryId, creatorId);
+    await api(h).get(path('/creators/integrity-unannounced')).expect(404);
+
+    const draft = (
+      await api(h).post(path('/admin/editions')).set(h.auth).send({ year: 2036, slug: '2036', titleLo: 'ງານ 2036' }).expect(201)
+    ).body.data.id;
+    const judgeId = (
+      await api(h)
+        .post(path('/admin/judges'))
+        .set(h.auth)
+        .send({ slug: 'integrity-draft-judge', nameLo: 'ກຳມະການ', positionLo: 'ຜູ້ຊ່ຽວຊານ' })
+        .expect(201)
+    ).body.data.id;
+    await api(h).post(path(`/admin/editions/${draft}/judges`)).set(h.auth).send({ judgeId }).expect(201);
+    await api(h).get(path('/judges/integrity-draft-judge')).expect(404);
   });
 
   it('answers a repeated or nested suggestion query without a server error', async () => {

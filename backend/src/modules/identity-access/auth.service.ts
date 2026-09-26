@@ -117,9 +117,17 @@ export class AuthService {
       where: { email: dto.email, deletedAt: null },
     });
 
-    const email = dto.email.toLowerCase();
-    const attemptKey = `${email}|${clientNetwork(ipAddress) ?? 'unknown'}`;
-    const accountKey = `${email}|*`;
+    // Counted against the account that was found, not the spelling typed.
+    // MySQL's collation matches "ádmin@…" and full-width "ａdmin@…" to the
+    // same row, so a key built from the typed string gave every look-alike
+    // its own fresh set of guesses at the same password. An address with no
+    // account is folded the way the collation folds it (width, accents,
+    // case), so its variants share one counter too.
+    const identity = user
+      ? `user:${user.id}`
+      : dto.email.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase();
+    const attemptKey = `${identity}|${clientNetwork(ipAddress) ?? 'unknown'}`;
+    const accountKey = `${identity}|*`;
     this.assertNotLockedOut(attemptKey, MAX_FAILURES);
     this.assertNotLockedOut(accountKey, MAX_ACCOUNT_FAILURES);
 

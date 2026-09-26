@@ -167,6 +167,19 @@ describe('access control', () => {
         .expect(429);
     });
 
+    it('holds the lock-out against a look-alike spelling of the same address', async () => {
+      // MySQL's collation finds the account for "édïtor@…" and "ｅditor@…";
+      // counted under their own spelling, each one used to get a fresh set of
+      // guesses at the same password.
+      for (const variant of ['édïtor@test.local', 'ｅditor@test.local', 'EDITOR@test.local']) {
+        await api(h)
+          .post(path('/auth/login'))
+          .set('X-Forwarded-For', '198.51.100.20')
+          .send({ email: variant, password: 'another-long-password' })
+          .expect(429);
+      }
+    });
+
     it('leaves the same account reachable from another address', async () => {
       await api(h)
         .post(path('/auth/login'))
