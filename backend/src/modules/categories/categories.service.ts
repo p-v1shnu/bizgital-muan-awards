@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { EditionPhase } from '@prisma/client';
+import { EditionPhase, SubmissionStatus } from '@prisma/client';
 
 import { AuditService } from '../audit/audit.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -119,16 +119,21 @@ export class CategoriesService {
   }
 
   /**
-   * Refuses to drop a category that still holds nominees or public entries,
-   * so nothing is lost by a stray click. The entries matter as much as the
-   * nominees: the foreign key cascades, so deleting the category used to wipe
-   * every one of them without a word, and PRD §7.2 says nothing sent in is
-   * ever thrown away.
+   * Refuses to drop a category that still holds nominees or live public
+   * entries, so nothing is lost by a stray click. The foreign key cascades,
+   * so deleting the category used to wipe every entry without a word, and
+   * PRD §7.2 says nothing sent in is ever thrown away.
+   *
+   * Rejected entries do not block it. A year copied from the one before
+   * keeps headings that drew nothing but spam, and the announce check tells
+   * the team to delete exactly those (`assertAnnouncable`); refusing here
+   * would leave a year that can neither lose the heading nor be announced.
+   * They are copied into the audit entry instead, so they are still kept.
    */
   async remove(id: string, actorId: string, ipAddress?: string) {
     const category = await this.prisma.category.findUnique({
       where: { id },
-      include: { _count: { select: { nominations: true, submissions: true } } },
+      include: { _count: { select: { nominations: true } } },
     });
     if (!category) throw new NotFoundException('Category not found');
 
@@ -137,19 +142,41 @@ export class CategoriesService {
         `Remove the ${category._count.nominations} nominee(s) from this category first`,
       );
     }
-    if (category._count.submissions > 0) {
-      throw new BadRequestException(
-        `This category holds ${category._count.submissions} public submission(s); it cannot be deleted without losing them`,
-      );
-    }
 
-    await this.prisma.category.delete({ where: { id } });
+    // In one transaction, so an entry sent in between the check and the
+    // delete cannot be cascaded away unseen.
+    const rejected = await this.prisma.$transaction(async (tx) => {
+      const live = await tx.publicSubmission.count({
+        where: { categoryId: id, status: { not: SubmissionStatus.REJECTED } },
+      });
+      if (live > 0) {
+        throw new BadRequestException(
+          `This category holds ${live} public submission(s) that are pending or were accepted; ` +
+            'screen them before deleting it — only rejected ones can go with the category',
+        );
+      }
+      const rows = await tx.publicSubmission.findMany({ where: { categoryId: id } });
+      await tx.category.delete({ where: { id } });
+      return rows;
+    });
+
     await this.audit.log({
       userId: actorId,
       action: 'category.deleted',
       targetType: 'Category',
       targetId: id,
-      before: { editionId: category.editionId, slug: category.slug, nameLo: category.nameLo },
+      before: {
+        editionId: category.editionId,
+        slug: category.slug,
+        nameLo: category.nameLo,
+        rejectedSubmissions: rejected.map((row) => ({
+          creatorNameRaw: row.creatorNameRaw,
+          originalNameRaw: row.originalNameRaw,
+          creatorLink: row.creatorLink,
+          reasonTags: row.reasonTags,
+          createdAt: row.createdAt,
+        })),
+      },
       ipAddress,
     });
   }

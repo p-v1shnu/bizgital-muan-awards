@@ -25,7 +25,11 @@ function fromPrisma(exception: unknown) {
   // null as absent — so `{ "titleLo": null }` passes validation and reaches
   // Prisma, which refuses null on a required column. That is the sender's
   // mistake, not a fault here, and as a 500 it also fed the error alarm.
-  if (exception instanceof Prisma.PrismaClientValidationError) {
+  //
+  // Only that refusal, matched by Prisma's own wording. The same error class
+  // is also what a query the code itself built wrongly throws, and that has
+  // to stay a 500 — logged, and counted by the alarm.
+  if (exception instanceof Prisma.PrismaClientValidationError && /must not be null/.test(exception.message)) {
     return {
       status: HttpStatus.BAD_REQUEST,
       message: 'A value sent is not allowed there — a required field cannot be left empty',

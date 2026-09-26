@@ -378,7 +378,12 @@ export class PublicSiteService {
 
   async creator(slug: string) {
     const creator = await this.prisma.creator.findFirst({
-      where: { slug, ...CREATOR_VISIBLE },
+      // Someone with no nomination in an announced year has no public page
+      // yet. A library row is only made when the team shortlists a new name,
+      // so answering 200 for it told anyone guessing a slug who was in the
+      // running before the shortlist was out — the year page and the
+      // sitemap already held that back.
+      where: { slug, ...CREATOR_VISIBLE, nominations: { some: { category: { edition: { phase: { in: ANNOUNCED } } } } } },
       include: {
         nominations: {
           where: { category: { edition: { phase: { in: ANNOUNCED } } } },
@@ -417,7 +422,9 @@ export class PublicSiteService {
    */
   async judge(slug: string) {
     const judge = await this.prisma.judge.findFirst({
-      where: { slug, deletedAt: null },
+      // Same rule for a judge: only once a year that seats them is public,
+      // or the page says who is judging a year nobody has announced.
+      where: { slug, deletedAt: null, editions: { some: { edition: { phase: { in: VISIBLE } } } } },
       include: {
         editions: {
           where: { edition: { phase: { in: VISIBLE } } },

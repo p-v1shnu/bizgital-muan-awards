@@ -182,8 +182,9 @@ describe('public site', () => {
     });
 
     it('keeps the creator profile free of an unannounced nomination', async () => {
-      const response = await api(h).get(path('/creators/aaa')).expect(200);
-      expect(response.body.data.appearances).toEqual([]);
+      // Not even an empty page: a 200 for a slug whose only nomination is
+      // unannounced is itself the news that they are in the running.
+      await api(h).get(path('/creators/aaa')).expect(404);
     });
 
     it('is absent from the hall of winners', async () => {
