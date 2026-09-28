@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
 
 import { ActionLink } from '@/components/site/primitives';
 import { SUBMISSION_REASON_TAGS } from '@/lib/submission-reason-tags';
+import { useDebounced } from '@/lib/use-debounced';
 import type { OpenSubmissionForm } from '@/types/public';
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -218,15 +219,19 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         )}
       </Field>
 
-      <Field label="ຊື່ຄຣີເອເຕີ" help="ຊື່ຊ່ອງ ຫຼື ຊື່ເພຈ ຂອງຄຣີເອເຕີ" required>
-        <Input
-          required
-          maxLength={160}
-          autoComplete="off"
-          value={values.creatorNameRaw}
-          onChange={(event) => setValues({ ...values, creatorNameRaw: event.target.value })}
-        />
-      </Field>
+      <CreatorNameField
+        value={values.creatorNameRaw}
+        onChange={(creatorNameRaw) => setValues({ ...values, creatorNameRaw })}
+        onPick={(suggestion) =>
+          setValues((current) => ({
+            ...current,
+            creatorNameRaw: suggestion.nameLo,
+            // Only fills a blank box — picking a suggestion is not proof it is
+            // the same person, so it never overwrites a link already typed.
+            creatorLink: current.creatorLink || suggestion.link || '',
+          }))
+        }
+      />
 
       <Field
         label="ລິງກ໌ຊ່ອງທາງ"
@@ -306,6 +311,155 @@ export function SubmitForm({ form }: { form: OpenSubmissionForm }) {
         {state === 'sending' ? 'ກຳລັງສົ່ງ…' : 'ສົ່ງລາຍຊື່'}
       </button>
     </form>
+  );
+}
+
+interface Suggestion {
+  slug: string;
+  nameLo: string;
+  nameEn: string | null;
+  /** The link already on file for them, in the same platform order the admin
+   *  form stores it — null once none of those platforms are set. */
+  link: string | null;
+}
+
+/**
+ * The name field, with suggestions drawn from creators already in the library
+ * (PRD §6.2). The same person gets sent in spelled five different ways, and
+ * every variant becomes a row the team has to merge by hand — offering the
+ * spelling already on record cuts that work at the source.
+ *
+ * Picking a suggestion only fills the box: the value still goes through the
+ * normal queue, because a matching name is not proof it is the same person.
+ */
+function CreatorNameField({
+  value,
+  onChange,
+  onPick,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  /** Fired instead of `onChange` when a row is picked, so the caller can also
+   *  pre-fill the link field from what is already on file for them. */
+  onPick: (suggestion: Suggestion) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  // Suggestions follow what was typed, not what was chosen — filling the box
+  // from the list would otherwise immediately ask for that exact name again.
+  const [typed, setTyped] = useState('');
+  const term = useDebounced(typed, 250);
+
+  const query = term.trim();
+
+  useEffect(() => {
+    // Nothing to fetch on a short term, and nothing to clear either: the list
+    // on screen is derived from the term below, so a stale row cannot outlive
+    // the word it was found for.
+    if (query.length < 2) return;
+
+    // A slower earlier response must not overwrite a newer one.
+    const cancel = new AbortController();
+    fetch(`${API}/creator-suggestions?q=${encodeURIComponent(query)}`, { signal: cancel.signal })
+      // Every API response is wrapped as { data }, so the rows are one level in.
+      .then((response) => (response.ok ? response.json() : { data: [] }))
+      .then((payload: { data?: Suggestion[] }) => {
+        setSuggestions(payload.data ?? []);
+        setActive(-1);
+      })
+      // A failed lookup is not worth showing: the field works without it.
+      .catch(() => undefined);
+
+    return () => cancel.abort();
+  }, [query]);
+
+  const rows = query.length >= 2 ? suggestions : [];
+  const visible = open && rows.length > 0;
+
+  function choose(suggestion: Suggestion) {
+    onPick(suggestion);
+    setTyped('');
+    setSuggestions([]);
+    setOpen(false);
+  }
+
+  return (
+    <div className="relative mb-5">
+      <label className="block">
+        <span className="mb-1.5 block text-[13px] font-semibold text-ink">
+          ຊື່ຄຣີເອເຕີ<span className="ml-1 text-brand-deep">*</span>
+        </span>
+        <Input
+          required
+          maxLength={160}
+          role="combobox"
+          aria-expanded={visible}
+          aria-controls="creator-suggestions"
+          aria-autocomplete="list"
+          autoComplete="off"
+          value={value}
+          onChange={(event) => {
+            onChange(event.target.value);
+            setTyped(event.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          // Blur fires before a click on an option registers, so closing waits
+          // a tick — otherwise the list vanishes out from under the pointer.
+          onBlur={() => setTimeout(() => setOpen(false), 120)}
+          onKeyDown={(event) => {
+            if (!visible) return;
+            if (event.key === 'ArrowDown') {
+              event.preventDefault();
+              setActive((index) => (index + 1) % rows.length);
+            } else if (event.key === 'ArrowUp') {
+              event.preventDefault();
+              setActive((index) => (index <= 0 ? rows.length - 1 : index - 1));
+            } else if (event.key === 'Enter' && active >= 0) {
+              event.preventDefault();
+              choose(rows[active]);
+            } else if (event.key === 'Escape') {
+              setOpen(false);
+            }
+          }}
+        />
+      </label>
+      <span className="mt-1.5 block text-[12px] text-ink-3">
+        ຊື່ຊ່ອງ ຫຼື ຊື່ເພຈ ຂອງຄຣີເອເຕີ
+      </span>
+
+      {visible && (
+        <ul
+          id="creator-suggestions"
+          role="listbox"
+          aria-label="ຊື່ທີ່ມີຢູ່ແລ້ວ"
+          className="absolute inset-x-0 top-[70px] z-20 overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-white shadow-lg"
+        >
+          <li className="border-b border-hairline px-3.5 py-2 text-[11.5px] text-ink-3">
+            ເຄີຍມີໃນລະບົບ — ເລືອກໄດ້ເພື່ອໃຫ້ຂຽນຄືກັນ
+          </li>
+          {rows.map((suggestion, index) => (
+            <li key={suggestion.slug} role="option" aria-selected={index === active}>
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => choose(suggestion)}
+                onMouseEnter={() => setActive(index)}
+                className={`block w-full px-3.5 py-2.5 text-left text-[14px] ${
+                  index === active ? 'bg-brand-soft text-brand-deep' : 'text-ink'
+                }`}
+              >
+                {suggestion.nameLo}
+                {suggestion.nameEn && (
+                  <span className="ml-2 text-[12px] text-ink-3">{suggestion.nameEn}</span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
