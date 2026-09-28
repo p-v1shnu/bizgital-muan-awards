@@ -436,9 +436,6 @@ function CreatorNameField({
           aria-label="ຊື່ທີ່ມີຢູ່ແລ້ວ"
           className="absolute inset-x-0 top-[70px] z-20 overflow-hidden rounded-[var(--radius-sm)] border border-rule bg-white shadow-lg"
         >
-          <li className="border-b border-hairline px-3.5 py-2 text-[11.5px] text-ink-3">
-            ເຄີຍມີໃນລະບົບ — ເລືອກໄດ້ເພື່ອໃຫ້ຂຽນຄືກັນ
-          </li>
           {rows.map((suggestion, index) => (
             <li key={suggestion.slug} role="option" aria-selected={index === active}>
               <button
